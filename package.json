@@ -10,12 +10,11 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2"
   },
   "dependencies": {
-    "domready": "^1.0.8",
     "express": "^4.0.x",
     "mathjax-node": "^0.5.1"
   },
   "engines": {
-    "node": "0.10.x"
+    "node": "latest"
   },
   "repository": {
     "type": "git",
