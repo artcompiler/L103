@@ -1,5 +1,5 @@
 {
-  "name": "L000",
+  "name": "L121",
   "version": "0.0.0",
   "description": "Compiler as a service.",
   "author": "Art Compiler LLC",
@@ -10,15 +10,16 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2"
   },
   "dependencies": {
+    "domready": "^1.0.8",
     "express": "^4.0.x",
-    "domready": "^1.0.8"
+    "mathjax-node": "^0.5.1"
   },
   "engines": {
     "node": "0.10.x"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/artcompiler/L000"
+    "url": "https://github.com/artcompiler/L121"
   },
   "babel": {
     "presets": [

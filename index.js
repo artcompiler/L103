@@ -1,5 +1,5 @@
 /*
-   L000 compiler service.
+   L121 compiler service.
 
    @flow weak
 */
@@ -7,13 +7,12 @@ var fs = require('fs');
 var http = require('http');
 var express = require('express')
 var app = express();
-app.set('port', (process.env.PORT || 5000));
+app.set('port', (process.env.PORT || 5121));
 app.set('views', __dirname);
 app.use(express.static(__dirname + '/pub'));
 app.get('/', function(req, res) {
-  res.send("Hello, L000!");
+  res.send("Hello, L121!");
 });
-
 
 var compiler = require("./lib/compile.js");
 // Graffiti Code will load the version of itself that matches the graffiti
@@ -37,7 +36,7 @@ app.get('/compile', function(req, res) {
   req.on('end', function () {
     var src = JSON.parse(data).src;
     var obj = compiler.compile(src, function (err, val) {
-      if (err.length) {
+      if (err && err.length) {
         res.send({
           error: err,
         });
@@ -67,15 +66,6 @@ app.get('/view/:id', function(req, res) {
         res.send(html);
       }
     });
-/*
-    if (err && err.length) {
-      res.send({
-        error: err,
-      });
-    } else {
-      res.send(obj);
-    }
-*/
   });
   function item(id, resume) {
     var options = {

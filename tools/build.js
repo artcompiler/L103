@@ -56,7 +56,7 @@ function build() {
   let t0 = Date.now();
   clean();
   compile();
-  bundle();
+  bundle(true);
   console.log("Build completed in " + (Date.now() - t0) + " ms");
 }
 

@@ -46,6 +46,7 @@ window.exports.viewer = (function () {
       var props = this.props;
       var data = props.data ? props.data : [];
       var elts = [];
+      var y = 0;
       data.forEach(function (d, i) {
         var style = {};
         if (d.style) {
@@ -60,12 +61,36 @@ window.exports.viewer = (function () {
           if (val instanceof Array) {
             val = val.join(" ");
           }
-          elts.push(<span key={i} style={style}>{"" + val}</span>);
+          let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+          let {width, height} = getSize(val);
+          elts.push(<div key={i} x="0" y={y} style={style}><img width={width} height={height} src={src}/></div>);
+          y += height + 10;
         }
       });
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>
       );
+      function unescapeXML(str) {
+        return String(str)
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, "'");
+      }
+      function getSize(svg) {
+        svg = svg.slice(svg.indexOf("width=") + 7 + 5);
+        var width = svg.slice(0, svg.indexOf("ex")) * 8;  // ex=8px
+        svg = svg.slice(svg.indexOf("height=") + 8 + 5);
+        var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
+        if (isNaN(width) || isNaN(height)) {
+          width = 640;
+          height = 30;
+        }
+        return {
+          width: width,
+          height: height
+        }
+      }
     },
   });
   return {

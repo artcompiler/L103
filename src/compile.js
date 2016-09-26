@@ -2,6 +2,8 @@
 /* @flow */
 
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
+import * as mjAPI from "mathjax-node/lib/mj-single.js";
+import MathCore from "./mathcore.js";
 
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
@@ -64,6 +66,75 @@ let transform = (function() {
           err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
         }
         resume([].concat(err1).concat(err2), val1 + val2);
+      });
+    });
+  }
+  function calculate(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      var response = val;
+      if (response) {
+        options.strict = true;
+        MathCore.evaluateVerbose({
+          method: "calculate",
+          options: options,
+        }, response, function (err, val) {
+          delete options.strict;
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+          }
+          resume(errs, val.result);
+        });
+      }
+    });
+  }
+  function simplify(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      var response = val;
+      if (response) {
+        options.strict = true;
+        MathCore.evaluateVerbose({
+          method: "simplify",
+          options: options,
+        }, response, function (err, val) {
+          delete options.strict;
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+          }
+          resume(errs, val.result);
+        });
+      }
+    });
+  }
+  function match(node, options, resume) {
+    var errs = [];
+    visit(node.elts[1], options, function (err, val) {
+      errs = errs.concat(err);
+      var reference = val.result ? val.result : val;
+      visit(node.elts[0], options, function (err, val) {
+        errs = errs.concat(err);
+        var response = val.result ? val.result : val;
+        var vals = [];
+        if (!(reference instanceof Array)) {
+          reference = [reference];
+        }
+        reference.forEach(v => {
+          MathCore.evaluateVerbose({
+            method: "equivLiteral",
+            options: options,
+            value: v,
+          }, response, (err, val) => {
+            if (err && err.length) {
+              errs = errs.concat(error(err, node.elts[0]));
+            } else {
+              vals.push("\\text{" + +(val.result) + " | } " + v);
+            }
+          });
+        });
+        resume(errs, vals);
       });
     });
   }
@@ -139,8 +210,7 @@ let transform = (function() {
       });
     } else if (node.elts && node.elts.length > 0) {
       visit(node.elts[0], options, function (err1, val1) {
-        let val = [val1];
-        resume([].concat(err1), val);
+        resume([].concat(err1), val1);
       });
     } else {
       resume([], []);
@@ -166,10 +236,36 @@ let transform = (function() {
     "BINDING": binding,
     "ADD" : add,
     "STYLE" : style,
+    "CALCULATE": calculate,
+    "SIMPLIFY": simplify,
+    "MATCH": match,
   }
   return transform;
 })();
+mjAPI.config({
+  MathJax: {
+    SVG: {
+      font: "Tex"
+    }
+  }
+});
+mjAPI.start();
 let render = (function() {
+  function tex2SVG(str, resume) {
+    mjAPI.typeset({
+      math: str,
+      format: "inline-TeX",
+      svg: true,
+      ex: 6,
+      width: 100,
+    }, function (data) {
+      if (!data.errors) {
+        resume(null, data.svg);
+      } else {
+        resume(null, "");
+      }
+    });
+  }
   function escapeXML(str) {
     return String(str)
       .replace(/&(?!\w+;)/g, "&amp;")
@@ -181,7 +277,21 @@ let render = (function() {
   }
   function render(val, resume) {
     // Do some rendering here.
-    resume([], val);
+    if (typeof val === "string") {
+      val = [val];
+    }
+    var errs = [];
+    var vals = [];
+    val.forEach(v => {
+      tex2SVG(v, function (err, val) {
+        if (err) {
+          errs.push(err);
+        } else {
+          vals.push(escapeXML(val));
+        }
+      });
+    });
+    resume(errs, vals);
   }
   return render;
 })();
