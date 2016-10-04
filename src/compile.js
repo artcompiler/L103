@@ -160,7 +160,24 @@ let transform = (function() {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
         }
-        resume(errs, "\\textbf{simplify  }" + val + " \\longrightarrow " + data);
+        resume(errs, data);
+      });
+    });
+  }
+  function factor(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      let obj = {
+        func: "factor",
+        expr: val,
+      };
+      console.log("factor() obj=" + JSON.stringify(obj));
+      get("/api/v1/eval", obj, function (err, data) {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
+        }
+        resume(errs, data);
       });
     });
   }
@@ -168,20 +185,16 @@ let transform = (function() {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
-      var response = val;
-      if (response) {
-        options.strict = true;
-        MathCore.evaluateVerbose({
-          method: "expand",
-          options: options,
-        }, response, function (err, val) {
-          delete options.strict;
-          if (err && err.length) {
-            errs = errs.concat(error(err, node.elts[0]));
-          }
-          resume(errs, val.result);
-        });
-      }
+      let obj = {
+        func: "expand",
+        expr: val,
+      };
+      get("/api/v1/eval", obj, function (err, data) {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
+        }
+        resume(errs, data);
+      });
     });
   }
   function match(node, options, resume) {
@@ -314,6 +327,7 @@ let transform = (function() {
     "CALCULATE": calculate,
     "SIMPLIFY": simplify,
     "EXPAND": expand,
+    "FACTOR": factor,
     "MATCH": match,
   }
   return transform;
