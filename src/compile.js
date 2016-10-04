@@ -67,10 +67,10 @@ let transform = (function() {
       },
     };
     let protocol;
-    if (options.port === 443) {
-      protocol = https;
-    } else {
+    if (options.host === "localhost") {
       protocol = http;
+    } else {
+      protocol = https;
     }
     var req = protocol.request(options, function(res) {
       var data = "";
