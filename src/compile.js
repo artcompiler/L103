@@ -50,7 +50,7 @@ let transform = (function() {
     if (global.port === 5121) {
       return "5000";
     } else {
-      return "443";
+      return "80";
     }
   }
   function get(path, data, resume) {
