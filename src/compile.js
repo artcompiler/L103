@@ -160,7 +160,7 @@ let transform = (function() {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
         }
-        resume(errs, data);
+        resume(errs, "\\textbf{simplify  }" + val + " \\longrightarrow " + data);
       });
     });
   }
