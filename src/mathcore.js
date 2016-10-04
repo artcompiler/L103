@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 80d2240
+ * Mathcore unversioned - f944585
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -559,7 +559,8 @@ var Model = function() {
   var OpToLaTeX = {};
   OpToLaTeX[OpStr.ADD] = "+";
   OpToLaTeX[OpStr.SUB] = "-";
-  OpToLaTeX[OpStr.MUL] = "*";
+  OpToLaTeX[OpStr.MUL] = "\\times";
+  OpToLaTeX[OpStr.TIMES] = "\\times";
   OpToLaTeX[OpStr.DIV] = "\\div";
   OpToLaTeX[OpStr.FRAC] = "\\frac";
   OpToLaTeX[OpStr.EQL] = "=";
@@ -608,6 +609,7 @@ var Model = function() {
     return node
   };
   var render = function render(n) {
+    console.log("render() n=" + JSON.stringify(n));
     var text = "";
     if(typeof n === "string") {
       text = n
@@ -725,13 +727,17 @@ var Model = function() {
                   }
                   text += args[index]
                 }else {
-                  if(term.op === OpStr.PAREN || (term.op === OpStr.VAR || (term.op === OpStr.CST || typeof prevTerm === "number" && typeof term !== "number"))) {
+                  if(term.op === OpStr.PAREN || (term.op === OpStr.VAR || term.op === OpStr.CST)) {
                     text += args[index]
                   }else {
-                    if(index !== 0) {
-                      text += " " + OpToLaTeX[n.op] + " "
+                    if(term.op === Model.POW && term.args[1].args[0] === "-1") {
+                      text += "/" + args[index]
+                    }else {
+                      if(index !== 0) {
+                        text += " " + OpToLaTeX[n.op] + " "
+                      }
+                      text += args[index]
                     }
-                    text += args[index]
                   }
                 }
                 prevTerm = term
@@ -5128,7 +5134,7 @@ var BigDecimal = function(MathContext) {
         forEach(node.args, function(n) {
           var cp = constantPart(n);
           if(!isOne(cp)) {
-            var mv = mathValue(n, env, true);
+            var mv = mathValue(cp, env, true);
             if(isOne(mv)) {
             }else {
               if(isZero(mv)) {
@@ -7614,16 +7620,19 @@ var BigDecimal = function(MathContext) {
                 n = numer(n1, d[0], denoms);
                 n2 = n2.concat(n)
               });
-              n0 = binaryNode(node.op, n2);
-              node = multiplyNode([n0, denominator])
+              if(n2.length) {
+                n0 = binaryNode(node.op, n2);
+                node = multiplyNode([n0, denominator])
+              }else {
+                node = denominator
+              }
             }else {
-              node = node
             }
           }
           return node
         }
         function numer(n, d, denoms) {
-          var dd = denoms.slice(0);
+          denoms = denoms.slice(0);
           var ff = factors(n, {}, true, true);
           var hasNumer = false;
           var n0, nn = [];
@@ -7632,14 +7641,14 @@ var BigDecimal = function(MathContext) {
               nn.push(n)
             }
           });
-          if(nn.length === 0) {
-            n0 = nodeOne
+          if(nn.length === 0 || isOne(nn[0])) {
+            n0 = []
           }else {
-            n0 = multiplyNode(nn)
+            n0 = [multiplyNode(nn)]
           }
-          var nid0 = ast.intern(d);
+          var nid0 = d ? ast.intern(d) : 0;
           var index = -1;
-          some(dd, function(n, i) {
+          some(denoms, function(n, i) {
             var nid1 = ast.intern(n);
             if(nid0 === nid1) {
               index = i;
@@ -7648,9 +7657,12 @@ var BigDecimal = function(MathContext) {
             return false
           });
           if(index > -1) {
-            dd.splice(index, 1)
+            denoms.splice(index, 1)
           }
-          return multiplyNode([].concat(n0).concat(dd), true)
+          if(n0.length || denoms.length) {
+            return multiplyNode([].concat(n0).concat(denoms), true)
+          }
+          return nodeOne
         }
         function denom(n, denoms) {
           var ff = factors(n, {}, true, true);
@@ -7658,12 +7670,18 @@ var BigDecimal = function(MathContext) {
           var d0, dd = [];
           forEach(ff, function(n) {
             d0 = n.args[0];
-            if(n.op === Model.POW && isNeg(mathValue(n.args[1], true))) {
-              dd.push(binaryNode(Model.POW, [d0, simplify(negate(n.args[1]), env)]))
+            if(n.op === Model.POW) {
+              if(isMinusOne(n.args[1])) {
+                dd.push(d0)
+              }else {
+                if(isNeg(mathValue(n.args[1], true))) {
+                  dd.push(binaryNode(Model.POW, [d0, simplify(negate(n.args[1]), env)]))
+                }
+              }
             }
           });
           if(dd.length === 0) {
-            d0 = nodeOne
+            return denoms
           }else {
             d0 = multiplyNode(dd)
           }
@@ -8308,7 +8326,8 @@ var BigDecimal = function(MathContext) {
       if(env === undefined) {
         env = Model.env
       }else {
-        if(allowDecimal === undefined && typeof env === "boolean") {
+        if(typeof env === "boolean") {
+          normalizeUnits = allowDecimal;
           allowDecimal = env;
           env = Model.env
         }
@@ -8818,14 +8837,17 @@ var BigDecimal = function(MathContext) {
         return node2;
         function unfold(op, expo, base) {
           var node;
+          var dontExpandPowers = option("dontExpandPowers");
           var emv = mathValue(expo);
           if(op === Model.POW) {
+            if(dontExpandPowers && (base.op === Model.VAR || base.op === Model.NUM)) {
+              return[expo, base]
+            }
             var ff = factors(base, null, false, true);
             if(ff.length === 0) {
               return nodeOne
             }
             var args = [];
-            var dontExpandPowers = option("dontExpandPowers");
             forEach(ff, function(n) {
               if(expo.op === Model.ADD) {
                 forEach(expo.args, function(e) {
@@ -8866,7 +8888,6 @@ var BigDecimal = function(MathContext) {
           }else {
             if(op === Model.LOG) {
               var args = [];
-              var dontExpandPowers = option("dontExpandPowers");
               if(isMultiplicative(expo)) {
                 var aa = [];
                 forEach(expo.args, function(e) {
@@ -9713,7 +9734,6 @@ var BigDecimal = function(MathContext) {
   }
   Model.fn.equivValue = function equivValue(n1, n2, op) {
     var options = Model.options = Model.options ? Model.options : {};
-    var scale = options.decimalPlaces != undefined ? +options.decimalPlaces : 10;
     var env = Model.env;
     var inverseResult = option("inverseResult");
     var result;
@@ -9748,14 +9768,20 @@ var BigDecimal = function(MathContext) {
       n2 = binaryNode(Model.PM, args)
     }
     var n1b, n2b, n1t, n2t;
+    var v1, v2;
     if(n1.op === Model.PM && n1.args.length > 1) {
       n1b = simplify(expand(normalize(n1.args[0])));
       n1t = simplify(expand(normalize(n1.args[1])));
       var v1 = mathValue(n1b, env, true, true);
       var v1t = mathValue(n1t, env, true, true)
     }else {
-      n1b = simplify(expand(normalize(n1)));
-      var v1 = mathValue(n1b, env, true, true)
+      n1 = normalize(n1);
+      if(v1 = mathValue(n1, true)) {
+        n1b = scale(n1)
+      }else {
+        n1b = simplify(expand(n1));
+        v1 = mathValue(n1b, true, true)
+      }
     }
     if(n2.op === Model.PM && n2.args.length > 1) {
       n2b = simplify(expand(normalize(n2.args[0])));
@@ -9763,8 +9789,13 @@ var BigDecimal = function(MathContext) {
       var v2 = mathValue(n2b, env, true, true);
       var v2t = mathValue(n2t, env, true, true)
     }else {
-      n2b = simplify(expand(normalize(n2)));
-      var v2 = mathValue(n2b, env, true, true)
+      n2 = normalize(n2);
+      if(v2 = mathValue(n2, true)) {
+        n2b = scale(n2)
+      }else {
+        n2b = simplify(expand(n2));
+        v2 = mathValue(n2b, true, true)
+      }
     }
     if(isUndefined(n1b) || isUndefined(n2b)) {
       result = false;
@@ -9822,8 +9853,9 @@ var BigDecimal = function(MathContext) {
       if(!isZero(v2t)) {
         v2t = baseUnitConversion(n1b, n2b)(v2t)
       }
-      v1 = v1.setScale(scale, BigDecimal.ROUND_HALF_UP);
-      v2 = v2.setScale(scale, BigDecimal.ROUND_HALF_UP);
+      var s = options.decimalPlaces != undefined ? +options.decimalPlaces : 10;
+      v1 = v1.setScale(s, BigDecimal.ROUND_HALF_UP);
+      v2 = v2.setScale(s, BigDecimal.ROUND_HALF_UP);
       Model.options = options;
       if(isZero(v1t) && isZero(v2t)) {
         var cmp = v1.compareTo(v2);
@@ -9846,8 +9878,8 @@ var BigDecimal = function(MathContext) {
         }
         return inverseResult ? !result : result
       }else {
-        v1t = v1t.setScale(scale, BigDecimal.ROUND_HALF_UP);
-        v2t = v2t.setScale(scale, BigDecimal.ROUND_HALF_UP);
+        v1t = v1t.setScale(s, BigDecimal.ROUND_HALF_UP);
+        v2t = v2t.setScale(s, BigDecimal.ROUND_HALF_UP);
         var v1min = v1.subtract(v1t);
         var v2min = v2.subtract(v2t);
         var v1max = v1.add(v1t);
@@ -10051,8 +10083,14 @@ var BigDecimal = function(MathContext) {
         n2 = nn[1];
         var n1o = n1;
         var n2o = n2;
-        n1 = scale(expand(normalize(simplify(expand(normalize(n1))))));
-        n2 = scale(expand(normalize(simplify(expand(normalize(n2))))));
+        var mv1, mv2;
+        if((mv1 = mathValue(n1, true)) && (mv2 = mathValue(n2, true))) {
+          n1 = scale(n1);
+          n2 = scale(n2)
+        }else {
+          n1 = scale(expand(normalize(simplify(expand(normalize(n1))))));
+          n2 = scale(expand(normalize(simplify(expand(normalize(n2))))))
+        }
         var nid1 = ast.intern(n1);
         var nid2 = ast.intern(n2);
         var result = nid1 === nid2;
@@ -10134,9 +10172,14 @@ var BigDecimal = function(MathContext) {
     if(n1.location) {
       Assert.setLocation(n1.location)
     }
-    var node = normalizeCalculate(scale(expand(normalize(simplify(expand(normalize(n1)))))));
-    var result = stripTrailingZeros(scale(numberNode(mathValue(node, Model.env, true))));
-    result = typeof result === "string" ? result : "ERROR";
+    n1 = normalize(n1);
+    var mv;
+    if(mv = mathValue(n1, true, true)) {
+      var node = scale(n1)
+    }else {
+      var node = normalizeCalculate(scale(expand(normalize(simplify(expand(n1))))))
+    }
+    var result = stripTrailingZeros(scale(numberNode(mathValue(node, Model.env, true, true))));
     Assert.setLocation(prevLocation);
     return result
   };
@@ -10146,6 +10189,16 @@ var BigDecimal = function(MathContext) {
       Assert.setLocation(n1.location)
     }
     var result = ast.toLaTeX(simplify(expand(normalize(n1))));
+    result = typeof result === "string" ? result : "ERROR";
+    Assert.setLocation(prevLocation);
+    return result
+  };
+  Model.fn.expand = function(n1) {
+    var prevLocation = Assert.location;
+    if(n1.location) {
+      Assert.setLocation(n1.location)
+    }
+    var result = ast.toLaTeX(normalizeExpanded(normalize(expand(normalize(n1)))));
     result = typeof result === "string" ? result : "ERROR";
     Assert.setLocation(prevLocation);
     return result
@@ -10612,6 +10665,9 @@ var MathCore = function() {
           break;
         case "simplify":
           result = solutionNode.simplify();
+          break;
+        case "expand":
+          result = solutionNode.expand();
           break;
         case "validSyntax":
           result = true;

@@ -4,6 +4,8 @@
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
 import * as mjAPI from "mathjax-node/lib/mj-single.js";
 import MathCore from "./mathcore.js";
+import * as https from "https";
+import * as http from "http";
 
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
@@ -36,6 +38,62 @@ let transform = (function() {
     assert(node.tag, message(1001, [nid]));
     assert(typeof table[node.tag] === "function", message(1004, [JSON.stringify(node.tag)]));
     return table[node.tag](node, options, resume);
+  }
+  function getGCHost() {
+    if (global.port === 5121) {
+      return "localhost";
+    } else {
+      return "sympy-artcompiler.herokuapp.com";
+    }
+  }
+  function getGCPort() {
+    if (global.port === 5121) {
+      return "5000";
+    } else {
+      return "443";
+    }
+  }
+  function get(path, data, resume) {
+    path = path.trim().replace(/ /g, "+");
+    var encodedData = JSON.stringify(data);
+    var options = {
+      method: "GET",
+      host: getGCHost(),
+      port: getGCPort(),
+      path: path,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': encodedData.length
+      },
+    };
+    let protocol;
+    if (options.port === 443) {
+      protocol = https;
+    } else {
+      protocol = http;
+    }
+    var req = protocol.request(options, function(res) {
+      var data = "";
+      res.on('data', function (chunk) {
+        data += chunk;
+      }).on('end', function () {
+        try {
+          resume([], JSON.parse(data));
+        } catch (e) {
+          console.log("parse error: " + e.stack);
+          resume([], {});
+        }
+      }).on("error", function () {
+        console.log("error() status=" + res.statusCode + " data=" + data);
+        resume([], {});
+      });
+    });
+    req.write(encodedData);
+    req.end();
+    req.on('error', function(e) {
+      console.log("ERROR: " + e);
+      resume(e, []);
+    });
   }
   // BEGIN VISITOR METHODS
   function str(node, options, resume) {
@@ -93,11 +151,28 @@ let transform = (function() {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
+      let obj = {
+        func: "simplify",
+        expr: val,
+      };
+      console.log("simplify() obj=" + JSON.stringify(obj));
+      get("/api/v1/eval", obj, function (err, data) {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
+        }
+        resume(errs, data);
+      });
+    });
+  }
+  function expand(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
       var response = val;
       if (response) {
         options.strict = true;
         MathCore.evaluateVerbose({
-          method: "simplify",
+          method: "expand",
           options: options,
         }, response, function (err, val) {
           delete options.strict;
@@ -238,6 +313,7 @@ let transform = (function() {
     "STYLE" : style,
     "CALCULATE": calculate,
     "SIMPLIFY": simplify,
+    "EXPAND": expand,
     "MATCH": match,
   }
   return transform;

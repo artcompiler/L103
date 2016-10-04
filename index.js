@@ -90,6 +90,7 @@ app.get('/view/:id', function(req, res) {
   }
 });
 app.listen(app.get('port'), function() {
+  global.port = app.get('port');
   console.log("Node app is running at localhost:" + app.get('port'))
 });
 process.on('uncaughtException', function(err) {
