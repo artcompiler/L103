@@ -70,7 +70,7 @@ let transform = (function() {
     if (options.host === "localhost") {
       protocol = http;
     } else {
-      protocol = https;
+      protocol = http; //https;
     }
     var req = protocol.request(options, function(res) {
       var data = "";
