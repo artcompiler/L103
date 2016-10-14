@@ -164,7 +164,7 @@ let transform = (function() {
       });
     });
   }
-  function eval(node, options, resume) {
+  function evaluate(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
@@ -172,7 +172,7 @@ let transform = (function() {
         func: "eval",
         expr: val,
       };
-      console.log("eval() obj=" + JSON.stringify(obj));
+      console.log("evaluate() obj=" + JSON.stringify(obj));
       get("/api/v1/eval", obj, function (err, data) {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
@@ -345,7 +345,7 @@ let transform = (function() {
     "SIMPLIFY": simplify,
     "EXPAND": expand,
     "FACTOR": factor,
-    "EVAL": eval,
+    "EVAL": evaluate,
     "MATCH": match,
   }
   return transform;
