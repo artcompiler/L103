@@ -164,6 +164,23 @@ let transform = (function() {
       });
     });
   }
+  function eval(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      let obj = {
+        func: "eval",
+        expr: val,
+      };
+      console.log("eval() obj=" + JSON.stringify(obj));
+      get("/api/v1/eval", obj, function (err, data) {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
+        }
+        resume(errs, data);
+      });
+    });
+  }
   function factor(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
@@ -328,6 +345,7 @@ let transform = (function() {
     "SIMPLIFY": simplify,
     "EXPAND": expand,
     "FACTOR": factor,
+    "EVAL": eval,
     "MATCH": match,
   }
   return transform;
