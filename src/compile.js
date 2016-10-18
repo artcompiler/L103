@@ -164,6 +164,59 @@ let transform = (function() {
       });
     });
   }
+  function cancel(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      let obj = {
+        func: "eval",
+        expr: "(lambda(x,y,z):cancel(" + val + "))(symbols('x y z'))",
+      };
+      console.log("cancel() obj=" + JSON.stringify(obj));
+      get("/api/v1/eval", obj, function (err, data) {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
+        }
+        resume(errs, data);
+      });
+    });
+  }
+  function apart(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      let obj = {
+        func: "eval",
+        expr: "(lambda(x,y,z):apart(" + val + "))(symbols('x y z'))",
+      };
+      console.log("apart() obj=" + JSON.stringify(obj));
+      get("/api/v1/eval", obj, function (err, data) {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
+        }
+        resume(errs, data);
+      });
+    });
+  }
+  function collect(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val0) {
+      visit(node.elts[1], options, function (err, val1) {
+        errs = errs.concat(err);
+        let obj = {
+          func: "eval",
+          expr: "(lambda(x,y,z):collect(" + val0 + "," + val1 + "))(symbols('x y z'))",
+        };
+        console.log("collect() obj=" + JSON.stringify(obj));
+        get("/api/v1/eval", obj, function (err, data) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+          }
+          resume(errs, data);
+        });
+      });
+    });
+  }
   function evaluate(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
@@ -347,6 +400,9 @@ let transform = (function() {
     "FACTOR": factor,
     "EVAL": evaluate,
     "MATCH": match,
+    "CANCEL": cancel,
+    "COLLECT": collect,
+    "APART": apart,
   }
   return transform;
 })();
