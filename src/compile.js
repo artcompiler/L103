@@ -152,8 +152,8 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
       let obj = {
-        func: "simplify",
-        expr: val,
+        func: "eval",
+        expr: "(lambda(x,y,z):simplify(" + val + "))(symbols('x y z'))",
       };
       console.log("simplify() obj=" + JSON.stringify(obj));
       get("/api/v1/eval", obj, function (err, data) {
@@ -170,7 +170,7 @@ let transform = (function() {
       errs = errs.concat(err);
       let obj = {
         func: "eval",
-        expr: val,
+        expr: "(lambda(x,y,z):" + val + ")(symbols('x y z'))",
       };
       console.log("evaluate() obj=" + JSON.stringify(obj));
       get("/api/v1/eval", obj, function (err, data) {
@@ -186,8 +186,8 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
       let obj = {
-        func: "factor",
-        expr: val,
+        func: "eval",
+        expr: "(lambda(x,y,z):factor(" + val + "))(symbols('x y z'))",
       };
       console.log("factor() obj=" + JSON.stringify(obj));
       get("/api/v1/eval", obj, function (err, data) {
@@ -203,8 +203,8 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
       let obj = {
-        func: "expand",
-        expr: val,
+        func: "eval",
+        expr: "(lambda(x,y,z):expand(" + val + "))(symbols('x y z'))",
       };
       get("/api/v1/eval", obj, function (err, data) {
         if (err && err.length) {
