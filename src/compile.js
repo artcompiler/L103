@@ -234,6 +234,13 @@ let transform = (function() {
       });
     });
   }
+  function literal(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      resume(errs, val);
+    });
+  }
   function factor(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
@@ -403,6 +410,7 @@ let transform = (function() {
     "CANCEL": cancel,
     "COLLECT": collect,
     "APART": apart,
+    "LITERAL": literal,
   }
   return transform;
 })();
