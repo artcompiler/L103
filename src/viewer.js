@@ -57,7 +57,7 @@ window.gcexports.viewer = (function () {
         if (d.value === "$$timer$$") {
           elts.push(<span key={i} style={style}><Timer {...props}/></span>);
         } else {
-          let val = d.value ? d.value : d;
+          let val = d.value ? d.value : d.svg ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
           }

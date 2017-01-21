@@ -6,12 +6,106 @@ import * as mjAPI from "mathjax-node/lib/mj-single.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
+import {Core} from "./latex-sympy.js";
 
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
 messages[1002] = "Invalid tag in node with Node ID %1.";
 messages[1003] = "No async callback provided.";
 messages[1004] = "No visitor method defined for '%1'.";
+
+function getGCHost() {
+  if (global.port === 5121) {
+    return "localhost";
+  } else {
+    return "www.graffiticode.com";
+  }
+}
+function getGCPort() {
+  if (global.port === 5121) {
+    return "3000";
+  } else {
+    return "80";
+  }
+}
+function get(path, resume) {
+  var data = [];
+  var options = {
+    host: getGCHost(),
+    port: getGCPort(),
+    path: path,
+  };
+  console.log("get() options=" + JSON.stringify(options));
+  var req = http.get(options, function(res) {
+    res.on("data", function (chunk) {
+      data.push(chunk);
+    }).on("end", function () {
+      console.log("get() data=" + data);
+      resume([], JSON.parse(data.join("")));
+    }).on("error", function () {
+      resume(["ERROR"], "");
+    });
+  });
+}
+
+function getSympy(path, data, resume) {
+  path = path.trim().replace(/ /g, "+");
+  var encodedData = JSON.stringify(data);
+  var options = {
+    method: "GET",
+    host: "sympy-artcompiler.herokuapp.com",
+    port: "80",
+    path: path,
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': encodedData.length
+    },
+  };
+  let protocol = http; //https;
+  console.log("getSympy() options=" + JSON.stringify(options));
+  console.log("getSympy() encodedData=" + encodedData);
+  var req = protocol.request(options, function(res) {
+    var data = "";
+    res.on('data', function (chunk) {
+      data += chunk;
+    }).on('end', function () {
+      try {
+        console.log("getSympy() data=" + data);
+        resume([], JSON.parse(data));
+      } catch (e) {
+        console.log("parse error: " + e.stack);
+        resume([], {});
+      }
+    }).on("error", function () {
+      console.log("error() status=" + res.statusCode + " data=" + data);
+      resume([], {});
+    });
+  });
+  req.write(encodedData);
+  req.end();
+  req.on('error', function(e) {
+    console.log("ERROR: " + e);
+    resume(e, []);
+  });
+}
+function mapList(lst, fn, resume) {
+  if (lst && lst.length > 1) {
+    fn(lst[0], (err1, val1) => {
+      mapList(lst.slice(1), fn, (err2, val2) => {
+        let val = [].concat(val2);
+        val.unshift(val1);
+        resume([].concat(err1).concat(err2), val);
+      });
+    });
+  } else if (lst && lst.length > 0) {
+    fn(lst[0], (err1, val1) => {
+      let val = [val1];
+      resume([].concat(err1), val);
+    });
+  } else {
+    resume([], []);
+  }
+}
 
 let transform = (function() {
   let nodePool;
@@ -24,6 +118,17 @@ let transform = (function() {
       str: str,
       nid: nid,
     };
+  }
+  function texToSympy(val, resume) {
+    var errs = [];
+    var source = val;
+    if (source) {
+      console.log("texToSympy() source=" + source);
+      Core.translate(null, source, function (err, val) {
+        console.log("texToSympy() val=" + val);
+        resume(errs, val);
+      });
+    }
   }
   function visit(nid, options, resume) {
     assert(typeof resume === "function", message(1003));
@@ -38,62 +143,6 @@ let transform = (function() {
     assert(node.tag, message(1001, [nid]));
     assert(typeof table[node.tag] === "function", message(1004, [JSON.stringify(node.tag)]));
     return table[node.tag](node, options, resume);
-  }
-  function getGCHost() {
-    if (global.port === 5121) {
-      return "localhost";
-    } else {
-      return "sympy-artcompiler.herokuapp.com";
-    }
-  }
-  function getGCPort() {
-    if (global.port === 5121) {
-      return "5000";
-    } else {
-      return "80";
-    }
-  }
-  function get(path, data, resume) {
-    path = path.trim().replace(/ /g, "+");
-    var encodedData = JSON.stringify(data);
-    var options = {
-      method: "GET",
-      host: getGCHost(),
-      port: getGCPort(),
-      path: path,
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': encodedData.length
-      },
-    };
-    let protocol;
-    if (options.host === "localhost") {
-      protocol = http;
-    } else {
-      protocol = http; //https;
-    }
-    var req = protocol.request(options, function(res) {
-      var data = "";
-      res.on('data', function (chunk) {
-        data += chunk;
-      }).on('end', function () {
-        try {
-          resume([], JSON.parse(data));
-        } catch (e) {
-          console.log("parse error: " + e.stack);
-          resume([], {});
-        }
-      }).on("error", function () {
-        console.log("error() status=" + res.statusCode + " data=" + data);
-        resume([], {});
-      });
-    });
-    req.write(encodedData);
-    req.end();
-    req.on('error', function(e) {
-      console.log("ERROR: " + e);
-      resume(e, []);
-    });
   }
   // BEGIN VISITOR METHODS
   function str(node, options, resume) {
@@ -131,20 +180,23 @@ let transform = (function() {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
-      var response = val;
-      if (response) {
-        options.strict = true;
-        MathCore.evaluateVerbose({
-          method: "calculate",
-          options: options,
-        }, response, function (err, val) {
-          delete options.strict;
-          if (err && err.length) {
-            errs = errs.concat(error(err, node.elts[0]));
-          }
-          resume(errs, val.result);
-        });
-      }
+      let lst = [].concat(val);
+      mapList(lst, (v, resume) => {
+        var response = v;
+        if (response) {
+          options.strict = true;
+          MathCore.evaluateVerbose({
+            method: "calculate",
+            options: options,
+          }, response, function (err, val) {
+            delete options.strict;
+            if (err && err.length) {
+              errs = errs.concat(error(err, node.elts[0]));
+            }
+            resume(errs, val.result);
+          });
+        }
+      }, resume);
     });
   }
   function simplify(node, options, resume) {
@@ -155,8 +207,7 @@ let transform = (function() {
         func: "eval",
         expr: "(lambda(x,y,z):simplify(" + val + "))(symbols('x y z'))",
       };
-      console.log("simplify() obj=" + JSON.stringify(obj));
-      get("/api/v1/eval", obj, function (err, data) {
+      getSympy("/api/v1/eval", obj, function (err, data) {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
         }
@@ -172,8 +223,7 @@ let transform = (function() {
         func: "eval",
         expr: "(lambda(x,y,z):cancel(" + val + "))(symbols('x y z'))",
       };
-      console.log("cancel() obj=" + JSON.stringify(obj));
-      get("/api/v1/eval", obj, function (err, data) {
+      getSympy("/api/v1/eval", obj, function (err, data) {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
         }
@@ -189,8 +239,7 @@ let transform = (function() {
         func: "eval",
         expr: "(lambda(x,y,z):apart(" + val + "))(symbols('x y z'))",
       };
-      console.log("apart() obj=" + JSON.stringify(obj));
-      get("/api/v1/eval", obj, function (err, data) {
+      getSympy("/api/v1/eval", obj, function (err, data) {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
         }
@@ -207,8 +256,7 @@ let transform = (function() {
           func: "eval",
           expr: "(lambda(x,y,z):collect(" + val0 + "," + val1 + "))(symbols('x y z'))",
         };
-        console.log("collect() obj=" + JSON.stringify(obj));
-        get("/api/v1/eval", obj, function (err, data) {
+        getSympy("/api/v1/eval", obj, function (err, data) {
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
           }
@@ -225,8 +273,7 @@ let transform = (function() {
         func: "eval",
         expr: "(lambda(x,y,z):" + val + ")(symbols('x y z'))",
       };
-      console.log("evaluate() obj=" + JSON.stringify(obj));
-      get("/api/v1/eval", obj, function (err, data) {
+      getSympy("/api/v1/eval", obj, function (err, data) {
         if (err && err.length) {
           errs = errs.concat(error(err, node.elts[0]));
         }
@@ -244,34 +291,43 @@ let transform = (function() {
   function factor(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
+      let lst = [].concat(val);
       errs = errs.concat(err);
-      let obj = {
-        func: "eval",
-        expr: "(lambda(x,y,z):factor(" + val + "))(symbols('x y z'))",
-      };
-      console.log("factor() obj=" + JSON.stringify(obj));
-      get("/api/v1/eval", obj, function (err, data) {
-        if (err && err.length) {
-          errs = errs.concat(error(err, node.elts[0]));
-        }
-        resume(errs, data);
-      });
+      mapList(lst, (v, resume) => {
+        texToSympy(v, (err, v) => {
+          let obj = {
+            func: "eval",
+            expr: "(lambda(x,y,z):factor(" + v + "))(symbols('x y z'))",
+          };
+          getSympy("/api/v1/eval", obj, function (err, data) {
+            if (err && err.length) {
+              errs = errs.concat(error(err, node.elts[0]));
+            }
+            resume(errs, v);
+          });
+        });
+      }, resume);
     });
   }
   function expand(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
       errs = errs.concat(err);
-      let obj = {
-        func: "eval",
-        expr: "(lambda(x,y,z):expand(" + val + "))(symbols('x y z'))",
-      };
-      get("/api/v1/eval", obj, function (err, data) {
-        if (err && err.length) {
-          errs = errs.concat(error(err, node.elts[0]));
-        }
-        resume(errs, data);
-      });
+      let lst = [].concat(val);
+      mapList(lst, (v, resume) => {
+        texToSympy(v, (err, v) => {
+          let obj = {
+            func: "eval",
+            expr: "(lambda(x,y,z):expand(" + v + "))(symbols('x y z'))",
+          };
+          getSympy("/api/v1/eval", obj, function (err, data) {
+            if (err && err.length) {
+              errs = errs.concat(error(err, node.elts[0]));
+            }
+            resume(errs, v);
+          });
+        });
+      }, resume);
     });
   }
   function match(node, options, resume) {
@@ -447,6 +503,21 @@ let render = (function() {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+  function sympyToLaTeX(val, resume) {
+    var errs = [];
+    console.log("sympyToLaTeX() val=" + val);
+    let obj = {
+      func: "latex",
+      expr: val,
+    };
+    getSympy("/api/v1/eval", obj, (err, data) => {
+      if (err && err.length) {
+        errs = errs.concat(error(err, node.elts[0]));
+      }
+      console.log("sympyToLaTeX() data=" + data);
+      resume(errs, data);
+    });
+  }
   function render(val, resume) {
     // Do some rendering here.
     if (typeof val === "string") {
@@ -454,16 +525,23 @@ let render = (function() {
     }
     var errs = [];
     var vals = [];
-    val.forEach(v => {
-      tex2SVG(v, function (err, val) {
-        if (err) {
-          errs.push(err);
-        } else {
-          vals.push(escapeXML(val));
+    let lst = [].concat(val);
+    mapList(lst, (v, resume) => {
+      sympyToLaTeX(v, (err, tex) => {
+        if (err && err.length) {
+          errs = errs.concat(error(err, node.elts[0]));
         }
+        tex2SVG(tex, function (err, svg) {
+          if (err) {
+            errs.push(err);
+          }
+          resume(errs, {
+            val: v,
+            svg: escapeXML(svg),
+          });
+        });
       });
-    });
-    resume(errs, vals);
+    }, resume);
   }
   return render;
 })();

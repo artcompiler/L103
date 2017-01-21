@@ -198,7 +198,7 @@ window.gcexports.viewer = function () {
             React.createElement(Timer, props)
           ));
         } else {
-          var val = d.value ? d.value : d;
+          var val = d.value ? d.value : d.svg ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
           }
