@@ -2029,7 +2029,6 @@ var Core = exports.Core = function () {
     }
   }
   function translate(options, solution, resume) {
-    console.log("translate() solution=" + solution);
     if (!options) {
       options = {};
     }
@@ -2076,9 +2075,7 @@ var Core = exports.Core = function () {
         var result = void 0;
         switch (method) {
           case "translate":
-            console.log("translate() solutionNode=" + JSON.stringify(solutionNode));
             result = solutionNode.translate();
-            console.log("translate() result=" + result);
             break;
           default:
             assert(false, message(3004, [method]));
