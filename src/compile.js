@@ -80,7 +80,7 @@ function getSympy(path, data, resume) {
   req.end();
   req.on('error', function(e) {
     console.log("ERROR: " + e);
-    resume(e, []);
+    resume([].concat(e), []);
   });
 }
 function mapList(lst, fn, resume) {
@@ -118,9 +118,19 @@ let transform = (function() {
     var errs = [];
     var source = val;
     if (source) {
-      Core.translate(null, source, function (err, val) {
-        resume(errs, val);
-      });
+      try {
+        Core.translate({}, source, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(err);
+            val = "";
+          }
+          resume(errs, val);
+        });
+      } catch (e) {
+        console.log("Exception caught: " + e.stack);
+        errs = errs.concat(e.message);
+        resume(errs, "");
+      }
     }
   }
   function visit(nid, options, resume) {
@@ -207,20 +217,27 @@ let transform = (function() {
         params += s;
       });
       let lst = [].concat(val);
-      errs = errs.concat(err);
+      if (err && err.length) {
+        errs = errs.concat(err);
+      }
       mapList(lst, (v, resume) => {
         texToSympy(v, (err, v) => {
-          let obj = {
-            func: "eval",
-            expr: "(lambda(" + params + "):" + name +
-              "(" + v + "))(symbols('"+ symbols + "'))",
-          };
-          getSympy("/api/v1/eval", obj, function (err, data) {
-            if (err && err.length) {
-              errs = errs.concat(error(err, node.elts[0]));
-            }
-            resume(errs, data);
-          });
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+            resume(errs, []);
+          } else {
+            let obj = {
+              func: "eval",
+              expr: "(lambda(" + params + "):" + name +
+                "(" + v + "))(symbols('"+ symbols + "'))",
+            };
+            getSympy("/api/v1/eval", obj, function (err, data) {
+              if (err && err.length) {
+                errs = errs.concat(error(err, node.elts[0]));
+              }
+              resume(errs, data);
+            });
+          }
         });
       }, resume);
     });
@@ -241,7 +258,9 @@ let transform = (function() {
           params += s;
         });
         let lst = [].concat(val0);
-        errs = errs.concat(err);
+        if (err && err.length) {
+          errs = errs.concat(err);
+        }
         mapList(lst, (v, resume) => {
           texToSympy(v, (err, v) => {
             let obj = {
@@ -438,9 +457,9 @@ let render = (function() {
       width: 100,
     }, function (data) {
       if (!data.errors) {
-        resume(null, data.svg);
+        resume([], data.svg);
       } else {
-        resume(null, "");
+        resume([], "");
       }
     });
   }
@@ -476,8 +495,8 @@ let render = (function() {
     let lst = [].concat(val);
     mapList(lst, (v, resume) => {
       tex2SVG(v, (err, svg) => {
-        if (err) {
-          errs.push(err);
+        if (err && err.length) {
+          errs = errs.concat(err);
         }
         resume(errs, {
           val: v,
@@ -494,18 +513,18 @@ export let compiler = (function () {
     // an object to be rendered on the client by the viewer for this language.
     try {
       transform(pool, function (err, val) {
-        if (err.length) {
-          resume(err, val);
+        if (err && err.length) {
+          resume([].concat(err), val);
         } else {
           render(val, function (err, val) {
-            resume(err, val);
+            resume([].concat(err), val);
           });
         }
       });
     } catch (x) {
       console.log("ERROR with code");
       console.log(x.stack);
-      resume("Compiler error", {
+      resume(["Compiler error"], {
         score: 0
       });
     }

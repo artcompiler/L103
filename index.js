@@ -37,7 +37,7 @@ app.get('/compile', function(req, res) {
     var src = JSON.parse(data).src;
     var obj = compiler.compile(src, function (err, val) {
       if (err && err.length) {
-        res.send({
+        res.status(400).send({
           error: err,
         });
       } else {
@@ -49,7 +49,7 @@ app.get('/compile', function(req, res) {
   });
   req.on('error', function(e) {
     console.log(e);
-    res.send(e);
+    res.status(400).send(e);
   });
 });
 app.get('/view/:id', function(req, res) {
@@ -61,7 +61,7 @@ app.get('/view/:id', function(req, res) {
     }, function (error, html) {
       if (error) {
         console.log("error=" + error.stack);
-        res.send(400, error);
+        res.status(400).send(error);
       } else {
         res.send(html);
       }
@@ -79,12 +79,12 @@ app.get('/view/:id', function(req, res) {
         data += chunk;
       }).on('end', function () {
         try {
-          resume(null, data);
+          resume([], data);
         } catch (e) {
           console.log("ERROR: " + e.stack);
         }
       }).on("error", function () {
-        resume("ERROR status=" + res.statusCode + " data=" + data, null);
+        resume([].concat("ERROR status=" + res.statusCode + " data=" + data), null);
       });
     });
   }
