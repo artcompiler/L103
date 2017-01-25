@@ -1,5 +1,6 @@
 /* @flow */
 window.gcexports.globalLexicon = {
+  "concat" : { "tk": 1, "name": "CONCAT", "cls": "function", "length": 1 , "arity": 1 },
   "add" : { "tk": 1, "name": "ADD", "cls": "function", "length": 2 , "arity": 2 },
   "style" : { "tk": 1, "name": "STYLE", "cls": "function", "length": 2, "arity": 2 },
   "calculate" : { "tk": 1, "name": "CALCULATE", "cls": "function", "length": 1 , "arity": 1 },

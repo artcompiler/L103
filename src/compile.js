@@ -204,38 +204,64 @@ let transform = (function() {
   }
   function evalSympy(name, node, options, resume) {
     var errs = [];
-    let syms = ["x", "y", "z"];
     visit(node.elts[0], options, function (err, val) {
-      let symbols = "";
-      let params = "";
-      syms.forEach(s => {
-        if (symbols) {
-          symbols += " ";
-          params += ",";
-        }
-        symbols += s;
-        params += s;
-      });
+      console.log("evalSympy() val=" + JSON.stringify(val, null, 2));
       let lst = [].concat(val);
       if (err && err.length) {
         errs = errs.concat(err);
       }
       mapList(lst, (v, resume) => {
-        texToSympy(v, (err, v) => {
+        MathCore.evaluateVerbose({
+          method: "variables",
+          options: options,
+        }, v, function (err, val) {
           if (err && err.length) {
+            console.log("ERROR: " + JSON.stringify(err));
             errs = errs.concat(error(err, node.elts[0]));
             resume(errs, []);
           } else {
-            let obj = {
-              func: "eval",
-              expr: "(lambda(" + params + "):" + name +
-                "(" + v + "))(symbols('"+ symbols + "'))",
-            };
-            getSympy("/api/v1/eval", obj, function (err, data) {
+            let syms = val.result;
+            let index;
+            if ((index = syms.indexOf("\\pi")) >= 0) {
+              syms = (function(syms) {
+                var rest = syms.slice(index + 1);
+                syms.length = index;
+                return syms.concat(rest);
+              })(syms);
+            }
+            let symbols = "";
+            let params = "";
+            if (syms && syms.length) {
+              // Construct a list a symbols and parameters.
+              syms.forEach(s => {
+                if (symbols) {
+                  symbols += " ";
+                  params += ",";
+                }
+                symbols += s;
+                params += s;
+              });
+              symbols = "symbols('" + symbols + "')";
+              params = "(" + params + ")";
+            }
+            texToSympy(v, (err, v) => {
               if (err && err.length) {
                 errs = errs.concat(error(err, node.elts[0]));
+                resume(errs, []);
+              } else {
+                let obj = {
+                  func: "eval",
+                  expr: "(lambda" + params + ":" + name +
+                    "(" + v + "))(" + symbols + ")",
+                };
+                console.log("evalSympy() obj=" + JSON.stringify(obj));
+                getSympy("/api/v1/eval", obj, function (err, data) {
+                  if (err && err.length) {
+                    errs = errs.concat(error(err, node.elts[0]));
+                  }
+                  resume(errs, data);
+                });
               }
-              resume(errs, data);
             });
           }
         });
@@ -339,6 +365,19 @@ let transform = (function() {
       });
     });
   }
+  function concat(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let str = "";
+      if (val1 instanceof Array) {
+        val1.forEach(v => {
+          str += v;
+        });
+      } else {
+        str = val1.toString();
+      }
+      resume(err1, str);
+    });
+  }
   function list(node, options, resume) {
     if (node.elts && node.elts.length > 1) {
       visit(node.elts[0], options, function (err1, val1) {
@@ -436,6 +475,7 @@ let transform = (function() {
     "COLLECT": collect,
     "APART": apart,
     "MATCH": match,
+    "CONCAT" : concat,
   }
   return transform;
 })();

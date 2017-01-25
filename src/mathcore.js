@@ -10669,6 +10669,9 @@ var MathCore = function() {
         case "expand":
           result = solutionNode.expand();
           break;
+        case "variables":
+          result = solutionNode.variables();
+          break;
         case "validSyntax":
           result = true;
           break;
