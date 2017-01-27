@@ -184,20 +184,17 @@ window.gcexports.viewer = function () {
       var data = props.data ? props.data : [];
       var elts = [];
       var y = 0;
-      data.forEach(function (d, i) {
-        var style = {};
-        if (d.style) {
-          Object.keys(d.style).forEach(function (k) {
-            style[k] = d.style[k];
-          });
-        }
-        if (d.value === "$$timer$$") {
-          elts.push(React.createElement(
-            "span",
-            { key: i, style: style },
-            React.createElement(Timer, props)
-          ));
-        } else {
+      var len = data.length;
+      data.forEach(function (data, i) {
+        var innerElts = [];
+        var name = data.name;
+        data.val.forEach(function (d, i) {
+          var style = {};
+          if (d.style) {
+            Object.keys(d.style).forEach(function (k) {
+              style[k] = d.style[k];
+            });
+          }
           var val = d.value ? d.value : d.svg ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
@@ -209,13 +206,24 @@ window.gcexports.viewer = function () {
           var width = _getSize.width;
           var height = _getSize.height;
 
-          elts.push(React.createElement(
+          innerElts.push(React.createElement(
             "div",
             { key: i, x: "0", y: y, style: style },
             React.createElement("img", { width: width, height: height, src: src })
           ));
           y += height + 10;
-        }
+        });
+        elts.push(React.createElement(
+          "h6",
+          null,
+          name.toUpperCase()
+        ));
+        elts.push(React.createElement(
+          "div",
+          { key: i },
+          innerElts,
+          React.createElement("br", null)
+        ));
       });
       return elts.length > 0 ? React.createElement(
         "div",

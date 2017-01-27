@@ -47,25 +47,28 @@ window.gcexports.viewer = (function () {
       var data = props.data ? props.data : [];
       var elts = [];
       var y = 0;
-      data.forEach(function (d, i) {
-        var style = {};
-        if (d.style) {
-          Object.keys(d.style).forEach(function (k) {
-            style[k] = d.style[k];
-          });
-        }
-        if (d.value === "$$timer$$") {
-          elts.push(<span key={i} style={style}><Timer {...props}/></span>);
-        } else {
+      let len = data.length;
+      data.forEach((data, i) => {
+        let innerElts = [];
+        let name = data.name;
+        data.val.forEach((d, i) => {
+          var style = {};
+          if (d.style) {
+            Object.keys(d.style).forEach(function (k) {
+              style[k] = d.style[k];
+            });
+          }
           let val = d.value ? d.value : d.svg ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
           }
           let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
           let {width, height} = getSize(val);
-          elts.push(<div key={i} x="0" y={y} style={style}><img width={width} height={height} src={src}/></div>);
+          innerElts.push(<div key={i} x="0" y={y} style={style}><img width={width} height={height} src={src}/></div>);
           y += height + 10;
-        }
+        });
+        elts.push(<h6>{name.toUpperCase()}</h6>);
+        elts.push(<div key={i}>{innerElts}<br/></div>);
       });
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>
