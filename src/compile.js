@@ -68,8 +68,7 @@ function getSympy(path, data, resume) {
       try {
         resume([], JSON.parse(data));
       } catch (e) {
-        console.log("parse error: " + e.stack);
-        resume([], {});
+        resume(["ERROR Sympy: " + encodedData], {});
       }
     }).on("error", function () {
       console.log("error() status=" + res.statusCode + " data=" + data);
@@ -127,7 +126,6 @@ let transform = (function() {
           resume(errs, val);
         });
       } catch (e) {
-        console.log("Exception caught: " + e.stack);
         errs = errs.concat(e.message);
         resume(errs, "");
       }
@@ -176,6 +174,30 @@ let transform = (function() {
           err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
         }
         resume([].concat(err1).concat(err2), val1 + val2);
+      });
+    });
+  }
+  function option(options, id, val) {
+    // Get or set an option on a node.
+    var old = options[id];
+    if (val !== undefined) {
+      options[id] = val;
+    }
+    return old;
+  }
+  function variable(node, options, resume) {
+    visit(node.elts[0], options, (err, val) => {
+      option(options, "variable", val);
+      visit(node.elts[1], options, (err, val) => {
+        resume(err, val);
+      });
+    });
+  }
+  function domain(node, options, resume) {
+    visit(node.elts[0], options, (err, val) => {
+      option(options, "domain", val);
+      visit(node.elts[1], options, (err, val) => {
+        resume(err, val);
       });
     });
   }
@@ -243,16 +265,31 @@ let transform = (function() {
               symbols = "symbols('" + symbols + "')";
               params = "(" + params + ")";
             }
+            let opts = "";
+            Object.keys(options).forEach(k => {
+              switch (k) {
+              case "variable":
+                opts += "," + options[k];
+                break;
+              case "domain":
+                opts += "," + k + "=" + options[k];
+                break;
+              default:
+                break;
+              }
+            });
             texToSympy(v, (err, v) => {
               if (err && err.length) {
                 errs = errs.concat(error(err, node.elts[0]));
                 resume(errs, []);
               } else {
+                let args = v + opts;
                 let obj = {
                   func: "eval",
                   expr: "(lambda" + params + ":" + name +
-                    "(" + v + "))(" + symbols + ")",
+                    "(" + args + "))(" + symbols + ")",
                 };
+                console.log("evalSympy() obj=" + JSON.stringify(obj));
                 getSympy("/api/v1/eval", obj, function (err, data) {
                   if (err && err.length) {
                     errs = errs.concat(error(err, node.elts[0]));
@@ -284,8 +321,12 @@ let transform = (function() {
         name: "literal",
         val: val,
       });
+      console.log("literal() val=" + val);
       resume([], val);
     });
+  }
+  function solve(node, options, resume) {
+    evalSympy("solveset", node, options, resume);
   }
   function cancel(node, options, resume) {
     evalSympy("cancel", node, options, resume);
@@ -451,6 +492,7 @@ let transform = (function() {
     "STYLE" : style,
     "CALCULATE": calculate,
     "SIMPLIFY": simplify,
+    "SOLVE": solve,
     "EXPAND": expand,
     "FACTOR": factor,
     "EVAL": evaluate,
@@ -460,6 +502,8 @@ let transform = (function() {
     "MATCH": match,
     "CONCAT" : concat,
     "LITERAL": literal,
+    "VARIABLE": variable,
+    "DOMAIN": domain,
   }
   return transform;
 })();

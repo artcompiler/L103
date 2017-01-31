@@ -1,9 +1,12 @@
 /* @flow */
 window.gcexports.globalLexicon = {
+  "variable" : { "tk": 1, "name": "VARIABLE", "cls": "function", "length": 2 , "arity": 2 },
+  "domain" : { "tk": 1, "name": "DOMAIN", "cls": "function", "length": 2 , "arity": 2 },
   "concat" : { "tk": 1, "name": "CONCAT", "cls": "function", "length": 1 , "arity": 1 },
   "add" : { "tk": 1, "name": "ADD", "cls": "function", "length": 2 , "arity": 2 },
   "style" : { "tk": 1, "name": "STYLE", "cls": "function", "length": 2, "arity": 2 },
   "calculate" : { "tk": 1, "name": "CALCULATE", "cls": "function", "length": 1 , "arity": 1 },
+  "solve" : { "tk": 1, "name": "SOLVE", "cls": "function", "length": 1 , "arity": 1 },
   "simplify" : { "tk": 1, "name": "SIMPLIFY", "cls": "function", "length": 1 , "arity": 1 },
   "expand" : { "tk": 1, "name": "EXPAND", "cls": "function", "length": 1 , "arity": 1 },
   "factor" : { "tk": 1, "name": "FACTOR", "cls": "function", "length": 1 , "arity": 1 },
