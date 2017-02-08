@@ -14,6 +14,6 @@ window.gcexports.globalLexicon = {
   "match" : { "tk": 1, "name": "MATCH", "cls": "function", "length": 2 , "arity": 2 },
   "apart" : { "tk": 1, "name": "APART", "cls": "function", "length": 1 , "arity": 1 },
   "cancel" : { "tk": 1, "name": "CANCEL", "cls": "function", "length": 1 , "arity": 1 },
-  "collect" : { "tk": 1, "name": "COLLECT", "cls": "function", "length": 2 , "arity": 2 },
+  "collect" : { "tk": 1, "name": "COLLECT", "cls": "function", "length": 1 , "arity": 1 },
   "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 }
 }
