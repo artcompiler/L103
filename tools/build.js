@@ -38,6 +38,7 @@ function clean() {
 
 function compile() {
   console.log("Compiling...");
+  exec("cp ./latex-sympy/build/spokenmath.js ./src/latex-sympy.js");
   exec("babel src --out-dir lib");
 }
 

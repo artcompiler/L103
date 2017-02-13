@@ -15,5 +15,9 @@ window.gcexports.globalLexicon = {
   "apart" : { "tk": 1, "name": "APART", "cls": "function", "length": 1 , "arity": 1 },
   "cancel" : { "tk": 1, "name": "CANCEL", "cls": "function", "length": 1 , "arity": 1 },
   "collect" : { "tk": 1, "name": "COLLECT", "cls": "function", "length": 1 , "arity": 1 },
-  "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 }
+  "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
+  "val" : { "tk": 1, "name": "VAL", "cls": "function", "length": 2 , "arity": 2 },
+  "key" : { "tk": 1, "name": "KEY", "cls": "function", "length": 2 , "arity": 2 },
+  "len" : { "tk": 1, "name": "LEN", "cls": "function", "length": 1 , "arity": 1 },
+  "options" : { "tk": 1, "name": "OPTIONS", "cls": "function", "length": 0, "arity": 0 }
 }

@@ -852,10 +852,6 @@ var _rules2 = require("./rules.js");
         if (val.charAt(0) === "\\") {
           val = val.substring(1);
         }
-        if (val.indexOf(".") >= 0) {
-          var i = val.indexOf(".");
-          val = val.substring(0, i) + " point " + val.substring(i + 1);
-        }
       }
       return val;
     }
@@ -1146,6 +1142,14 @@ var _rules2 = require("./rules.js");
             str = s; // Overwrite str.
           })();
         }
+        if (str.indexOf("%IP") >= 0) {
+          (0, _assert.assert)(env.ip);
+          str = str.replace("%IP", env.ip);
+        }
+        if (str.indexOf("%FP") >= 0) {
+          (0, _assert.assert)(env.fp);
+          str = str.replace("%FP", env.fp);
+        }
         if (str.indexOf("%M") >= 0) {
           (0, _assert.assert)(env.m);
           str = str.replace("%M", env.m);
@@ -1399,13 +1403,20 @@ var _rules2 = require("./rules.js");
             op: _model.Model.VAR,
             args: [lookup(node.args[0])]
           }];
+          var env = {};
+          if (node.numberFormat === "decimal") {
+            var parts = node.args[0].split(".");
+            (0, _assert.assert)(parts.length === 2);
+            env.ip = parts[0];
+            env.fp = parts[1];
+          }
           var matches = match(patterns, node);
           if (matches.length === 0) {
             return node;
           }
           // Use first match for now.
           var template = matchedTemplate(rules, matches, 1);
-          return expand(template, args);
+          return expand(template, args, env);
         },
         binary: function binary(node) {
           var matches = match(patterns, node);
@@ -2042,10 +2053,10 @@ var Core = exports.Core = function () {
       method: "translate",
       options: options
     };
-    var evaluator = makeEvaluator(spec);
+    var evaluator = makeEvaluator(spec, resume);
     evaluator.evaluate(solution, resume);
   }
-  function makeEvaluator(spec) {
+  function makeEvaluator(spec, resume) {
     var valueNode = void 0;
     var method = spec.method;
     var value = spec.value;
@@ -2058,7 +2069,7 @@ var Core = exports.Core = function () {
       valueNode = value != undefined ? _model.Model.create(value, "spec") : undefined;
       _model.Model.popEnv();
     } catch (e) {
-      console.log(e.stack);
+      //      console.log(e.stack);
       pendingError = e;
     }
     var evaluate = function evaluate(solution, resume) {
@@ -2082,11 +2093,11 @@ var Core = exports.Core = function () {
             break;
         }
         _model.Model.popEnv();
-        resume([], result);
+        resume(null, result);
       } catch (e) {
-        console.log(e.stack);
+        //        console.log(e.stack);
         var _message = e.message;
-        resume([{
+        resume({
           result: null,
           errorCode: parseErrorCode(_message),
           message: parseMessage(_message),
@@ -2096,7 +2107,7 @@ var Core = exports.Core = function () {
           toString: function toString() {
             return this.errorCode + ": (" + this.location + ") " + this.message + "\n" + this.stack;
           }
-        }], ""); // If error, empty string.
+        }, ""); // If error, empty string.
       }
     };
     return {
@@ -4230,7 +4241,7 @@ var Model = exports.Model = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var rules = exports.rules = { "words": {}, "types": { "functionName": ["f", "g", "h", "F", "G", "H", "\\ln", "\\lg", "\\log", "\\sin", "\\cos", "\\tan", "\\csc", "\\sec", "\\cot", "\\sinh", "\\cosh", "\\tanh", "\\csch", "\\sech", "\\coth"], "numberPosNeg": ["\\type{number}", "-\\type{number}"], "numberOrLetter": ["\\type{numberPosNeg}", "\\type{variable}"], "matrix": ["\\begin{bmatrix}?&?&?\\end{bmatrix}"], "functionComposition": ["(\\type{functionName}+\\type{functionName})", "(\\type{functionName}-\\type{functionName})", "(\\type{functionName}\\cdot\\type{functionName})", "(\\frac{\\type{functionName}}{\\type{functionName}})"], "function": ["\\type{function}^{?}", "\\type{function}_{?}", "\\type{functionComposition}", "\\type{functionName}"], "functionCall": ["\\type{function}(?)", "\\type{function}[?]", "\\type{variable}(\\type{number})", "\\type{variable}(\\type{variable})", "\\type{variable}(?,?)", "\\type{variable}[\\type{number}]", "\\type{variable}[\\type{variable}]", "\\type{variable}[?,?]"], "commonFraction": ["\\frac{\\type{integer}}{2}", "\\frac{\\type{integer}}{3}", "\\frac{\\type{integer}}{4}", "\\frac{\\type{integer}}{5}", "\\frac{\\type{integer}}{6}", "\\frac{\\type{integer}}{7}", "\\frac{\\type{integer}}{8}", "\\frac{\\type{integer}}{9}", "\\frac{\\type{integer}}{10}"], "simpleExpression": ["\\type{numberOrLetter}", "\\type{commonFraction}", "\\type{function}(?)", "\\type{function}[?]", "\\type{number}", "-\\type{variable}", "\\type{variable}", "\\type{number}\\degrees", "\\type{variable}\\degrees", "\\type{variable}", "\\type{variable}\\type{variable}", "\\type{number}\\type{variable}"], "simpleFractionPart": ["-\\type{commonFraction}", "\\type{simpleExpression}", "\\type{commonFraction}"], "simpleFractionExtended": ["\\frac{\\type{simpleFractionPart}}{\\type{simpleFractionPart}}"], "simpleNumericExponent": ["\\type{number}", "\\type{commonFraction}"], "simpleExponent": ["\\type{simpleNumericExponent}", "\\type{variable}"] }, "rules": { "\\type{integer}\\div\\type{integer}": ["Rational(%1,%2)"], "-\\frac{\\type{integer}}{\\type{integer}}": ["-Rational(%1,%2)"], "\\frac{\\type{integer}}{\\type{integer}}": ["Rational(%1,%2)"], "?\\div?": ["(%1/%2)"], "\\frac{?}{?}": ["(%1)/(%2)"], "?^?": ["%1**%2"], "\\sqrt{?}": ["sqrt(%1)"], "\\sqrt[?]{?}": ["root(%2,%1)"], "-?": ["-%1"], "?\\degree": ["radians(%1)"], "\\sin{?}": ["sin(%2)"], "\\cos{?}": ["cos(%2)"], "\\tan{?}": ["tan(%2)"], "\\csc{?}": ["csc(%2)"], "\\sec{?}": ["sec(%2)"], "\\cot{?}": ["cot(%2)"], "\\sin^{-1}{?}": ["asin(%2)"], "\\cos^{-1}{?}": ["acos(%2)"], "\\tan^{-1}{?}": ["atan(%2)"], "\\csc^{-1}{?}": ["acsc(%2)"], "\\sec^{-1}{?}": ["asec(%2)"], "\\cot^{-1}{?}": ["acot(%2)"], "\\sinh^{-1}{?}": ["sinh(%2)"], "\\cosh^{-1}{?}": ["cosh(%2)"], "\\tanh^{-1}{?}": ["tanh(%2)"], "\\csch^{-1}{?}": ["csch(%2)"], "\\sech^{-1}{?}": ["sech(%2)"], "\\acoth^{-1}{?}": ["acoth(%2)"], "\\asinh^{-1}{?}": ["asinh(%2)"], "\\acosh^{-1}{?}": ["acosh(%2)"], "\\atanh^{-1}{?}": ["atanh(%2)"], "\\acsch^{-1}{?}": ["acsch(%2)"], "\\asech^{-1}{?}": ["asech(%2)"], "\\type{mixedFraction}": ["(%1+%2)"], "\\type{integer}+\\frac{\\type{integer}}{\\type{integer}}": ["(%1+%2)"], "\\type{scientific}": ["(%1*%2)"], "\\type{fraction}": ["(%1/%2)"], "\\type{integer}": ["%1"], "\\type{decimal}": ["%1"], "\\type{number}": ["%1"], "?(?)": ["(%1*%2)"], "(?)?": ["(%1*%2)"], "(?)(?)": ["(%1*%2)"], "?+?": ["(%1+%2)"], "?-?": ["(%1-%2)"], "?*?": ["(%1*%2)"], "?\\cdot?": ["(%1*%2)"], "?\\cdotp?": ["(%1*%2)"], "?<?": ["Lt(%1,%2)"], "?<=?": ["Le(%1,%2)"], "?>?": ["Gt(%1,%2)"], "?>=?": ["Ge(%1,%2)"], "?=?": ["Eq(%1,%2)"], "?\\ne?": ["Ne(%1,%2)"], "?\\neq?": ["Ne(%1,%2)"], "?^? ?": ["(%1*%2)"], "? ?^?": ["(%1*%2)"], "(\\type{simpleExpression})": ["%1"], "[?]": ["(%1)"], "{?} ?": ["(%1*%2)"], "(?)": ["(%1)"], "{?}": ["(%1)"], "? ?": ["(%1*%2)"], "?": ["%1"] } };
+var rules = exports.rules = { "words": {}, "types": { "functionName": ["f", "g", "h", "F", "G", "H", "\\ln", "\\lg", "\\log", "\\sin", "\\cos", "\\tan", "\\csc", "\\sec", "\\cot", "\\sinh", "\\cosh", "\\tanh", "\\csch", "\\sech", "\\coth"], "numberPosNeg": ["\\type{number}", "-\\type{number}"], "numberOrLetter": ["\\type{numberPosNeg}", "\\type{variable}"], "matrix": ["\\begin{bmatrix}?&?&?\\end{bmatrix}"], "functionComposition": ["(\\type{functionName}+\\type{functionName})", "(\\type{functionName}-\\type{functionName})", "(\\type{functionName}\\cdot\\type{functionName})", "(\\frac{\\type{functionName}}{\\type{functionName}})"], "function": ["\\type{function}^{?}", "\\type{function}_{?}", "\\type{functionComposition}", "\\type{functionName}"], "functionCall": ["\\type{function}(?)", "\\type{function}[?]", "\\type{variable}(\\type{number})", "\\type{variable}(\\type{variable})", "\\type{variable}(?,?)", "\\type{variable}[\\type{number}]", "\\type{variable}[\\type{variable}]", "\\type{variable}[?,?]"], "commonFraction": ["\\frac{\\type{integer}}{2}", "\\frac{\\type{integer}}{3}", "\\frac{\\type{integer}}{4}", "\\frac{\\type{integer}}{5}", "\\frac{\\type{integer}}{6}", "\\frac{\\type{integer}}{7}", "\\frac{\\type{integer}}{8}", "\\frac{\\type{integer}}{9}", "\\frac{\\type{integer}}{10}"], "simpleExpression": ["\\type{numberOrLetter}", "\\type{commonFraction}", "\\type{function}(?)", "\\type{function}[?]", "\\type{number}", "-\\type{variable}", "\\type{variable}", "\\type{number}\\degrees", "\\type{variable}\\degrees", "\\type{variable}", "\\type{variable}\\type{variable}", "\\type{number}\\type{variable}"], "simpleFractionPart": ["-\\type{commonFraction}", "\\type{simpleExpression}", "\\type{commonFraction}"], "simpleFractionExtended": ["\\frac{\\type{simpleFractionPart}}{\\type{simpleFractionPart}}"], "simpleNumericExponent": ["\\type{number}", "\\type{commonFraction}"], "simpleExponent": ["\\type{simpleNumericExponent}", "\\type{variable}"] }, "rules": { "\\frac{?}{?}": ["(%1)/(%2)"], "?^?": ["%1**%2"], "\\sqrt{?}": ["sqrt(%1)"], "\\sqrt[?]{?}": ["root(%2,%1)"], "-?": ["-%1"], "?\\degree": ["radians(%1)"], "\\sin{?}": ["sin(%2)"], "\\cos{?}": ["cos(%2)"], "\\tan{?}": ["tan(%2)"], "\\csc{?}": ["csc(%2)"], "\\sec{?}": ["sec(%2)"], "\\cot{?}": ["cot(%2)"], "\\sin^{-1}{?}": ["asin(%2)"], "\\cos^{-1}{?}": ["acos(%2)"], "\\tan^{-1}{?}": ["atan(%2)"], "\\csc^{-1}{?}": ["acsc(%2)"], "\\sec^{-1}{?}": ["asec(%2)"], "\\cot^{-1}{?}": ["acot(%2)"], "\\sinh^{-1}{?}": ["sinh(%2)"], "\\cosh^{-1}{?}": ["cosh(%2)"], "\\tanh^{-1}{?}": ["tanh(%2)"], "\\csch^{-1}{?}": ["csch(%2)"], "\\sech^{-1}{?}": ["sech(%2)"], "\\acoth^{-1}{?}": ["acoth(%2)"], "\\asinh^{-1}{?}": ["asinh(%2)"], "\\acosh^{-1}{?}": ["acosh(%2)"], "\\atanh^{-1}{?}": ["atanh(%2)"], "\\acsch^{-1}{?}": ["acsch(%2)"], "\\asech^{-1}{?}": ["asech(%2)"], "\\type{mixedFraction}": ["(%1+%2)"], "\\type{integer}+\\frac{\\type{integer}}{\\type{integer}}": ["(%1+%2)"], "\\type{scientific}": ["(%1*%2)"], "\\type{fraction}": ["(%1/%2)"], "\\type{integer}": ["%1"], "\\type{decimal}": ["%IP.%FP"], "\\type{number}": ["%1"], "?(?)": ["(%1*%2)"], "(?)?": ["(%1*%2)"], "(?)(?)": ["(%1*%2)"], "?+?": ["(%1+%2)"], "?-?": ["(%1-%2)"], "?*?": ["(%1*%2)"], "?\\cdot?": ["(%1*%2)"], "?\\cdotp?": ["(%1*%2)"], "?<?": ["Lt(%1,%2)"], "?<=?": ["Le(%1,%2)"], "?>?": ["Gt(%1,%2)"], "?>=?": ["Ge(%1,%2)"], "?=?": ["Eq(%1,%2)"], "?\\ne?": ["Ne(%1,%2)"], "?\\neq?": ["Ne(%1,%2)"], "?^? ?": ["(%1*%2)"], "? ?^?": ["(%1*%2)"], "(\\type{simpleExpression})": ["%1"], "[?]": ["(%1)"], "{?} ?": ["(%1*%2)"], "(?)": ["(%1)"], "{?}": ["(%1)"], "? ?": ["(%1*%2)"], "?": ["%1"] } };
 },{}],7:[function(require,module,exports){
 "use strict";
 

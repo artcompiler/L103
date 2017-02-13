@@ -1,19 +1,16 @@
 /* Copyright (c) 2016, Art Compiler LLC */
 /* @flow */
-
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
 import * as mjAPI from "mathjax-node/lib/mj-single.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
 import {Core} from "./latex-sympy.js";
-
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
 messages[1002] = "Invalid tag in node with Node ID %1.";
 messages[1003] = "No async callback provided.";
 messages[1004] = "No visitor method defined for '%1'.";
-
 function getGCHost() {
   if (global.port === 5121) {
     return "localhost";
@@ -45,7 +42,6 @@ function get(path, resume) {
     });
   });
 }
-
 function getSympy(path, data, resume) {
   path = path.trim().replace(/ /g, "+");
   var encodedData = JSON.stringify(data);
@@ -100,12 +96,11 @@ function mapList(lst, fn, resume) {
     resume([], []);
   }
 }
-
 let transform = (function() {
   let nodePool;
-  function transform(pool, resume) {
+  function transform(pool, data, resume) {
     nodePool = pool;
-    return visit(pool.root, {}, resume);
+    return visit(pool.root, data, resume);
   }
   function error(str, nid) {
     return {
@@ -185,6 +180,43 @@ let transform = (function() {
     }
     return old;
   }
+  function key(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let key = val1;
+      if (false) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        let obj = val2;
+        if (false) {
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), Object.keys(obj)[key]);
+      });
+    });
+  }
+  function val(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let key = val1;
+      visit(node.elts[1], options, function (err2, val2) {
+        let obj = val2;
+        console.log("val() key=" + key + " obj=" + JSON.stringify(obj));
+        resume([].concat(err1).concat(err2), obj[key]);
+      });
+    });
+  }
+  function len(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let obj = val1;
+      if (false) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      resume([].concat(err1), obj.length);
+    });
+  }
+  function options(node, options, resume) {
+    resume([], options);
+  }
   function variable(node, options, resume) {
     visit(node.elts[0], options, (err, val) => {
       option(options, "variable", val);
@@ -231,6 +263,7 @@ let transform = (function() {
       if (err && err.length) {
         errs = errs.concat(err);
       }
+      console.log("evalSympy() lst=" + lst);
       mapList(lst, (v, resume) => {
         MathCore.evaluateVerbose({
           method: "variables",
@@ -504,6 +537,10 @@ let transform = (function() {
     "LITERAL": literal,
     "VARIABLE": variable,
     "DOMAIN": domain,
+    "VAL" : val,
+    "KEY" : key,
+    "LEN" : len,
+    "OPTIONS" : options,
   }
   return transform;
 })();
@@ -581,11 +618,11 @@ let render = (function() {
   return render;
 })();
 export let compiler = (function () {
-  exports.compile = function compile(pool, resume) {
+  exports.compile = function compile(pool, data, resume) {
     // Compiler takes an AST in the form of a node pool and transforms it into
     // an object to be rendered on the client by the viewer for this language.
     try {
-      transform(pool, function (err, val) {
+      transform(pool, data, function (err, val) {
         if (err && err.length) {
           resume([].concat(err), val);
         } else {
