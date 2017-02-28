@@ -98,9 +98,14 @@ function mapList(lst, fn, resume) {
 }
 let transform = (function() {
   let nodePool;
-  function transform(pool, data, resume) {
-    nodePool = pool;
-    return visit(pool.root, data, resume);
+  let version;
+  function getVersion(pool) {
+    return pool.version ? +pool.version : 0;
+  }
+  function transform(code, data, resume) {
+    nodePool = code;
+    version = getVersion(code);
+    return visit(code.root, data, resume);
   }
   function error(str, nid) {
     return {
@@ -200,7 +205,6 @@ let transform = (function() {
       let key = val1;
       visit(node.elts[1], options, function (err2, val2) {
         let obj = val2;
-        console.log("val() key=" + key + " obj=" + JSON.stringify(obj));
         resume([].concat(err1).concat(err2), obj[key]);
       });
     });
@@ -214,12 +218,17 @@ let transform = (function() {
       resume([].concat(err1), obj.length);
     });
   }
-  function options(node, options, resume) {
-    resume([], options);
-  }
   function variable(node, options, resume) {
     visit(node.elts[0], options, (err, val) => {
       option(options, "variable", val);
+      visit(node.elts[1], options, (err, val) => {
+        resume(err, val);
+      });
+    });
+  }
+  function precision(node, options, resume) {
+    visit(node.elts[0], options, (err, val) => {
+      option(options, "precision", val);
       visit(node.elts[1], options, (err, val) => {
         resume(err, val);
       });
@@ -258,104 +267,105 @@ let transform = (function() {
   }
   function evalSympy(name, node, options, resume) {
     var errs = [];
-    visit(node.elts[0], options, function (err, val) {
-      let lst = [].concat(val);
+    var result;
+    visit(node.elts[0], options, function (err, val0) {
+      if (typeof val0 !== "string") {
+        result = val0;
+        val0 = val0.value;
+      } else {
+        result = {
+          value: val0,
+          steps: [],
+        }
+      }
       if (err && err.length) {
         errs = errs.concat(err);
       }
-      console.log("evalSympy() lst=" + lst);
-      mapList(lst, (v, resume) => {
-        MathCore.evaluateVerbose({
-          method: "variables",
-          options: {},
-        }, v, function (err, val) {
-          if (err && err.length) {
-            console.log("ERROR: " + JSON.stringify(err));
-            errs = errs.concat(error(err, node.elts[0]));
-            resume(errs, []);
-          } else {
-            let syms = val.result;
-            let index;
-            if ((index = syms.indexOf("\\pi")) >= 0) {
-              syms = (function(syms) {
-                var rest = syms.slice(index + 1);
-                syms.length = index;
-                return syms.concat(rest);
-              })(syms);
-            }
-            let symbols = "";
-            let params = "";
-            if (syms && syms.length) {
-              // Construct a list a symbols and parameters.
-              syms.forEach(s => {
-                if (symbols) {
-                  symbols += " ";
-                  params += ",";
-                }
-                symbols += s;
-                params += s;
-              });
-              symbols = "symbols('" + symbols + "')";
-              params = "(" + params + ")";
-            }
-            let opts = "";
-            Object.keys(options).forEach(k => {
-              switch (k) {
-              case "variable":
-                opts += "," + options[k];
-                break;
-              case "domain":
-                opts += "," + k + "=" + options[k];
-                break;
-              default:
-                break;
-              }
-            });
-            texToSympy(v, (err, v) => {
-              if (err && err.length) {
-                errs = errs.concat(error(err, node.elts[0]));
-                resume(errs, []);
-              } else {
-                let args = v + opts;
-                let obj = {
-                  func: "eval",
-                  expr: "(lambda" + params + ":" + name +
-                    "(" + args + "))(" + symbols + ")",
-                };
-                console.log("evalSympy() obj=" + JSON.stringify(obj));
-                getSympy("/api/v1/eval", obj, function (err, data) {
-                  if (err && err.length) {
-                    errs = errs.concat(error(err, node.elts[0]));
-                  }
-                  resume(errs, data);
-                });
-              }
-            });
+      MathCore.evaluateVerbose({
+        method: "variables",
+        options: {},
+      }, val0, function (err, val) {
+        if (err && err.length) {
+          console.log("ERROR: " + JSON.stringify(err));
+          errs = errs.concat(error(err, node.elts[0]));
+          resume(errs, []);
+        } else {
+          let syms = val.result;
+          let index;
+          if ((index = syms.indexOf("\\pi")) >= 0) {
+            syms = (function(syms) {
+              var rest = syms.slice(index + 1);
+              syms.length = index;
+              return syms.concat(rest);
+            })(syms);
           }
-        });
-      }, (err, val) => {
-        if (options.steps === undefined) {
-          options.steps = [];
+          let symbols = "";
+          let params = "";
+          if (syms && syms.length) {
+            // Construct a list a symbols and parameters.
+            syms.forEach(s => {
+              if (symbols) {
+                symbols += " ";
+                params += ",";
+              }
+              symbols += s;
+              params += s;
+            });
+            symbols = "symbols('" + symbols + "')";
+            params = "(" + params + ")";
+          }
+          let opts = "";
+          Object.keys(options).forEach(k => {
+            switch (k) {
+            case "variable":
+            case "precision":
+              opts += "," + options[k];
+              break;
+            case "domain":
+              opts += "," + k + "=" + options[k];
+              break;
+            default:
+              break;
+            }
+          });
+          texToSympy(val0, (err, v) => {
+            if (err && err.length) {
+              errs = errs.concat(error(err, node.elts[0]));
+              resume(errs, []);
+            } else {
+              let args = v + opts;
+              let obj = {
+                func: "eval",
+                expr: "(lambda" + params + ":" + name +
+                  "(" + args + "))(" + symbols + ")",
+              };
+              getSympy("/api/v1/eval", obj, function (err, data) {
+                if (err && err.length) {
+                  errs = errs.concat(error(err, node.elts[0]));
+                }
+                result.value = data;
+                result.steps.push({
+                  name: name,
+                  val: data,
+                });
+                resume(errs, result);
+              });
+            }
+          });
         }
-        options.steps.push({
-          name: name,
-          val: val
-        });
-        resume(err, val);
       });
     });
   }
   function literal(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      if (options.steps === undefined) {
-        options.steps = [];
-      }
-      options.steps.push({
-        name: "literal",
+      let obj = {
+        value: val,
+        steps: [{
+        name: "seed",
         val: val,
-      });
-      console.log("literal() val=" + val);
-      resume([], val);
+        }],
+      };
+      resume([], obj);
     });
   }
   function solve(node, options, resume) {
@@ -381,6 +391,15 @@ let transform = (function() {
   }
   function simplify(node, options, resume) {
     evalSympy("simplify", node, options, resume);
+  }
+  function integrate(node, options, resume) {
+    evalSympy("integrate", node, options, resume);
+  }
+  function diff(node, options, resume) {
+    evalSympy("diff", node, options, resume);
+  }
+  function decimal(node, options, resume) {
+    evalSympy("N", node, options, resume);
   }
   function match(node, options, resume) {
     var errs = [];
@@ -434,6 +453,11 @@ let transform = (function() {
       resume(err1, str);
     });
   }
+  function paren(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(err1, val1);
+    });
+  }
   function list(node, options, resume) {
     if (node.elts && node.elts.length > 1) {
       visit(node.elts[0], options, function (err1, val1) {
@@ -455,6 +479,56 @@ let transform = (function() {
     } else {
       resume([], []);
     }
+  }
+  function data(node, options, resume) {
+    resume([], options.data);
+  }
+  function arg(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let key = val1;
+      if (false) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      resume([].concat(err1), options.args[key]);
+    });
+  }
+  function args(node, options, resume) {
+    resume([], options.args);
+  }
+  function lambda(node, options, resume) {
+    // Return a function value.
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function apply(node, options, resume) {
+    // Apply a function to arguments.
+    visit(node.elts[1], options, function (err1, val1) {
+      // args
+      options.args = [val1];
+      visit(node.elts[0], options, function (err0, val0) {
+        // fn
+        resume([].concat(err1).concat(err0), val0);
+      });
+    });
+  }
+  function map(node, options, resume) {
+    // Apply a function to arguments.
+    let errs = [];
+    let vals = [];
+    visit(node.elts[1], options, function (err1, val1) {
+      // args
+      mapList(val1, (val, resume) => {
+        options.args = [val];
+        visit(node.elts[0], options, (err0, val0) => {
+          resume([].concat(err0), val0);
+        });
+      }, (err, val) => {
+        resume(err, val);
+      });
+    });
   }
   function binding(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
@@ -507,8 +581,7 @@ let transform = (function() {
       options = {};
     }
     visit(node.elts[0], options, function (err, val) {
-      val.steps = options.steps;
-      resume(err, options.steps);
+      resume(err, val);
     });
   }
   let table = {
@@ -530,17 +603,26 @@ let transform = (function() {
     "FACTOR": factor,
     "EVAL": evaluate,
     "CANCEL": cancel,
+    "INTEGRATE": integrate,
+    "DIFF": diff,
     "COLLECT": collect,
     "APART": apart,
     "MATCH": match,
     "CONCAT" : concat,
     "LITERAL": literal,
     "VARIABLE": variable,
+    "PRECISION": precision,
     "DOMAIN": domain,
     "VAL" : val,
     "KEY" : key,
     "LEN" : len,
-    "OPTIONS" : options,
+    "ARG" : arg,
+    "DATA" : data,
+    "LAMBDA" : lambda,
+    "PAREN" : paren,
+    "APPLY" : apply,
+    "MAP" : map,
+    "DECIMAL": decimal,
   }
   return transform;
 })();
@@ -596,20 +678,21 @@ let render = (function() {
     var vals = [];
     let lst = [].concat(val);
     mapList(lst, (lst, resume) => {
-      let name = lst.name;
-      mapList(lst.val, (v, resume) => {
-        tex2SVG(v, (err, svg) => {
+      mapList(lst.steps, (v, resume) => {
+        tex2SVG(v.val, (err, svg) => {
           if (err && err.length) {
             errs = errs.concat(err);
           }
           resume(errs, {
-            val: v,
+            name: v.name,
+            val: v.val,
             svg: escapeXML(svg),
           });
         });
       }, (err, val) => {
+        let name = lst.name;
         resume(err, {
-          name: name,
+          name: val.name,
           val: val,
         });
       });
@@ -622,7 +705,10 @@ export let compiler = (function () {
     // Compiler takes an AST in the form of a node pool and transforms it into
     // an object to be rendered on the client by the viewer for this language.
     try {
-      transform(pool, data, function (err, val) {
+      let options = {
+        data: data
+      };
+      transform(pool, options, function (err, val) {
         if (err && err.length) {
           resume([].concat(err), val);
         } else {

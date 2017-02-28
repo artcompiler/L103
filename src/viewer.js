@@ -50,9 +50,10 @@ window.gcexports.viewer = (function () {
       let len = data.length;
       data.forEach((data, i) => {
         let innerElts = [];
-        let name = data.name;
+        let name;
         data.val.forEach((d, i) => {
           var style = {};
+          name = d.name;
           if (d.style) {
             Object.keys(d.style).forEach(function (k) {
               style[k] = d.style[k];
@@ -64,10 +65,14 @@ window.gcexports.viewer = (function () {
           }
           let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
           let {width, height} = getSize(val);
-          innerElts.push(<div key={i} x="0" y={y} style={style}><img width={width} height={height} src={src}/></div>);
+          let n = 2*i;
+          innerElts.push(<div key={n} style={{
+            fontSize: "12px",
+            color: "rgba(8, 149, 194, 0.5)",
+          }}>{name.toUpperCase()}</div>);
+          innerElts.push(<div key={n+1} x="0" y={y} style={style}><img width={width} height={height} src={src}/></div>);
           y += height + 10;
         });
-        elts.push(<h6>{name.toUpperCase()}</h6>);
         elts.push(<div key={i}>{innerElts}<br/></div>);
       });
       return (

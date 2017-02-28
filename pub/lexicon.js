@@ -1,5 +1,6 @@
 /* @flow */
 window.gcexports.globalLexicon = {
+  "precision" : { "tk": 1, "name": "PRECISION", "cls": "function", "length": 2 , "arity": 2 },
   "variable" : { "tk": 1, "name": "VARIABLE", "cls": "function", "length": 2 , "arity": 2 },
   "domain" : { "tk": 1, "name": "DOMAIN", "cls": "function", "length": 2 , "arity": 2 },
   "concat" : { "tk": 1, "name": "CONCAT", "cls": "function", "length": 1 , "arity": 1 },
@@ -15,9 +16,16 @@ window.gcexports.globalLexicon = {
   "apart" : { "tk": 1, "name": "APART", "cls": "function", "length": 1 , "arity": 1 },
   "cancel" : { "tk": 1, "name": "CANCEL", "cls": "function", "length": 1 , "arity": 1 },
   "collect" : { "tk": 1, "name": "COLLECT", "cls": "function", "length": 1 , "arity": 1 },
+  "integrate" : { "tk": 1, "name": "INTEGRATE", "cls": "function", "length": 1 , "arity": 1 },
+  "diff" : { "tk": 1, "name": "DIFF", "cls": "function", "length": 1 , "arity": 1 },
+  "decimal" : { "tk": 1, "name": "DECIMAL", "cls": "function", "length": 1 , "arity": 1 },
   "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
+  "seed" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
   "val" : { "tk": 1, "name": "VAL", "cls": "function", "length": 2 , "arity": 2 },
   "key" : { "tk": 1, "name": "KEY", "cls": "function", "length": 2 , "arity": 2 },
   "len" : { "tk": 1, "name": "LEN", "cls": "function", "length": 1 , "arity": 1 },
-  "options" : { "tk": 1, "name": "OPTIONS", "cls": "function", "length": 0, "arity": 0 }
+  "map" : { "tk": 1, "name": "MAP", "cls": "function", "length": 2, "arity": 2 },
+  "apply" : { "tk": 1, "name": "APPLY", "cls": "function", "length": 2, "arity": 2 },
+  "data" : { "tk": 1, "name": "DATA", "cls": "function", "length": 0, "arity": 0 },
+  "arg" : { "tk": 1, "name": "ARG", "cls": "function", "length": 1, "arity": 1 }
 }
