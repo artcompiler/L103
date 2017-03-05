@@ -43,9 +43,7 @@ app.get('/compile', function(req, res) {
           error: err,
         });
       } else {
-        res.send({
-          data: val,
-        });
+        res.send(val);
       }
     });
   });
