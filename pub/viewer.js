@@ -187,6 +187,7 @@ window.gcexports.viewer = function () {
         props = this.props;
       }
       var data = props.data ? props.data : [];
+      var elts = [];
       var y = 0;
       var len = data.length;
       data.forEach(function (data, i) {

@@ -50,6 +50,7 @@ window.gcexports.viewer = (function () {
         props = this.props;
       }
       let data = props.data ? props.data : [];
+      var elts = [];
       let y = 0;
       let len = data.length;
       data.forEach((data, i) => {
