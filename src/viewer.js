@@ -43,10 +43,14 @@ window.gcexports.viewer = (function () {
     render: function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
-      var props = this.props;
-      var data = props.data ? props.data : [];
-      var elts = [];
-      var y = 0;
+      let props;
+      if (this.props.data.data) {
+        props = this.props.data;
+      } else {
+        props = this.props;
+      }
+      let data = props.data ? props.data : [];
+      let y = 0;
       let len = data.length;
       data.forEach((data, i) => {
         let innerElts = [];
