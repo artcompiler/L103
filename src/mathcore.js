@@ -10621,8 +10621,6 @@ var MathCore = function() {
         solutionNode.env = env;
         outerResult.model = solutionNode
       }
-      console.log("makeEvaluator.evaluate() solution=" + solution);
-      console.log("makeEvaluator.evaluate() solutionNode=" + JSON.stringify(solutionNode));
       Assert.setLocation("spec");
       var result;
       switch(method) {

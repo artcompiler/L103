@@ -180,13 +180,8 @@ window.gcexports.viewer = function () {
     render: function render() {
       // If you have nested components, make sure you send the props down to the
       // owned components.
-      var props = void 0;
-      if (this.props.data.data) {
-        props = this.props.data;
-      } else {
-        props = this.props;
-      }
-      var data = props.data ? props.data : [];
+      var props = this.props;
+      var data = props.obj ? props.obj : [];
       var elts = [];
       var y = 0;
       var len = data.length;
