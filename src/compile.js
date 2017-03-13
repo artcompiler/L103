@@ -480,7 +480,7 @@ let transform = (function() {
       resume([], []);
     }
   }
-  function data(node, options, resume) {
+  function inData(node, options, resume) {
     resume([], options.data);
   }
   function arg(node, options, resume) {
@@ -617,7 +617,7 @@ let transform = (function() {
     "KEY" : key,
     "LEN" : len,
     "ARG" : arg,
-    "DATA" : data,
+    "IN" : inData,
     "LAMBDA" : lambda,
     "PAREN" : paren,
     "APPLY" : apply,
