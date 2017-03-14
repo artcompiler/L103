@@ -48,6 +48,10 @@ window.gcexports.viewer = (function () {
       var elts = [];
       let y = 0;
       let len = data.length;
+      if (!(data instanceof Array)) {
+        // Not ready yet.
+        return <div/>;
+      }
       data.forEach((data, i) => {
         let innerElts = [];
         let name;

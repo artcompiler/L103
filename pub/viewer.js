@@ -185,6 +185,10 @@ window.gcexports.viewer = function () {
       var elts = [];
       var y = 0;
       var len = data.length;
+      if (!(data instanceof Array)) {
+        // Not ready yet.
+        return React.createElement("div", null);
+      }
       data.forEach(function (data, i) {
         var innerElts = [];
         var name = void 0;
