@@ -617,6 +617,7 @@ let transform = (function() {
     "KEY" : key,
     "LEN" : len,
     "ARG" : arg,
+    "DATA" : inData,
     "IN" : inData,
     "LAMBDA" : lambda,
     "PAREN" : paren,
