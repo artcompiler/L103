@@ -177,6 +177,36 @@ let transform = (function() {
       });
     });
   }
+  function mul(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      val1 = +val1;
+      if (isNaN(val1)) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        val2 = +val2;
+        if (isNaN(val2)) {
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), val1 * val2);
+      });
+    });
+  }
+  function pow(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      val1 = +val1;
+      if (isNaN(val1)) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        val2 = +val2;
+        if (isNaN(val2)) {
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), Math.pow(val1,val2));
+      });
+    });
+  }
   function option(options, id, val) {
     // Get or set an option on a node.
     var old = options[id];
@@ -595,6 +625,8 @@ let transform = (function() {
     "RECORD": record,
     "BINDING": binding,
     "ADD" : add,
+    "MUL" : mul,
+    "POW" : pow,
     "STYLE" : style,
     "CALCULATE": calculate,
     "SIMPLIFY": simplify,
