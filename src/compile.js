@@ -475,8 +475,14 @@ let transform = (function() {
       let str = "";
       if (val1 instanceof Array) {
         val1.forEach(v => {
-          str += v;
+          if (v.value) {
+            str += v.value;
+          } else {
+            str += v;
+          }
         });
+      } else if (val1.value) {
+        str = val1.value.toString();
       } else {
         str = val1.toString();
       }
