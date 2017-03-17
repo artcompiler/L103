@@ -390,12 +390,25 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       let obj = {
         value: val,
+        seed: val,
         steps: [{
-        name: "seed",
-        val: val,
+          name: "seed",
+          val: val,
         }],
       };
       resume([], obj);
+    });
+  }
+  function stimulus(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      val.stimulus = val.value;
+      resume([], val);
+    });
+  }
+  function solution(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      val.solution = val.value;
+      resume([], val);
     });
   }
   function solve(node, options, resume) {
@@ -648,6 +661,8 @@ let transform = (function() {
     "MATCH": match,
     "CONCAT" : concat,
     "LITERAL": literal,
+    "STIMULUS": stimulus,
+    "SOLUTION": solution,
     "VARIABLE": variable,
     "PRECISION": precision,
     "DOMAIN": domain,
@@ -716,8 +731,27 @@ let render = (function() {
     var errs = [];
     var vals = [];
     let lst = [].concat(val);
-    mapList(lst, (lst, resume) => {
-      mapList(lst.steps, (v, resume) => {
+    mapList(lst, (v, resume) => {
+      let lst = [];
+      if (v.seed) {
+        lst.push({
+          name: "seed",
+          val: v.seed
+        });
+      }
+      if (v.stimulus) {
+        lst.push({
+          name: "stimulus",
+          val: v.stimulus
+        });
+      }
+      if (v.solution) {
+        lst.push({
+          name: "solution",
+          val: v.solution
+        });
+      }
+      mapList(lst, (v, resume) => {
         tex2SVG(v.val, (err, svg) => {
           if (err && err.length) {
             errs = errs.concat(err);

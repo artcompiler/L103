@@ -23,6 +23,8 @@ window.gcexports.globalLexicon = {
   "decimal" : { "tk": 1, "name": "DECIMAL", "cls": "function", "length": 1 , "arity": 1 },
   "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
   "seed" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
+  "stimulus" : { "tk": 1, "name": "STIMULUS", "cls": "function", "length": 1 , "arity": 1 },
+  "solution" : { "tk": 1, "name": "SOLUTION", "cls": "function", "length": 1 , "arity": 1 },
   "val" : { "tk": 1, "name": "VAL", "cls": "function", "length": 2 , "arity": 2 },
   "key" : { "tk": 1, "name": "KEY", "cls": "function", "length": 2 , "arity": 2 },
   "len" : { "tk": 1, "name": "LEN", "cls": "function", "length": 1 , "arity": 1 },
