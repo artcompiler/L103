@@ -444,6 +444,29 @@ let transform = (function() {
   function decimal(node, options, resume) {
     evalSympy("N", node, options, resume);
   }
+  function params(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        val2.params = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function title(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        val2.title = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function gen(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      resume([].concat(err), {
+        gen: val
+      });
+    });
+  }
   function match(node, options, resume) {
     var errs = [];
     visit(node.elts[1], options, function (err, val) {
@@ -530,6 +553,7 @@ let transform = (function() {
     }
   }
   function inData(node, options, resume) {
+    console.log("inData() data=" + JSON.stringify(options.data));
     resume([], options.data);
   }
   function arg(node, options, resume) {
@@ -677,6 +701,9 @@ let transform = (function() {
     "APPLY" : apply,
     "MAP" : map,
     "DECIMAL": decimal,
+    "GEN" : gen,
+    "TITLE" : title,
+    "PARAMS" : params,
   }
   return transform;
 })();
@@ -727,10 +754,12 @@ let render = (function() {
     });
   }
   function render(val, resume) {
+    let params = val.params;
+    let title = val.title;
     // Do some rendering here.
     var errs = [];
     var vals = [];
-    let lst = [].concat(val);
+    let lst = [].concat(val.gen);
     mapList(lst, (v, resume) => {
       let lst = [];
       if (v.seed) {
@@ -769,7 +798,13 @@ let render = (function() {
           val: val,
         });
       });
-    }, resume);
+    }, (err, val) => {
+      resume([], {
+        data: val,
+        params: params,
+        title: title,
+      });
+    });
   }
   return render;
 })();

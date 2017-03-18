@@ -31,5 +31,8 @@ window.gcexports.globalLexicon = {
   "map" : { "tk": 1, "name": "MAP", "cls": "function", "length": 2, "arity": 2 },
   "apply" : { "tk": 1, "name": "APPLY", "cls": "function", "length": 2, "arity": 2 },
   "in" : { "tk": 1, "name": "IN", "cls": "function", "length": 0, "arity": 0 },
-  "arg" : { "tk": 1, "name": "ARG", "cls": "function", "length": 1, "arity": 1 }
+  "arg" : { "tk": 1, "name": "ARG", "cls": "function", "length": 1, "arity": 1 },
+  "gen" : { "tk": 1, "name": "GEN", "cls": "function", "length": 1 , "arity": 1 },
+  "title" : { "tk": 1, "name": "TITLE", "cls": "function", "length": 2 , "arity": 2 },
+  "params" : { "tk": 1, "name": "PARAMS", "cls": "function", "length": 2 , "arity": 2 }
 }
