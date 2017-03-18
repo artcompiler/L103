@@ -553,7 +553,6 @@ let transform = (function() {
     }
   }
   function inData(node, options, resume) {
-    console.log("inData() data=" + JSON.stringify(options.data));
     resume([], options.data);
   }
   function arg(node, options, resume) {
@@ -612,7 +611,11 @@ let transform = (function() {
   }
   function record(node, options, resume) {
     if (node.elts && node.elts.length > 1) {
-      visit(node.elts.pop(), options, function (err1, val1) {
+      visit(node.elts[0], options, function (err1, val1) {
+        node = {
+          tag: "RECORD",
+          elts: node.elts.slice(1),
+        };
         record(node, options, function (err2, val2) {
           val2[val1.key] = val1.val;
           resume([].concat(err1).concat(err2), val2);
