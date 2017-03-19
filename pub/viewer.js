@@ -675,11 +675,9 @@ window.gcexports.viewer = function () {
       }, {
         "type": "row",
         "args": [{
+          "id": "math",
           "type": "twelveColumns",
-          "args": [],
-          "attrs": {
-            id: "math"
-          }
+          "args": []
         }]
       }]
     }],
@@ -706,8 +704,7 @@ window.gcexports.viewer = function () {
         React.createElement(
           "div",
           { className: "container" },
-          elts,
-          React.createElement(ProblemViewer, props)
+          elts
         )
       );
     }

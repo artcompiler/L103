@@ -534,12 +534,10 @@ window.gcexports.viewer = (function () {
             "type": "row",
             "args": [
               {
+                "id": "math",
                 "type": "twelveColumns",
                 "args": [
                 ],
-                "attrs": {
-                  id: "math",
-                },
               }
             ],
           }]
@@ -566,7 +564,6 @@ window.gcexports.viewer = (function () {
         <div className="section">
           <div className="container">
             {elts}
-            <ProblemViewer {...props}/>
           </div>
         </div>
       );
