@@ -111,7 +111,8 @@ window.gcexports.viewer = (function () {
   let codeID;
   function update(vals) {
     dispatcher.dispatch({
-      data: vals
+      data: vals,
+      recompileCode: true,
     });
   }
   function render(nodes, props) {
