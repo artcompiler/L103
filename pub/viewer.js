@@ -155,7 +155,9 @@ window.gcexports.viewer = function () {
   var ProblemViewer = React.createClass({
     displayName: "ProblemViewer",
 
-    componentDidMount: function componentDidMount() {},
+    componentDidUpdate: function componentDidUpdate() {
+      var props = this.props;
+    },
     render: function render() {
       // If you have nested components, make sure you send the props down to the
       // owned components.
@@ -262,9 +264,7 @@ window.gcexports.viewer = function () {
   var codeID = void 0;
   function update(vals) {
     dispatcher.dispatch({
-      data: {
-        vals: vals
-      }
+      data: vals
     });
   }
   function _render(nodes, props) {
@@ -416,8 +416,12 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "twelveColumns":
-          if (n.id === "main") {
-            elts.push(React.createElement(ProblemViewer, props));
+          if (n.id === "math") {
+            elts.push(React.createElement(
+              "div",
+              _extends({ className: "twelve columns", key: i, style: n.style }, n.attrs),
+              React.createElement(ProblemViewer, props)
+            ));
           } else {
             elts.push(React.createElement(
               "div",
@@ -673,7 +677,7 @@ window.gcexports.viewer = function () {
           "type": "twelveColumns",
           "args": [],
           "attrs": {
-            id: "main"
+            id: "math"
           }
         }]
       }]

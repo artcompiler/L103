@@ -14,7 +14,8 @@ window.gcexports.viewer = (function () {
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
   var ProblemViewer = React.createClass({
-    componentDidMount: function() {
+    componentDidUpdate: function() {
+      let props = this.props;
     },
     render: function () {
       // If you have nested components, make sure you send the props down to the
@@ -110,9 +111,7 @@ window.gcexports.viewer = (function () {
   let codeID;
   function update(vals) {
     dispatcher.dispatch({
-      data: {
-        vals: vals,
-      }
+      data: vals
     });
   }
   function render(nodes, props) {
@@ -264,13 +263,15 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "twelveColumns":
-        if (n.id === "main") {
+        if (n.id === "math") {
           elts.push(
-            <ProblemViewer {...props} />
+            <div className="twelve columns" key={i} style={n.style} {...n.attrs}>
+              <ProblemViewer {...props} />
+            </div>
           );
         } else {
           elts.push(
-              <div className="twelve columns" key={i} style={n.style} {...n.attrs}>
+            <div className="twelve columns" key={i} style={n.style} {...n.attrs}>
               {args}
             </div>
           );
@@ -536,7 +537,7 @@ window.gcexports.viewer = (function () {
                 "args": [
                 ],
                 "attrs": {
-                  id: "main",
+                  id: "math",
                 },
               }
             ],
