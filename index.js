@@ -52,43 +52,6 @@ app.get('/compile', function(req, res) {
     res.status(400).send(e);
   });
 });
-app.get('/view/:id', function(req, res) {
-  var id = req.params.id;
-  item(id, function (err, data) {
-    var obj = JSON.parse(data)[0].obj;
-    res.render('view.html', {
-      obj: JSON.stringify(obj),
-    }, function (error, html) {
-      if (error) {
-        console.log("error=" + error.stack);
-        res.status(400).send(error);
-      } else {
-        res.send(html);
-      }
-    });
-  });
-  function item(id, resume) {
-    var options = {
-      method: "GET",
-      host: "www.graffiticode.com",
-      path: "/code/" + id,
-    };
-    var req = http.get(options, function(res) {
-      var data = "";
-      res.on('data', function (chunk) {
-        data += chunk;
-      }).on('end', function () {
-        try {
-          resume([], data);
-        } catch (e) {
-          console.log("ERROR: " + e.stack);
-        }
-      }).on("error", function () {
-        resume([].concat("ERROR status=" + res.statusCode + " data=" + data), null);
-      });
-    });
-  }
-});
 app.listen(app.get('port'), function() {
   global.port = app.get('port');
   console.log("Node app is running at localhost:" + app.get('port'))

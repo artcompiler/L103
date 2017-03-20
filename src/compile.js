@@ -83,13 +83,18 @@ function mapList(lst, fn, resume) {
     fn(lst[0], (err1, val1) => {
       mapList(lst.slice(1), fn, (err2, val2) => {
         let val = [].concat(val2);
-        val.unshift(val1);
+        if (val1 !== null) {
+          val.unshift(val1);
+        }
         resume([].concat(err1).concat(err2), val);
       });
     });
   } else if (lst && lst.length > 0) {
     fn(lst[0], (err1, val1) => {
-      let val = [val1];
+      let val = [];
+      if (val1 !== null) {
+        val.push(val1);
+      }
       resume([].concat(err1), val);
     });
   } else {
@@ -720,19 +725,23 @@ mjAPI.config({
 mjAPI.start();
 let render = (function() {
   function tex2SVG(str, resume) {
-    mjAPI.typeset({
-      math: str,
-      format: "inline-TeX",
-      svg: true,
-      ex: 6,
-      width: 100,
-    }, function (data) {
-      if (!data.errors) {
-        resume([], data.svg);
-      } else {
-        resume([], "");
-      }
-    });
+    try {
+      mjAPI.typeset({
+        math: str,
+        format: "inline-TeX",
+        svg: true,
+        ex: 6,
+        width: 100,
+      }, function (data) {
+        if (!data.errors) {
+          resume([], data.svg);
+        } else {
+          resume([], "");
+        }
+      });
+    } catch (e) {
+      resume(["MathJAX parsing error"], "");
+    }
   }
   function escapeXML(str) {
     return String(str)
@@ -784,16 +793,21 @@ let render = (function() {
         });
       }
       mapList(lst, (v, resume) => {
-        tex2SVG(v.val, (err, svg) => {
-          if (err && err.length) {
-            errs = errs.concat(err);
-          }
-          resume(errs, {
-            name: v.name,
-            val: v.val,
-            svg: escapeXML(svg),
+        console.log("render() v=" + JSON.stringify(v, null, 2));
+        if (typeof v.val === "string") {
+          tex2SVG(v.val, (err, svg) => {
+            if (err && err.length) {
+              errs = errs.concat(err);
+            }
+            resume(errs, {
+              name: v.name,
+              val: v.val,
+              svg: escapeXML(svg),
+            });
           });
-        });
+        } else {
+          resume(errs, null);
+        }
       }, (err, val) => {
         let name = lst.name;
         resume(err, {
