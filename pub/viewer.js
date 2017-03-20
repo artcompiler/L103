@@ -474,7 +474,7 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "h4":
-          if (n.attrs.id === "title") {
+          if (n.attrs.id === "title" && props.obj.title) {
             elts.push(React.createElement(
               "h4",
               _extends({ key: i, style: n.style }, n.attrs),
@@ -496,11 +496,19 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "h6":
-          elts.push(React.createElement(
-            "h6",
-            _extends({ key: i, style: n.style }, n.attrs),
-            args
-          ));
+          if (n.attrs.id === "notes" && props.obj.notes) {
+            elts.push(React.createElement(
+              "h6",
+              _extends({ key: i, style: n.style }, n.attrs),
+              props.obj.notes
+            ));
+          } else {
+            elts.push(React.createElement(
+              "h6",
+              _extends({ key: i, style: n.style }, n.attrs),
+              args
+            ));
+          }
           break;
         case "br":
           elts.push(React.createElement("br", null));
@@ -606,7 +614,7 @@ window.gcexports.viewer = function () {
 
   function injectParamsIntoUI(ui, params) {
     var grid = ui[0];
-    var table = grid.args[0].args[0].args[1];
+    var table = grid.args[2].args[0].args[0];
     var thead = table.args[0];
     var tbody = table.args[1];
     thead.args[0].args = [];
@@ -648,14 +656,35 @@ window.gcexports.viewer = function () {
           "type": "twelveColumns",
           "args": [{
             "type": "h4",
-            "args": {
+            "args": [{
               "type": "str",
               "value": "(x+a)(x+b)"
-            },
+            }],
             "attrs": {
               id: "title"
             }
-          }, {
+          }]
+        }]
+      }, {
+        "type": "row",
+        "args": [{
+          "type": "twelveColumns",
+          "args": [{
+            "type": "h6",
+            "args": [{
+              "type": "str",
+              "value": "(x+a)(x+b)"
+            }],
+            "attrs": {
+              id: "notes"
+            }
+          }]
+        }]
+      }, {
+        "type": "row",
+        "args": [{
+          "type": "twelveColumns",
+          "args": [{
             "type": "table",
             "args": [{
               "type": "thead",

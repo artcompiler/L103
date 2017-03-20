@@ -465,6 +465,14 @@ let transform = (function() {
       });
     });
   }
+  function notes(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        val2.notes = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
   function gen(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
@@ -711,6 +719,7 @@ let transform = (function() {
     "DECIMAL": decimal,
     "GEN" : gen,
     "TITLE" : title,
+    "NOTES" : notes,
     "PARAMS" : params,
   }
   return transform;
@@ -768,6 +777,7 @@ let render = (function() {
   function render(val, resume) {
     let params = val.params;
     let title = val.title;
+    let notes = val.notes;
     // Do some rendering here.
     var errs = [];
     var vals = [];
@@ -793,7 +803,6 @@ let render = (function() {
         });
       }
       mapList(lst, (v, resume) => {
-        console.log("render() v=" + JSON.stringify(v, null, 2));
         if (typeof v.val === "string") {
           tex2SVG(v.val, (err, svg) => {
             if (err && err.length) {
@@ -820,6 +829,7 @@ let render = (function() {
         data: val,
         params: params,
         title: title,
+        notes: notes,
       });
     });
   }

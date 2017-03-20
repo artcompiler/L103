@@ -321,7 +321,7 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "h4":
-        if (n.attrs.id === "title") {
+        if (n.attrs.id === "title" && props.obj.title) {
           elts.push(
               <h4 key={i} style={n.style} {...n.attrs}>
               {props.obj.title}
@@ -343,11 +343,19 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "h6":
-        elts.push(
-          <h6 key={i} style={n.style} {...n.attrs}>
-            {args}
-          </h6>
-        );
+        if (n.attrs.id === "notes" && props.obj.notes) {
+          elts.push(
+              <h6 key={i} style={n.style} {...n.attrs}>
+              {props.obj.notes}
+            </h6>
+          );
+        } else {
+          elts.push(
+              <h6 key={i} style={n.style} {...n.attrs}>
+              {args}
+            </h6>
+          );
+        }
         break;
       case "br":
         elts.push(
@@ -452,7 +460,7 @@ window.gcexports.viewer = (function () {
 
   function injectParamsIntoUI(ui, params) {
     let grid = ui[0];
-    let table = grid.args[0].args[0].args[1];
+    let table = grid.args[2].args[0].args[0];
     let thead = table.args[0];
     let tbody = table.args[1];
     thead.args[0].args = [];
@@ -496,14 +504,42 @@ window.gcexports.viewer = (function () {
                 "args": [
                   {
                     "type": "h4",
-                    "args": {
+                    "args": [{
                       "type": "str",
                       "value": "(x+a)(x+b)",
-                    },
+                    }],
                     "attrs": {
                       id: "title",
                     },
                   },
+                ]
+              }
+            ]
+          }, {
+            "type": "row",
+            "args": [
+              {
+                "type": "twelveColumns",
+                "args": [
+                  {
+                    "type": "h6",
+                    "args": [{
+                      "type": "str",
+                      "value": "(x+a)(x+b)",
+                    }],
+                    "attrs": {
+                      id: "notes",
+                    },
+                  },
+                ]
+              }
+            ]
+          }, {
+            "type": "row",
+            "args": [
+              {
+                "type": "twelveColumns",
+                "args": [
                   {
                     "type": "table",
                     "args": [
@@ -540,7 +576,8 @@ window.gcexports.viewer = (function () {
                 ],
               }
             ],
-          }]
+          }
+        ]
       }
     ],
     componentDidMount: function() {
