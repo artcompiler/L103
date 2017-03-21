@@ -656,10 +656,6 @@ window.gcexports.viewer = function () {
           "type": "twelveColumns",
           "args": [{
             "type": "h4",
-            "args": [{
-              "type": "str",
-              "value": "(x+a)(x+b)"
-            }],
             "attrs": {
               id: "title"
             }
@@ -671,10 +667,6 @@ window.gcexports.viewer = function () {
           "type": "twelveColumns",
           "args": [{
             "type": "h6",
-            "args": [{
-              "type": "str",
-              "value": "(x+a)(x+b)"
-            }],
             "attrs": {
               id: "notes"
             }
