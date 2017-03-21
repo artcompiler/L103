@@ -614,7 +614,7 @@ window.gcexports.viewer = function () {
 
   function injectParamsIntoUI(ui, params) {
     var grid = ui[0];
-    var table = grid.args[2].args[0].args[0];
+    var table = grid.args[0].args[0].args[2];
     var thead = table.args[0];
     var tbody = table.args[1];
     thead.args[0].args = [];
@@ -658,25 +658,15 @@ window.gcexports.viewer = function () {
             "type": "h4",
             "attrs": {
               id: "title"
-            }
-          }]
-        }]
-      }, {
-        "type": "row",
-        "args": [{
-          "type": "twelveColumns",
-          "args": [{
+            },
+            args: []
+          }, {
             "type": "h6",
             "attrs": {
               id: "notes"
-            }
-          }]
-        }]
-      }, {
-        "type": "row",
-        "args": [{
-          "type": "twelveColumns",
-          "args": [{
+            },
+            args: []
+          }, {
             "type": "table",
             "args": [{
               "type": "thead",
