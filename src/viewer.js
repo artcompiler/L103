@@ -108,6 +108,14 @@ window.gcexports.viewer = (function () {
     var vals = valuesOfTable(d3.select("table"));
     update(vals);
   }
+
+  function onParamBlur(e) {
+    if (e.target.value !== "") {
+      e.target.placeholder = e.target.value;
+    }
+    e.target.value = "";
+  }
+
   let codeID;
   function update(vals) {
     dispatcher.dispatch({
@@ -379,7 +387,10 @@ window.gcexports.viewer = (function () {
         break;
       case "textarea":
         elts.push(
-          <textarea className="u-full-width" key={i} rows="1" onChange={handleTextChange} style={n.style} {...n.attrs}>
+          <textarea className="u-full-width" key={i} rows="1"
+                    onChange={handleTextChange}
+                    onBlur={onParamBlur}
+                    style={n.style} {...n.attrs}>
           </textarea>
         );
         break;

@@ -261,6 +261,14 @@ window.gcexports.viewer = function () {
     var vals = valuesOfTable(d3.select("table"));
     update(vals);
   }
+
+  function onParamBlur(e) {
+    if (e.target.value !== "") {
+      e.target.placeholder = e.target.value;
+    }
+    e.target.value = "";
+  }
+
   var codeID = void 0;
   function update(vals) {
     dispatcher.dispatch({
@@ -533,7 +541,10 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "textarea":
-          elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1", onChange: handleTextChange, style: n.style }, n.attrs)));
+          elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
+            onChange: handleTextChange,
+            onBlur: onParamBlur,
+            style: n.style }, n.attrs)));
           break;
         case "button":
           elts.push(React.createElement(
