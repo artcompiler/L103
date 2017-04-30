@@ -128,7 +128,9 @@ exports.reserveCodeRange = reserveCodeRange;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; /* Copyright (c) 2016, Art Compiler LLC */
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }(); /* Copyright (c) 2016, Art Compiler LLC */
 
 /* Copyright (c) 2017, Art Compiler LLC */
 
@@ -139,9 +141,9 @@ var _react = require("react");
 
 var React = _interopRequireWildcard(_react);
 
-var _d = require("d3");
+var _d2 = require("d3");
 
-var d3 = _interopRequireWildcard(_d);
+var d3 = _interopRequireWildcard(_d2);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -257,12 +259,94 @@ window.gcexports.viewer = function () {
     return encodeURIComponent(str);
   }
 
+  function getTable(strs) {
+    var table = [];
+    strs = strs[0];
+    strs.forEach(function (s) {
+      var exprs = s.split(",");
+      var vals = [];
+      exprs.forEach(function (expr) {
+        var _expr$split = expr.split(":");
+
+        var _expr$split2 = _slicedToArray(_expr$split, 2);
+
+        var r = _expr$split2[0];
+        var _expr$split2$ = _expr$split2[1];
+        var incr = _expr$split2$ === undefined ? 1 : _expr$split2$;
+
+        var _r$split = r.split("..");
+
+        var _r$split2 = _slicedToArray(_r$split, 2);
+
+        var start = _r$split2[0];
+        var stop = _r$split2[1];
+
+        if (start >= stop) {
+          // Guard against nonsense.
+          stop = undefined;
+        }
+        if (stop === undefined) {
+          vals.push(start);
+        } else {
+          var e = void 0,
+              n = void 0,
+              t = void 0;
+          if (n = parseInt(start)) {
+            t = "I";
+            e = parseInt(stop);
+          } else if (n = parseFloat(start)) {
+            t = "F";
+            e = parseFloat(stop);
+          } else {
+            t = "V";
+            n = start.charCodeAt(0);
+            e = stop.charCodeAt(0);
+          }
+          incr = isNaN(+incr) ? 1 : +incr;
+          for (var i = 0; i <= e - n; i += incr) {
+            switch (t) {
+              case "I":
+              case "F":
+                vals.push(String(n + i));
+                break;
+              case "V":
+                vals.push(String.fromCharCode(n + i) + start.substring(1));
+                break;
+            }
+          }
+        }
+      });
+      table.push(vals);
+    });
+    return table;
+  }
+
   function handleTextChange() {
     var vals = valuesOfTable(d3.select("table"));
-    update(vals);
+    var table = getTable(vals);
+    var tbl = [];
+    for (var i = 0; i < table.length; i++) {
+      var row = void 0;
+      var len = tbl.length;
+      var newtbl = [];
+      for (var j = 0; j < table[i].length; j++) {
+        var col = table[i][j];
+        if (len > 0) {
+          for (var k = 0; k < len; k++) {
+            row = [].concat(tbl[k]).concat(col);
+            newtbl.push(row);
+          }
+        } else {
+          newtbl.push([col]);
+        }
+      }
+      tbl = newtbl;
+    }
+    update(tbl);
   }
 
   function onParamBlur(e) {
+    handleTextChange();
     if (e.target.value !== "") {
       e.target.placeholder = e.target.value;
     }
@@ -542,7 +626,6 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
-            onChange: handleTextChange,
             onBlur: onParamBlur,
             style: n.style }, n.attrs)));
           break;

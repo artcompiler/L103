@@ -104,12 +104,79 @@ window.gcexports.viewer = (function () {
     return encodeURIComponent(str);
   }
 
+  function getTable(strs) {
+    let table = []
+    strs = strs[0];
+    strs.forEach(s => {
+      let exprs = s.split(",");
+      let vals = [];
+      exprs.forEach(expr => {
+        let [r, incr=1] = expr.split(":");
+        let [start, stop] = r.split("..");
+        if (start >= stop) {
+          // Guard against nonsense.
+          stop = undefined;
+        }
+        if (stop === undefined) {
+          vals.push(start);
+        } else {
+          let e, n, t;
+          if (n = parseInt(start)) {
+            t = "I";
+            e = parseInt(stop);
+          } else if (n = parseFloat(start)) {
+            t = "F";
+            e = parseFloat(stop);
+          } else {
+            t = "V";
+            n = start.charCodeAt(0);
+            e = stop.charCodeAt(0);
+          }
+          incr = isNaN(+incr) ? 1 : +incr;
+          for (let i = 0; i <= (e - n); i += incr) {
+            switch (t) {
+            case "I":
+            case "F":
+              vals.push(String(n + i));
+              break;
+            case "V":
+              vals.push(String.fromCharCode(n+i) + start.substring(1));
+              break;
+            }
+          }
+        }
+      });
+      table.push(vals);
+    })
+    return table;
+  }
+
   function handleTextChange() {
     var vals = valuesOfTable(d3.select("table"));
-    update(vals);
+    var table = getTable(vals);
+    var tbl = [];
+    for (let i = 0; i < table.length; i++) {
+      let row;
+      let len = tbl.length;
+      let newtbl = [];
+      for (let j = 0; j < table[i].length; j++) {
+        let col = table[i][j];
+        if (len > 0) {
+          for (let k = 0; k < len; k++) {
+            row = [].concat(tbl[k]).concat(col);
+            newtbl.push(row);
+          }
+        } else {
+          newtbl.push([col]);
+        }
+      }
+      tbl = newtbl;
+    }
+    update(tbl);
   }
 
   function onParamBlur(e) {
+    handleTextChange();
     if (e.target.value !== "") {
       e.target.placeholder = e.target.value;
     }
@@ -388,7 +455,6 @@ window.gcexports.viewer = (function () {
       case "textarea":
         elts.push(
           <textarea className="u-full-width" key={i} rows="1"
-                    onChange={handleTextChange}
                     onBlur={onParamBlur}
                     style={n.style} {...n.attrs}>
           </textarea>
