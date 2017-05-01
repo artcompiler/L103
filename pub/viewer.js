@@ -322,27 +322,28 @@ window.gcexports.viewer = function () {
   }
 
   function handleTextChange() {
-    var vals = valuesOfTable(d3.select("table"));
-    var table = getTable(vals);
-    var tbl = [];
+    var spec = valuesOfTable(d3.select("table"));
+    var table = getTable(spec);
+    var data = [];
     for (var i = 0; i < table.length; i++) {
       var row = void 0;
-      var len = tbl.length;
-      var newtbl = [];
+      var len = data.length;
+      var newData = [];
       for (var j = 0; j < table[i].length; j++) {
         var col = table[i][j];
         if (len > 0) {
           for (var k = 0; k < len; k++) {
-            row = [].concat(tbl[k]).concat(col);
-            newtbl.push(row);
+            row = [].concat(data[k]).concat(col);
+            newData.push(row);
           }
         } else {
-          newtbl.push([col]);
+          newData.push([col]);
         }
       }
-      tbl = newtbl;
+      data = newData;
     }
-    update(tbl);
+    //    update(data);
+    update(spec);
   }
 
   function onParamBlur(e) {
@@ -354,9 +355,9 @@ window.gcexports.viewer = function () {
   }
 
   var codeID = void 0;
-  function update(vals) {
+  function update(data) {
     dispatcher.dispatch({
-      data: vals,
+      data: data,
       recompileCode: true
     });
   }
@@ -721,17 +722,19 @@ window.gcexports.viewer = function () {
           value: n
         }]
       });
+      // Use the parameter name if no value.
+      var val = params && params[n] !== undefined && params[n].length > 0 ? params[n] : n;
       tbody.args[0].args.push({
         type: "td",
         args: {
           type: "textarea",
           attrs: {
-            "placeholder": params[n]
+            "placeholder": val
           },
           style: {
             width: "100"
           },
-          args: [params[n]]
+          args: [val]
         }
       });
     });

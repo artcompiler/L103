@@ -237,10 +237,11 @@ let transform = (function() {
   }
   function val(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      let key = val1;
+      var key = val1;
       visit(node.elts[1], options, function (err2, val2) {
-        let obj = val2;
-        resume([].concat(err1).concat(err2), obj[key]);
+        var obj = val2;
+        var val = obj && obj[key] ? obj[key] : [];
+        resume([].concat(err1).concat(err2), val);
       });
     });
   }
@@ -452,8 +453,10 @@ let transform = (function() {
   function params(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
-        val2.params = val1;
-        resume([].concat(err1).concat(err2), val2);
+        resume([].concat(err1).concat(err2), {
+          params: val1,
+          values: val2
+        });
       });
     });
   }
@@ -476,7 +479,8 @@ let transform = (function() {
   function gen(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
-        gen: val
+        gen: val.values,
+        params: val.params,
       });
     });
   }
@@ -566,7 +570,87 @@ let transform = (function() {
     }
   }
   function inData(node, options, resume) {
-    resume([], options.data);
+    let data = options.data ? options.data : [[]];
+    resume([], data);
+  }
+  function expandSpec(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let data = [];
+      if (val1.params) {
+        data.push(Object.keys(val1.params));
+      }
+      data = data.concat(generateDataFromSpec(val1.values));
+      val1.values = data;
+      resume([], val1);
+    });
+    function expand(strs) {
+      let table = []
+      strs = strs ? strs[0] : [];
+      strs.forEach(s => {
+        let exprs = s.split(",");
+        let vals = [];
+        exprs.forEach(expr => {
+          let [r, incr=1] = expr.split(":");
+          let [start, stop] = r.split("..");
+          if (start >= stop) {
+            // Guard against nonsense.
+            stop = undefined;
+          }
+          if (stop === undefined) {
+            vals.push(start);
+          } else {
+            let e, n, t;
+            if (n = parseInt(start)) {
+              t = "I";
+              e = parseInt(stop);
+            } else if (n = parseFloat(start)) {
+              t = "F";
+              e = parseFloat(stop);
+            } else {
+              t = "V";
+              n = start.charCodeAt(0);
+              e = stop.charCodeAt(0);
+            }
+            incr = isNaN(+incr) ? 1 : +incr;
+            for (let i = 0; i <= (e - n); i += incr) {
+              switch (t) {
+              case "I":
+              case "F":
+                vals.push(String(n + i));
+                break;
+              case "V":
+                vals.push(String.fromCharCode(n+i) + start.substring(1));
+                break;
+              }
+            }
+          }
+        });
+        table.push(vals);
+      })
+      return table;
+    }
+    function generateDataFromSpec(spec) {
+      let table = expand(spec);
+      let data = [];
+      for (let i = 0; i < table.length; i++) {
+        let row;
+        let len = data.length;
+        let newData = [];
+        for (let j = 0; j < table[i].length; j++) {
+          let col = table[i][j];
+          if (len > 0) {
+            for (let k = 0; k < len; k++) {
+              row = [].concat(data[k]).concat(col);
+              newData.push(row);
+            }
+          } else {
+            newData.push([col]);
+          }
+        }
+        data = newData;
+      }
+      return data;
+    }
   }
   function arg(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
@@ -605,13 +689,14 @@ let transform = (function() {
     let vals = [];
     visit(node.elts[1], options, function (err1, val1) {
       // args
-      mapList(val1, (val, resume) => {
+      mapList(val1.values, (val, resume) => {
         options.args = [val];
         visit(node.elts[0], options, (err0, val0) => {
           resume([].concat(err0), val0);
         });
       }, (err, val) => {
-        resume(err, val);
+        val1.values = val;
+        resume(err, val1);
       });
     });
   }
@@ -720,6 +805,7 @@ let transform = (function() {
     "GEN" : gen,
     "TITLE" : title,
     "NOTES" : notes,
+    "EXPAND-SPEC" : expandSpec,
     "PARAMS" : params,
   }
   return transform;

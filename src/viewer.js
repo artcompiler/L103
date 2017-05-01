@@ -152,27 +152,28 @@ window.gcexports.viewer = (function () {
   }
 
   function handleTextChange() {
-    var vals = valuesOfTable(d3.select("table"));
-    var table = getTable(vals);
-    var tbl = [];
+    let spec = valuesOfTable(d3.select("table"));
+    let table = getTable(spec);
+    let data = [];
     for (let i = 0; i < table.length; i++) {
       let row;
-      let len = tbl.length;
-      let newtbl = [];
+      let len = data.length;
+      let newData = [];
       for (let j = 0; j < table[i].length; j++) {
         let col = table[i][j];
         if (len > 0) {
           for (let k = 0; k < len; k++) {
-            row = [].concat(tbl[k]).concat(col);
-            newtbl.push(row);
+            row = [].concat(data[k]).concat(col);
+            newData.push(row);
           }
         } else {
-          newtbl.push([col]);
+          newData.push([col]);
         }
       }
-      tbl = newtbl;
+      data = newData;
     }
-    update(tbl);
+//    update(data);
+    update(spec);
   }
 
   function onParamBlur(e) {
@@ -184,9 +185,9 @@ window.gcexports.viewer = (function () {
   }
 
   let codeID;
-  function update(vals) {
+  function update(data) {
     dispatcher.dispatch({
-      data: vals,
+      data: data,
       recompileCode: true,
     });
   }
@@ -550,17 +551,19 @@ window.gcexports.viewer = (function () {
           value: n,
         }]
       });
+      // Use the parameter name if no value.
+      let val = params && (params[n] !== undefined && params[n].length > 0) ? params[n] : n;
       tbody.args[0].args.push({
         type: "td",
         args: {
           type: "textarea",
           attrs: {
-            "placeholder": params[n]
+            "placeholder": val
           },
           style: {
             width: "100"
           },
-          args: [params[n]],
+          args: [val],
         },
       });
     });
