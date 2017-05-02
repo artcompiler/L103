@@ -30,8 +30,10 @@ window.gcexports.viewer = (function () {
         return <div/>;
       }
       data.forEach((data, i) => {
-        let innerElts = [];
+        let headElts = [];
+        let bodyElts = [];
         let name;
+        let x = 0;
         data.val.forEach((d, i) => {
           var style = {};
           name = d.name;
@@ -47,14 +49,20 @@ window.gcexports.viewer = (function () {
           let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
           let {width, height} = getSize(val);
           let n = 2*i;
-          innerElts.push(<div key={n} style={{
+          headElts.push(<th key={n} x={x} style={{
+            padding: "0 40 0 0",
             fontSize: "12px",
             color: "rgba(8, 149, 194, 0.5)",
-          }}>{name.toUpperCase()}</div>);
-          innerElts.push(<div key={n+1} x="0" y={y} style={style}><img width={width} height={height} src={src}/></div>);
-          y += height + 10;
+          }}>{name.toUpperCase()}</th>);
+          style.padding = "0 40 0 0";
+          bodyElts.push(<td key={n+1} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+//          y += height + 10;
+//          x += width + 10;
         });
-        elts.push(<div key={i}>{innerElts}<br/></div>);
+        elts.push(<table key={i}>
+           <thead><tr>{headElts}</tr></thead>
+           <tbody><tr>{bodyElts}</tr></tbody>
+        </table>);
       });
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>
@@ -423,7 +431,7 @@ window.gcexports.viewer = (function () {
           elts.push(
               <h6 key={i} style={n.style} {...n.attrs}>
               {props.obj.notes}
-            </h6>
+              </h6>
           );
         } else {
           elts.push(

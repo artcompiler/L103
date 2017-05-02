@@ -173,8 +173,10 @@ window.gcexports.viewer = function () {
         return React.createElement("div", null);
       }
       data.forEach(function (data, i) {
-        var innerElts = [];
+        var headElts = [];
+        var bodyElts = [];
         var name = void 0;
+        var x = 0;
         data.val.forEach(function (d, i) {
           var style = {};
           name = d.name;
@@ -195,26 +197,45 @@ window.gcexports.viewer = function () {
           var height = _getSize.height;
 
           var n = 2 * i;
-          innerElts.push(React.createElement(
-            "div",
-            { key: n, style: {
+          headElts.push(React.createElement(
+            "th",
+            { key: n, x: x, style: {
+                padding: "0 40 0 0",
                 fontSize: "12px",
                 color: "rgba(8, 149, 194, 0.5)"
               } },
             name.toUpperCase()
           ));
-          innerElts.push(React.createElement(
-            "div",
-            { key: n + 1, x: "0", y: y, style: style },
+          style.padding = "0 40 0 0";
+          bodyElts.push(React.createElement(
+            "td",
+            { key: n + 1, x: x, y: y, style: style },
             React.createElement("img", { width: width, height: height, src: src })
           ));
-          y += height + 10;
+          //          y += height + 10;
+          //          x += width + 10;
         });
         elts.push(React.createElement(
-          "div",
+          "table",
           { key: i },
-          innerElts,
-          React.createElement("br", null)
+          React.createElement(
+            "thead",
+            null,
+            React.createElement(
+              "tr",
+              null,
+              headElts
+            )
+          ),
+          React.createElement(
+            "tbody",
+            null,
+            React.createElement(
+              "tr",
+              null,
+              bodyElts
+            )
+          )
         ));
       });
       return elts.length > 0 ? React.createElement(

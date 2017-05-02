@@ -407,13 +407,35 @@ let transform = (function() {
   }
   function stimulus(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      val.stimulus = val.value;
+      if (typeof val === "string") {
+        val = {
+          value: val,
+          stimulus: val,
+          steps: [{
+            name: "stimulus",
+            val: val,
+          }],
+        }
+      } else {
+        val.stimulus = val.value;
+      }
       resume([], val);
     });
   }
   function solution(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      val.solution = val.value;
+      if (typeof val === "string") {
+        val = {
+          value: val,
+          solution: val,
+          steps: [{
+            name: "solution",
+            val: val,
+          }],
+        }
+      } else {
+        val.solution = val.value;
+      }
       resume([], val);
     });
   }
