@@ -10587,6 +10587,12 @@ var MathCore = function() {
         }
         assert(false, message(3007, [p, v]));
         break;
+      case "env":
+        if(typeof v === "undefined" || typeof v === "object") {
+          break
+        }
+        assert(false, message(3007, [p, JSON.stringify(v)]));
+        break;
       default:
         assert(false, message(3006, [p]));
         break
@@ -10607,15 +10613,24 @@ var MathCore = function() {
     Assert.setLocation("spec");
     validateOptions(options);
     Model.pushEnv(env);
+    if(options.env) {
+      Model.pushEnv(options.env)
+    }
     var valueNode = value != undefined ? Model.create(value, "spec") : undefined;
     if(valueNode) {
       valueNode.env = env
+    }
+    if(options.env) {
+      Model.popEnv(options.env)
     }
     Model.popEnv();
     var evaluate = function evaluate(solution, resume) {
       Assert.setLocation("user");
       assert(solution != undefined, message(3002));
       Model.pushEnv(env);
+      if(options.env) {
+        Model.pushEnv(options.env)
+      }
       var solutionNode = Model.create(solution, "user");
       if(!outerResult.model) {
         solutionNode.env = env;
@@ -10678,6 +10693,9 @@ var MathCore = function() {
         default:
           assert(false, message(3004, [method]));
           break
+      }
+      if(options.env) {
+        Model.popEnv(options.env)
       }
       Model.popEnv();
       resume(null, result)

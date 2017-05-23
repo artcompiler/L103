@@ -601,14 +601,14 @@ let transform = (function() {
       if (val1.params) {
         data.push(Object.keys(val1.params));
       }
-      data = data.concat(generateDataFromSpec(val1.values));
+      data = data.concat(generateDataFromArgs(val1.params, val1.values));
       val1.values = data;
       resume([], val1);
     });
-    function expand(strs) {
-      let table = []
-      strs = strs ? strs[0] : [];
-      strs.forEach(s => {
+    function expandArgs(params, args) {
+      let table = [];
+      args = args ? args[0] : []; // NOTE this only supports one row of args.
+      args.forEach(s => {
         let exprs = s.split(",");
         let vals = [];
         exprs.forEach(expr => {
@@ -635,6 +635,7 @@ let transform = (function() {
             }
             incr = isNaN(+incr) ? 1 : +incr;
             for (let i = 0; i <= (e - n); i += incr) {
+              // Expand range
               switch (t) {
               case "I":
               case "F":
@@ -651,19 +652,61 @@ let transform = (function() {
       })
       return table;
     }
-    function generateDataFromSpec(spec) {
-      let table = expand(spec);
+    function buildEnv(params, vals) {
+      let keys = Object.keys(params);
+      let env = Object.assign({}, params);
+      console.log("buildEnv() keys=" + JSON.stringify(keys));
+      console.log("buildEnv() vals=" + JSON.stringify(vals));
+      keys.forEach((k, i) => {
+        if (vals[i] !== undefined) {
+          env[k] = {
+            type: "const",
+            value: vals[i],
+          };
+        }
+      });
+      return env;
+    }
+    function evalExpr(env, expr, resume) {
+      if (expr.indexOf("=") === 0) {
+        expr = expr.substring(1);
+        console.log("evalExpr() expr=" + expr);
+        MathCore.evaluateVerbose({
+          method: "calculate",
+          options: {
+            env: env
+          },
+        }, expr, function (err, val) {
+          console.log("evalExpr() val.result=" + JSON.stringify(val.result));
+          return resume([], val.result);
+        });
+      } else {
+        return resume([], expr);
+      }
+    }
+    function generateDataFromArgs(params, args) {
+      let table = expandArgs(params, args);
+      console.log("generateDataFromArgs() table=" + JSON.stringify(table));
       let data = [];
       for (let i = 0; i < table.length; i++) {
+        // For each parameter.
         let row;
         let len = data.length;
         let newData = [];
         for (let j = 0; j < table[i].length; j++) {
+          // For each arg for each parameters.
           let col = table[i][j];
           if (len > 0) {
             for (let k = 0; k < len; k++) {
-              row = [].concat(data[k]).concat(col);
-              newData.push(row);
+              // Add a new row extended by the current column value.
+              let env = buildEnv(params, data[k]);
+              console.log("generateDataFromArgs() env=" + JSON.stringify(env));
+              console.log("generateDataFromArgs() col=" + JSON.stringify(col));
+              evalExpr(env, col, (err, val) => {
+                row = [].concat(data[k]).concat(val);
+                console.log("generateDataFromArgs() row=" + JSON.stringify(row));
+                newData.push(row);
+              });
             }
           } else {
             newData.push([col]);
