@@ -99,7 +99,7 @@ var assert = function () {
 }();
 
 var message = function message(errorCode) {
-  var args = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+  var args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
   var str = messages[errorCode];
   if (args) {
@@ -128,7 +128,7 @@ exports.reserveCodeRange = reserveCodeRange;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }(); /* Copyright (c) 2016, Art Compiler LLC */
 
@@ -191,10 +191,9 @@ window.gcexports.viewer = function () {
           }
           var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
 
-          var _getSize = getSize(val);
-
-          var width = _getSize.width;
-          var height = _getSize.height;
+          var _getSize = getSize(val),
+              width = _getSize.width,
+              height = _getSize.height;
 
           var n = 2 * i;
           headElts.push(React.createElement(
@@ -287,20 +286,16 @@ window.gcexports.viewer = function () {
       var exprs = s.split(",");
       var vals = [];
       exprs.forEach(function (expr) {
-        var _expr$split = expr.split(":");
+        var _expr$split = expr.split(":"),
+            _expr$split2 = _slicedToArray(_expr$split, 2),
+            r = _expr$split2[0],
+            _expr$split2$ = _expr$split2[1],
+            incr = _expr$split2$ === undefined ? 1 : _expr$split2$;
 
-        var _expr$split2 = _slicedToArray(_expr$split, 2);
-
-        var r = _expr$split2[0];
-        var _expr$split2$ = _expr$split2[1];
-        var incr = _expr$split2$ === undefined ? 1 : _expr$split2$;
-
-        var _r$split = r.split("..");
-
-        var _r$split2 = _slicedToArray(_r$split, 2);
-
-        var start = _r$split2[0];
-        var stop = _r$split2[1];
+        var _r$split = r.split(".."),
+            _r$split2 = _slicedToArray(_r$split, 2),
+            start = _r$split2[0],
+            stop = _r$split2[1];
 
         if (start >= stop) {
           // Guard against nonsense.
@@ -18848,6 +18843,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');

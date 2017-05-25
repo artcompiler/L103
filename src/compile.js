@@ -472,16 +472,6 @@ let transform = (function() {
   function decimal(node, options, resume) {
     evalSympy("N", node, options, resume);
   }
-  function params(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      visit(node.elts[1], options, function (err2, val2) {
-        resume([].concat(err1).concat(err2), {
-          params: val1,
-          values: val2
-        });
-      });
-    });
-  }
   function title(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
@@ -595,15 +585,26 @@ let transform = (function() {
     let data = options.data ? options.data : [[]];
     resume([], data);
   }
-  function expandSpec(node, options, resume) {
+  function params(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      let data = [];
-      if (val1.params) {
-        data.push(Object.keys(val1.params));
+      let params = val1;
+      let values = [];
+      let data = options.data ? options.data : [[]];
+      if (params) {
+        let keys = Object.keys(params);
+        // Create first row using param names.
+        data[0].forEach((d, i) => {
+          // Replace default values with actual values.
+          let k = keys[i];
+          params[k] = d;
+        });
+        values.push(keys);
       }
-      data = data.concat(generateDataFromArgs(val1.params, val1.values));
-      val1.values = data;
-      resume([], val1);
+      values = values.concat(generateDataFromArgs(params, data));
+      resume([], {
+        params: params,
+        values: values,
+      });
     });
     function expandArgs(params, args) {
       let table = [];
@@ -655,8 +656,6 @@ let transform = (function() {
     function buildEnv(params, vals) {
       let keys = Object.keys(params);
       let env = Object.assign({}, params);
-      console.log("buildEnv() keys=" + JSON.stringify(keys));
-      console.log("buildEnv() vals=" + JSON.stringify(vals));
       keys.forEach((k, i) => {
         if (vals[i] !== undefined) {
           env[k] = {
@@ -670,14 +669,12 @@ let transform = (function() {
     function evalExpr(env, expr, resume) {
       if (expr.indexOf("=") === 0) {
         expr = expr.substring(1);
-        console.log("evalExpr() expr=" + expr);
         MathCore.evaluateVerbose({
           method: "calculate",
           options: {
             env: env
           },
         }, expr, function (err, val) {
-          console.log("evalExpr() val.result=" + JSON.stringify(val.result));
           return resume([], val.result);
         });
       } else {
@@ -686,7 +683,6 @@ let transform = (function() {
     }
     function generateDataFromArgs(params, args) {
       let table = expandArgs(params, args);
-      console.log("generateDataFromArgs() table=" + JSON.stringify(table));
       let data = [];
       for (let i = 0; i < table.length; i++) {
         // For each parameter.
@@ -700,11 +696,8 @@ let transform = (function() {
             for (let k = 0; k < len; k++) {
               // Add a new row extended by the current column value.
               let env = buildEnv(params, data[k]);
-              console.log("generateDataFromArgs() env=" + JSON.stringify(env));
-              console.log("generateDataFromArgs() col=" + JSON.stringify(col));
               evalExpr(env, col, (err, val) => {
                 row = [].concat(data[k]).concat(val);
-                console.log("generateDataFromArgs() row=" + JSON.stringify(row));
                 newData.push(row);
               });
             }
@@ -870,7 +863,6 @@ let transform = (function() {
     "GEN" : gen,
     "TITLE" : title,
     "NOTES" : notes,
-    "EXPAND-SPEC" : expandSpec,
     "PARAMS" : params,
   }
   return transform;
