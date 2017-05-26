@@ -30,8 +30,12 @@ window.gcexports.viewer = (function () {
         return <div/>;
       }
       data.forEach((data, i) => {
-        let headElts = [];
-        let bodyElts = [];
+        let headElts = [
+          <td />
+        ];
+        let bodyElts = [
+              <td><input type="checkbox" style={{margin: "0 10 20 0"}}/></td>
+        ];
         let name;
         let x = 0;
         data.val.forEach((d, i) => {
@@ -55,7 +59,8 @@ window.gcexports.viewer = (function () {
             color: "rgba(8, 149, 194, 0.5)",
           }}>{name.toUpperCase()}</th>);
           style.padding = "0 40 0 0";
-          bodyElts.push(<td key={n+1} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+          bodyElts.push(
+              <td key={n+1} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
 //          y += height + 10;
 //          x += width + 10;
         });

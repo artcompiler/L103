@@ -173,8 +173,12 @@ window.gcexports.viewer = function () {
         return React.createElement("div", null);
       }
       data.forEach(function (data, i) {
-        var headElts = [];
-        var bodyElts = [];
+        var headElts = [React.createElement("td", null)];
+        var bodyElts = [React.createElement(
+          "td",
+          null,
+          React.createElement("input", { type: "checkbox", style: { margin: "0 10 20 0" } })
+        )];
         var name = void 0;
         var x = 0;
         data.val.forEach(function (d, i) {
