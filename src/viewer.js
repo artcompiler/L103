@@ -11,6 +11,8 @@ window.gcexports.viewer = (function () {
     var mySVG = $(el).html();
     return mySVG;
   }
+  let checks;
+
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
   var ProblemViewer = React.createClass({
@@ -22,6 +24,7 @@ window.gcexports.viewer = (function () {
       // owned components.
       let props = this.props;
       let data = props.obj.data ? props.obj.data : [];
+      checks = checks ? checks : props.checks ? props.checks : [];
       var elts = [];
       let y = 0;
       let len = data.length;
@@ -33,8 +36,13 @@ window.gcexports.viewer = (function () {
         let headElts = [
           <td />
         ];
+        let checked = checks.indexOf(i) > -1;
         let bodyElts = [
-              <td><input type="checkbox" style={{margin: "0 10 20 0"}}/></td>
+          <td><input type="checkbox"
+                     checked={checked}
+                     className="check"
+                     onClick={onChange}
+                     style={{margin: "0 10 20 0"}}/></td>
         ];
         let name;
         let x = 0;
@@ -164,9 +172,9 @@ window.gcexports.viewer = (function () {
     return table;
   }
 
-  function handleTextChange() {
-    let spec = valuesOfTable(d3.select("table"));
-    let table = getTable(spec);
+  function onChange(e) {
+    let params = valuesOfTable(d3.select("table"));
+    let table = getTable(params);
     let data = [];
     for (let i = 0; i < table.length; i++) {
       let row;
@@ -185,22 +193,27 @@ window.gcexports.viewer = (function () {
       }
       data = newData;
     }
-//    update(data);
-    update(spec);
-  }
-
-  function onParamBlur(e) {
-    handleTextChange();
+    checks = [];
+    // checks are saved for next refresh.
+    d3.selectAll(".check").nodes().forEach((d, i) => {
+      if (d.checked) {
+        checks.push(i);
+      }
+    });
     if (e.target.value !== "") {
       e.target.placeholder = e.target.value;
     }
     e.target.value = "";
+    update(params, checks);
   }
 
   let codeID;
-  function update(data) {
+  function update(params, checks) {
     dispatcher.dispatch({
-      data: data,
+      data: {
+        params: params,
+        checks: checks,
+      },
       recompileCode: true,
     });
   }
@@ -469,7 +482,7 @@ window.gcexports.viewer = (function () {
       case "textarea":
         elts.push(
           <textarea className="u-full-width" key={i} rows="1"
-                    onBlur={onParamBlur}
+                    onBlur={onChange}
                     style={n.style} {...n.attrs}>
           </textarea>
         );
@@ -656,7 +669,6 @@ window.gcexports.viewer = (function () {
       keys.forEach((k) => {
         vals.push(params[k]);
       });
-//      update(vals);
     },
     render: function () {
       // If you have nested components, make sure you send the props down to the

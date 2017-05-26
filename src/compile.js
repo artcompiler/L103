@@ -582,14 +582,14 @@ let transform = (function() {
     }
   }
   function inData(node, options, resume) {
-    let data = options.data ? options.data : [[]];
+    let data = options.data && options.data.params ? options.data.params : [[]];
     resume([], data);
   }
   function params(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       let params = val1;
       let values = [];
-      let data = options.data ? options.data : [[]];
+      let data = options.data && options.data.params ? options.data.params : [[]];
       if (params) {
         let keys = Object.keys(params);
         // Create first row using param names.
@@ -813,6 +813,8 @@ let transform = (function() {
       options = {};
     }
     visit(node.elts[0], options, function (err, val) {
+      // Copy checks into object code.
+      val.checks = options.data ? options.data.checks : undefined;
       resume(err, val);
     });
   }
@@ -918,6 +920,7 @@ let render = (function() {
     });
   }
   function render(val, resume) {
+    let checks = val.checks;
     let params = val.params;
     let title = val.title;
     let notes = val.notes;
@@ -973,6 +976,7 @@ let render = (function() {
         params: params,
         title: title,
         notes: notes,
+        checks: checks,
       });
     });
   }

@@ -152,6 +152,8 @@ window.gcexports.viewer = function () {
     var mySVG = $(el).html();
     return mySVG;
   }
+  var checks = void 0;
+
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
   var ProblemViewer = React.createClass({
@@ -165,6 +167,7 @@ window.gcexports.viewer = function () {
       // owned components.
       var props = this.props;
       var data = props.obj.data ? props.obj.data : [];
+      checks = checks ? checks : props.checks ? props.checks : [];
       var elts = [];
       var y = 0;
       var len = data.length;
@@ -174,10 +177,15 @@ window.gcexports.viewer = function () {
       }
       data.forEach(function (data, i) {
         var headElts = [React.createElement("td", null)];
+        var checked = checks.indexOf(i) > -1;
         var bodyElts = [React.createElement(
           "td",
           null,
-          React.createElement("input", { type: "checkbox", style: { margin: "0 10 20 0" } })
+          React.createElement("input", { type: "checkbox",
+            checked: checked,
+            className: "check",
+            onClick: onChange,
+            style: { margin: "0 10 20 0" } })
         )];
         var name = void 0;
         var x = 0;
@@ -341,9 +349,9 @@ window.gcexports.viewer = function () {
     return table;
   }
 
-  function handleTextChange() {
-    var spec = valuesOfTable(d3.select("table"));
-    var table = getTable(spec);
+  function onChange(e) {
+    var params = valuesOfTable(d3.select("table"));
+    var table = getTable(params);
     var data = [];
     for (var i = 0; i < table.length; i++) {
       var row = void 0;
@@ -362,22 +370,27 @@ window.gcexports.viewer = function () {
       }
       data = newData;
     }
-    //    update(data);
-    update(spec);
-  }
-
-  function onParamBlur(e) {
-    handleTextChange();
+    checks = [];
+    // checks are saved for next refresh.
+    d3.selectAll(".check").nodes().forEach(function (d, i) {
+      if (d.checked) {
+        checks.push(i);
+      }
+    });
     if (e.target.value !== "") {
       e.target.placeholder = e.target.value;
     }
     e.target.value = "";
+    update(params, checks);
   }
 
   var codeID = void 0;
-  function update(data) {
+  function update(params, checks) {
     dispatcher.dispatch({
-      data: data,
+      data: {
+        params: params,
+        checks: checks
+      },
       recompileCode: true
     });
   }
@@ -647,7 +660,7 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
-            onBlur: onParamBlur,
+            onBlur: onChange,
             style: n.style }, n.attrs)));
           break;
         case "button":
@@ -816,7 +829,6 @@ window.gcexports.viewer = function () {
       keys.forEach(function (k) {
         vals.push(params[k]);
       });
-      //      update(vals);
     },
     render: function render() {
       // If you have nested components, make sure you send the props down to the
