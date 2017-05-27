@@ -34,14 +34,14 @@ window.gcexports.viewer = (function () {
       }
       data.forEach((data, i) => {
         let headElts = [
-          <td />
+          <td key="0"/>
         ];
         let checked = checks.indexOf(i) > -1;
         let bodyElts = [
-          <td><input type="checkbox"
+          <td key="0"><input type="checkbox"
                      checked={checked}
                      className="check"
-                     onClick={onChange}
+                     onClick={onUpdate}
                      style={{margin: "0 10 20 0"}}/></td>
         ];
         let name;
@@ -61,14 +61,14 @@ window.gcexports.viewer = (function () {
           let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
           let {width, height} = getSize(val);
           let n = 2*i;
-          headElts.push(<th key={n} x={x} style={{
+          headElts.push(<th key={headElts.length} x={x} style={{
             padding: "0 40 0 0",
             fontSize: "12px",
             color: "rgba(8, 149, 194, 0.5)",
           }}>{name.toUpperCase()}</th>);
           style.padding = "0 40 0 0";
           bodyElts.push(
-              <td key={n+1} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+              <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
 //          y += height + 10;
 //          x += width + 10;
         });
@@ -171,8 +171,11 @@ window.gcexports.viewer = (function () {
     })
     return table;
   }
-
+  let isDirty = false;
   function onChange(e) {
+    isDirty = true;
+  }
+  function onUpdate(e) {
     let params = valuesOfTable(d3.select("table"));
     let table = getTable(params);
     let data = [];
@@ -196,10 +199,11 @@ window.gcexports.viewer = (function () {
     checks = [];
     // checks are saved for next refresh.
     d3.selectAll(".check").nodes().forEach((d, i) => {
-      if (d.checked) {
+      if (!isDirty && d.checked) {
         checks.push(i);
       }
     });
+    isDirty = false;
     if (e.target.value !== "") {
       e.target.placeholder = e.target.value;
     }
@@ -482,7 +486,8 @@ window.gcexports.viewer = (function () {
       case "textarea":
         elts.push(
           <textarea className="u-full-width" key={i} rows="1"
-                    onBlur={onChange}
+                    onBlur={onUpdate}
+                    onChange={onChange}
                     style={n.style} {...n.attrs}>
           </textarea>
         );

@@ -176,15 +176,15 @@ window.gcexports.viewer = function () {
         return React.createElement("div", null);
       }
       data.forEach(function (data, i) {
-        var headElts = [React.createElement("td", null)];
+        var headElts = [React.createElement("td", { key: "0" })];
         var checked = checks.indexOf(i) > -1;
         var bodyElts = [React.createElement(
           "td",
-          null,
+          { key: "0" },
           React.createElement("input", { type: "checkbox",
             checked: checked,
             className: "check",
-            onClick: onChange,
+            onClick: onUpdate,
             style: { margin: "0 10 20 0" } })
         )];
         var name = void 0;
@@ -210,7 +210,7 @@ window.gcexports.viewer = function () {
           var n = 2 * i;
           headElts.push(React.createElement(
             "th",
-            { key: n, x: x, style: {
+            { key: headElts.length, x: x, style: {
                 padding: "0 40 0 0",
                 fontSize: "12px",
                 color: "rgba(8, 149, 194, 0.5)"
@@ -220,7 +220,7 @@ window.gcexports.viewer = function () {
           style.padding = "0 40 0 0";
           bodyElts.push(React.createElement(
             "td",
-            { key: n + 1, x: x, y: y, style: style },
+            { key: bodyElts.length, x: x, y: y, style: style },
             React.createElement("img", { width: width, height: height, src: src })
           ));
           //          y += height + 10;
@@ -348,8 +348,11 @@ window.gcexports.viewer = function () {
     });
     return table;
   }
-
+  var isDirty = false;
   function onChange(e) {
+    isDirty = true;
+  }
+  function onUpdate(e) {
     var params = valuesOfTable(d3.select("table"));
     var table = getTable(params);
     var data = [];
@@ -373,10 +376,11 @@ window.gcexports.viewer = function () {
     checks = [];
     // checks are saved for next refresh.
     d3.selectAll(".check").nodes().forEach(function (d, i) {
-      if (d.checked) {
+      if (!isDirty && d.checked) {
         checks.push(i);
       }
     });
+    isDirty = false;
     if (e.target.value !== "") {
       e.target.placeholder = e.target.value;
     }
@@ -660,7 +664,8 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
-            onBlur: onChange,
+            onBlur: onUpdate,
+            onChange: onChange,
             style: n.style }, n.attrs)));
           break;
         case "button":
