@@ -125,6 +125,15 @@ window.gcexports.viewer = (function () {
     return encodeURIComponent(str);
   }
 
+  function getContext() {
+    let context = "";
+    d3.select("#notes")
+      .each(function(d, k, ta) {
+         context += this.value ? this.value : this.placeholder;
+      });
+    return context;
+  }
+
   function getTable(strs) {
     let table = []
     strs = strs[0];
@@ -173,7 +182,7 @@ window.gcexports.viewer = (function () {
   }
   let isDirty = false;
   function onChange(e) {
-    isDirty = true;
+    isDirty = true;    
   }
   function onUpdate(e) {
     let params = valuesOfTable(d3.select("table"));
@@ -205,18 +214,20 @@ window.gcexports.viewer = (function () {
     });
     isDirty = false;
     if (e.target.value !== "") {
-      e.target.placeholder = e.target.value;
+//      e.target.placeholder = e.target.value;
     }
-    e.target.value = "";
-    update(params, checks);
+//    e.target.value = "";
+    let context = getContext();
+    update(context, params, checks);
   }
 
   let codeID;
-  function update(params, checks) {
+  function update(context, params, checks) {
     dispatcher.dispatch({
       data: {
         params: params,
         checks: checks,
+        context: context,
       },
       recompileCode: true,
     });
@@ -449,19 +460,11 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "h6":
-        if (n.attrs.id === "notes" && props.obj.notes) {
-          elts.push(
-              <h6 key={i} style={n.style} {...n.attrs}>
-              {props.obj.notes}
-              </h6>
-          );
-        } else {
           elts.push(
               <h6 key={i} style={n.style} {...n.attrs}>
               {args}
             </h6>
           );
-        }
         break;
       case "br":
         elts.push(
@@ -484,13 +487,24 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "textarea":
-        elts.push(
-          <textarea className="u-full-width" key={i} rows="1"
+        if (n.attrs.id === "notes" && props.obj.notes) {
+          elts.push(
+              <textarea className="u-full-width" key={i} rows="3"
+                onBlur={onUpdate}
+                onChange={onChange}
+                style={n.style} {...n.attrs}>
+                {props.obj.notes}
+              </textarea>
+          );
+        } else {
+          elts.push(
+            <textarea className="u-full-width" key={i} rows="1"
                     onBlur={onUpdate}
                     onChange={onChange}
                     style={n.style} {...n.attrs}>
-          </textarea>
-        );
+            </textarea>
+          );
+        }
         break;
       case "button":
         elts.push(
@@ -621,7 +635,7 @@ window.gcexports.viewer = (function () {
                     args: [],
                   },
                   {
-                    "type": "h6",
+                    "type": "textarea",
                     "attrs": {
                       id: "notes",
                     },

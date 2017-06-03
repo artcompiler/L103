@@ -815,6 +815,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
       val.checks = options.data ? options.data.checks : undefined;
+      val.context = options.data ? options.data.context : undefined;
       resume(err, val);
     });
   }
@@ -920,6 +921,7 @@ let render = (function() {
     });
   }
   function render(val, resume) {
+    let context = val.context;
     let checks = val.checks;
     let params = val.params;
     let title = val.title;
@@ -973,6 +975,7 @@ let render = (function() {
     }, (err, val) => {
       resume([], {
         data: val,
+        context: context,
         params: params,
         title: title,
         notes: notes,

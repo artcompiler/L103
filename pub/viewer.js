@@ -291,6 +291,14 @@ window.gcexports.viewer = function () {
     return encodeURIComponent(str);
   }
 
+  function getContext() {
+    var context = "";
+    d3.select("#notes").each(function (d, k, ta) {
+      context += this.value ? this.value : this.placeholder;
+    });
+    return context;
+  }
+
   function getTable(strs) {
     var table = [];
     strs = strs[0];
@@ -381,19 +389,21 @@ window.gcexports.viewer = function () {
       }
     });
     isDirty = false;
-    if (e.target.value !== "") {
-      e.target.placeholder = e.target.value;
-    }
-    e.target.value = "";
-    update(params, checks);
+    if (e.target.value !== "") {}
+    //      e.target.placeholder = e.target.value;
+
+    //    e.target.value = "";
+    var context = getContext();
+    update(context, params, checks);
   }
 
   var codeID = void 0;
-  function update(params, checks) {
+  function update(context, params, checks) {
     dispatcher.dispatch({
       data: {
         params: params,
-        checks: checks
+        checks: checks,
+        context: context
       },
       recompileCode: true
     });
@@ -626,19 +636,11 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "h6":
-          if (n.attrs.id === "notes" && props.obj.notes) {
-            elts.push(React.createElement(
-              "h6",
-              _extends({ key: i, style: n.style }, n.attrs),
-              props.obj.notes
-            ));
-          } else {
-            elts.push(React.createElement(
-              "h6",
-              _extends({ key: i, style: n.style }, n.attrs),
-              args
-            ));
-          }
+          elts.push(React.createElement(
+            "h6",
+            _extends({ key: i, style: n.style }, n.attrs),
+            args
+          ));
           break;
         case "br":
           elts.push(React.createElement("br", null));
@@ -663,10 +665,21 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "textarea":
-          elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
-            onBlur: onUpdate,
-            onChange: onChange,
-            style: n.style }, n.attrs)));
+          if (n.attrs.id === "notes" && props.obj.notes) {
+            elts.push(React.createElement(
+              "textarea",
+              _extends({ className: "u-full-width", key: i, rows: "3",
+                onBlur: onUpdate,
+                onChange: onChange,
+                style: n.style }, n.attrs),
+              props.obj.notes
+            ));
+          } else {
+            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
+              onBlur: onUpdate,
+              onChange: onChange,
+              style: n.style }, n.attrs)));
+          }
           break;
         case "button":
           elts.push(React.createElement(
@@ -796,7 +809,7 @@ window.gcexports.viewer = function () {
             },
             args: []
           }, {
-            "type": "h6",
+            "type": "textarea",
             "attrs": {
               id: "notes"
             },
