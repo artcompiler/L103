@@ -127,7 +127,7 @@ window.gcexports.viewer = (function () {
 
   function getContext() {
     let context = "";
-    d3.select("#notes")
+    d3.select("#context")
       .each(function(d, k, ta) {
          context += this.value ? this.value : this.placeholder;
       });
@@ -460,11 +460,19 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "h6":
+        if (n.attrs.id === "notes" && props.obj.notes) {
+          elts.push(
+              <h6 key={i} style={n.style} {...n.attrs}>
+              {props.obj.notes}
+            </h6>
+          );
+        } else {
           elts.push(
               <h6 key={i} style={n.style} {...n.attrs}>
               {args}
             </h6>
           );
+        }
         break;
       case "br":
         elts.push(
@@ -487,13 +495,13 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "textarea":
-        if (n.attrs.id === "notes" && props.obj.notes) {
+        if (n.attrs.id === "context" && props.obj.context) {
           elts.push(
-              <textarea className="u-full-width" key={i} rows="3"
+              <textarea className="u-full-width" key={i} rows="2"
                 onBlur={onUpdate}
                 onChange={onChange}
                 style={n.style} {...n.attrs}
-                defaultValue={props.obj.notes}
+                defaultValue={props.obj.context}
               >
               </textarea>
           );
@@ -584,7 +592,7 @@ window.gcexports.viewer = (function () {
 
   function injectParamsIntoUI(ui, params) {
     let grid = ui[0];
-    let table = grid.args[0].args[0].args[2];
+    let table = grid.args[0].args[0].args[3];  // This is extremely brittle!
     let thead = table.args[0];
     let tbody = table.args[1];
     thead.args[0].args = [];
@@ -636,9 +644,16 @@ window.gcexports.viewer = (function () {
                     args: [],
                   },
                   {
-                    "type": "textarea",
+                    "type": "h6",
                     "attrs": {
                       id: "notes",
+                    },
+                    args: [],
+                  },
+                  {
+                    "type": "textarea",
+                    "attrs": {
+                      id: "context",
                     },
                     args: [],
                   },

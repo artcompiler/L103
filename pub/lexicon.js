@@ -34,6 +34,7 @@ window.gcexports.globalLexicon = {
   "arg" : { "tk": 1, "name": "ARG", "cls": "function", "length": 1, "arity": 1 },
   "gen" : { "tk": 1, "name": "GEN", "cls": "function", "length": 1 , "arity": 1 },
   "title" : { "tk": 1, "name": "TITLE", "cls": "function", "length": 2 , "arity": 2 },
+  "context" : { "tk": 1, "name": "CONTEXT", "cls": "function", "length": 2 , "arity": 2 },
   "notes" : { "tk": 1, "name": "NOTES", "cls": "function", "length": 2 , "arity": 2 },
   "params" : { "tk": 1, "name": "PARAMS", "cls": "function", "length": 1 , "arity": 1 }
 }

@@ -293,7 +293,7 @@ window.gcexports.viewer = function () {
 
   function getContext() {
     var context = "";
-    d3.select("#notes").each(function (d, k, ta) {
+    d3.select("#context").each(function (d, k, ta) {
       context += this.value ? this.value : this.placeholder;
     });
     return context;
@@ -636,11 +636,19 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "h6":
-          elts.push(React.createElement(
-            "h6",
-            _extends({ key: i, style: n.style }, n.attrs),
-            args
-          ));
+          if (n.attrs.id === "notes" && props.obj.notes) {
+            elts.push(React.createElement(
+              "h6",
+              _extends({ key: i, style: n.style }, n.attrs),
+              props.obj.notes
+            ));
+          } else {
+            elts.push(React.createElement(
+              "h6",
+              _extends({ key: i, style: n.style }, n.attrs),
+              args
+            ));
+          }
           break;
         case "br":
           elts.push(React.createElement("br", null));
@@ -665,12 +673,12 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "textarea":
-          if (n.attrs.id === "notes" && props.obj.notes) {
-            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "3",
+          if (n.attrs.id === "context" && props.obj.context) {
+            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "2",
               onBlur: onUpdate,
               onChange: onChange,
               style: n.style }, n.attrs, {
-              defaultValue: props.obj.notes
+              defaultValue: props.obj.context
             })));
           } else {
             elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
@@ -758,7 +766,7 @@ window.gcexports.viewer = function () {
 
   function injectParamsIntoUI(ui, params) {
     var grid = ui[0];
-    var table = grid.args[0].args[0].args[2];
+    var table = grid.args[0].args[0].args[3]; // This is extremely brittle!
     var thead = table.args[0];
     var tbody = table.args[1];
     thead.args[0].args = [];
@@ -807,9 +815,15 @@ window.gcexports.viewer = function () {
             },
             args: []
           }, {
-            "type": "textarea",
+            "type": "h6",
             "attrs": {
               id: "notes"
+            },
+            args: []
+          }, {
+            "type": "textarea",
+            "attrs": {
+              id: "context"
             },
             args: []
           }, {

@@ -483,7 +483,21 @@ let transform = (function() {
   function notes(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
+        if (val1 instanceof Array) {
+          val1 = val1.join("");
+        }
         val2.notes = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function context(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        if (val1 instanceof Array) {
+          val1 = val1.join("");
+        }
+        val2.context = val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -815,7 +829,9 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
       val.checks = options.data ? options.data.checks : undefined;
-      val.context = options.data ? options.data.context : undefined;
+      val.context = options.data && options.data.context ? options.data.context 
+                  : val.context ? val.context
+                  : "{{stimulus}}";
       resume(err, val);
     });
   }
@@ -866,6 +882,7 @@ let transform = (function() {
     "GEN" : gen,
     "TITLE" : title,
     "NOTES" : notes,
+    "CONTEXT" : context,
     "PARAMS" : params,
   }
   return transform;
@@ -921,11 +938,11 @@ let render = (function() {
     });
   }
   function render(val, resume) {
-    let context = val.context;
     let checks = val.checks;
     let params = val.params;
     let title = val.title;
     let notes = val.notes;
+    let context = val.context;
     // Do some rendering here.
     var errs = [];
     var vals = [];
@@ -975,10 +992,10 @@ let render = (function() {
     }, (err, val) => {
       resume([], {
         data: val,
-        context: context,
         params: params,
         title: title,
         notes: notes,
+        context: context,
         checks: checks,
       });
     });
