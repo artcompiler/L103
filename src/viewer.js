@@ -492,8 +492,9 @@ window.gcexports.viewer = (function () {
               <textarea className="u-full-width" key={i} rows="3"
                 onBlur={onUpdate}
                 onChange={onChange}
-                style={n.style} {...n.attrs}>
-                {props.obj.notes}
+                style={n.style} {...n.attrs}
+                defaultValue={props.obj.notes}
+              >
               </textarea>
           );
         } else {

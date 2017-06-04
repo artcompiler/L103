@@ -666,14 +666,12 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           if (n.attrs.id === "notes" && props.obj.notes) {
-            elts.push(React.createElement(
-              "textarea",
-              _extends({ className: "u-full-width", key: i, rows: "3",
-                onBlur: onUpdate,
-                onChange: onChange,
-                style: n.style }, n.attrs),
-              props.obj.notes
-            ));
+            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "3",
+              onBlur: onUpdate,
+              onChange: onChange,
+              style: n.style }, n.attrs, {
+              defaultValue: props.obj.notes
+            })));
           } else {
             elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
               onBlur: onUpdate,
