@@ -167,7 +167,7 @@ window.gcexports.viewer = function () {
       // owned components.
       var props = this.props;
       var data = props.obj.data ? props.obj.data : [];
-      checks = checks ? checks : props.checks ? props.checks : [];
+      checks = isDirty ? checks : props.checks ? props.checks : [];
       var elts = [];
       var y = 0;
       var len = data.length;

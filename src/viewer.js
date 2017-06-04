@@ -24,7 +24,7 @@ window.gcexports.viewer = (function () {
       // owned components.
       let props = this.props;
       let data = props.obj.data ? props.obj.data : [];
-      checks = checks ? checks : props.checks ? props.checks : [];
+      checks = isDirty ? checks : props.checks ? props.checks : [];
       var elts = [];
       let y = 0;
       let len = data.length;
