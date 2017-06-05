@@ -525,7 +525,9 @@ let transform = (function() {
         reference.forEach(v => {
           MathCore.evaluateVerbose({
             method: "equivLiteral",
-            options: {},
+            options: {
+              "ignoreOrder": true,
+            },
             value: v,
           }, response, (err, val) => {
             if (err && err.length) {

@@ -159,13 +159,11 @@ window.gcexports.viewer = function () {
   var ProblemViewer = React.createClass({
     displayName: "ProblemViewer",
 
-    componentDidUpdate: function componentDidUpdate() {
-      var props = this.props;
-    },
     render: function render() {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       var props = this.props;
+      console.log("render() props=" + JSON.stringify(props, null, 2));
       var data = props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
       var elts = [];
@@ -223,8 +221,6 @@ window.gcexports.viewer = function () {
             { key: bodyElts.length, x: x, y: y, style: style },
             React.createElement("img", { width: width, height: height, src: src })
           ));
-          //          y += height + 10;
-          //          x += width + 10;
         });
         elts.push(React.createElement(
           "table",
@@ -358,9 +354,14 @@ window.gcexports.viewer = function () {
   }
   var isDirty = false;
   function onChange(e) {
+    // Once anything has changed, we use the in memory state,
+    // not the compiled state. These should be in sync until
+    // the next refesh.
     isDirty = true;
   }
   function onUpdate(e) {
+    // Update the state of the view. If the update target is a checkbox, then
+    // we don't get the checks from the code.
     var params = valuesOfTable(d3.select("table"));
     var table = getTable(params);
     var data = [];
@@ -382,17 +383,23 @@ window.gcexports.viewer = function () {
       data = newData;
     }
     checks = [];
-    // checks are saved for next refresh.
-    d3.selectAll(".check").nodes().forEach(function (d, i) {
-      if (!isDirty && d.checked) {
-        checks.push(i);
-      }
-    });
-    isDirty = false;
-    if (e.target.value !== "") {}
-    //      e.target.placeholder = e.target.value;
-
-    //    e.target.value = "";
+    if (e.target.className === "check") {
+      // If target is a checkbox, then save the state of the checks.
+      d3.selectAll(".check").nodes().forEach(function (d, i) {
+        if (d.checked) {
+          checks.push(i);
+        }
+      });
+      isDirty = true;
+    } else {
+      // Otherwise, clear the dirty flag and the checks.
+      isDirty = false;
+      checks = [];
+    }
+    // if (e.target.id !== "context" && e.target.value !== "") {
+    //   e.target.placeholder = e.target.value;
+    //   e.target.value = "";
+    // }
     var context = getContext();
     update(context, params, checks);
   }
