@@ -195,17 +195,14 @@ window.gcexports.viewer = function () {
               style[k] = d.style[k];
             });
           }
-          var val = d.value ? d.value : d.svg ? d.svg : d;
-          if (val instanceof Array) {
-            val = val.join(" ");
-          }
-          var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
-
-          var _getSize = getSize(val),
-              width = _getSize.width,
-              height = _getSize.height;
-
-          var n = 2 * i;
+          var val = d.val;
+          // let val = d.value ? d.value : d.svg ? d.svg : d;
+          // if (val instanceof Array) {
+          //   val = val.join(" ");
+          // }
+          // let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+          // let {width, height} = getSize(val);
+          // let n = 2*i;
           headElts.push(React.createElement(
             "th",
             { key: headElts.length, x: x, style: {
@@ -216,10 +213,12 @@ window.gcexports.viewer = function () {
             name.toUpperCase()
           ));
           style.padding = "0 40 0 0";
-          bodyElts.push(React.createElement(
+          bodyElts.push(
+          // <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+          React.createElement(
             "td",
             { key: bodyElts.length, x: x, y: y, style: style },
-            React.createElement("img", { width: width, height: height, src: src })
+            val
           ));
         });
         elts.push(React.createElement(

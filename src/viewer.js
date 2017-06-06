@@ -52,13 +52,14 @@ window.gcexports.viewer = (function () {
               style[k] = d.style[k];
             });
           }
-          let val = d.value ? d.value : d.svg ? d.svg : d;
-          if (val instanceof Array) {
-            val = val.join(" ");
-          }
-          let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
-          let {width, height} = getSize(val);
-          let n = 2*i;
+          let val = d.val;
+          // let val = d.value ? d.value : d.svg ? d.svg : d;
+          // if (val instanceof Array) {
+          //   val = val.join(" ");
+          // }
+          // let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+          // let {width, height} = getSize(val);
+          // let n = 2*i;
           headElts.push(<th key={headElts.length} x={x} style={{
             padding: "0 40 0 0",
             fontSize: "12px",
@@ -66,7 +67,8 @@ window.gcexports.viewer = (function () {
           }}>{name.toUpperCase()}</th>);
           style.padding = "0 40 0 0";
           bodyElts.push(
-              <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+              // <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+              <td key={bodyElts.length} x={x} y={y} style={style}>{val}</td>);
         });
         elts.push(<table key={i}>
            <thead><tr>{headElts}</tr></thead>

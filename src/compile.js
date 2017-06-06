@@ -1,7 +1,7 @@
 /* Copyright (c) 2016, Art Compiler LLC */
 /* @flow */
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
-import * as mjAPI from "mathjax-node/lib/mj-single.js";
+import * as mjAPI from "mathjax-node/lib/main.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
@@ -415,8 +415,6 @@ let transform = (function() {
   }
   function stimulus(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      console.log("stimulus() options=" + JSON.stringify(options));
-      console.log("stimulus() val=" + JSON.stringify(val));
       if (typeof val === "string") {
         val = {
           value: val,
@@ -503,10 +501,8 @@ let transform = (function() {
   }
   function context(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      console.log("context() val1=" + JSON.stringify(val1));
       options.context = val1;
       visit(node.elts[1], options, function (err2, val2) {
-        console.log("context() val2=" + JSON.stringify(val2, null, 2));
         if (val1 instanceof Array) {
           val1 = val1.join("");
         }
@@ -761,7 +757,6 @@ let transform = (function() {
         keys.forEach((k, i) => {
           val2[k] = vals[i];
         });
-        console.log("lambda() val2=" + JSON.stringify(val2, null, 2));
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -913,7 +908,7 @@ mjAPI.config({
   MathJax: {
     SVG: {
       font: "Tex"
-    }
+    },
   }
 });
 mjAPI.start();
@@ -922,7 +917,7 @@ let render = (function() {
     try {
       mjAPI.typeset({
         math: str,
-        format: "inline-TeX",
+        format: "TeX", //"inline-TeX",
         svg: true,
         ex: 6,
         width: 100,
@@ -964,8 +959,7 @@ let render = (function() {
     let params = val.params;
     let title = val.title;
     let notes = val.notes;
-    let context = val.context;
-    // Do some rendering here.
+    let context = val.context ? val.context : "{{stimulus}}";
     var errs = [];
     var vals = [];
     let lst = [].concat(val.gen);
@@ -989,18 +983,36 @@ let render = (function() {
           val: v.solution
         });
       }
+      if (context) {
+        let cntx = context;
+        let keys = Object.keys(v);
+        keys.forEach((k, i) => {
+          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), v[k]);
+        });
+        lst.push({
+          name: "context",
+          val: cntx,
+        });
+      }
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
-          tex2SVG(v.val, (err, svg) => {
-            if (err && err.length) {
-              errs = errs.concat(err);
-            }
+          if (true || v.name === "context") {
             resume(errs, {
               name: v.name,
               val: v.val,
-              svg: escapeXML(svg),
             });
-          });
+          } else {
+            tex2SVG(v.val, (err, svg) => {
+              if (err && err.length) {
+                errs = errs.concat(err);
+              }
+              resume(errs, {
+                name: v.name,
+                val: v.val,
+                svg: escapeXML(svg),
+              });
+            });
+          }
         } else {
           resume(errs, null);
         }

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "express": "^4.0.x",
-    "mathjax-node": "^0.5.1"
+    "mathjax-node": "^1.1.0"
   },
   "engines": {
     "node": "latest"
