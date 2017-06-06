@@ -311,7 +311,7 @@ let transform = (function() {
       } else {
         result = {
           value: val0,
-          steps: [],
+          // steps: [],
         }
       }
       if (err && err.length) {
@@ -380,10 +380,10 @@ let transform = (function() {
                   errs = errs.concat(error(err, node.elts[0]));
                 }
                 result.value = data;
-                result.steps.push({
-                  name: name,
-                  val: data,
-                });
+                // result.steps.push({
+                //   name: name,
+                //   val: data,
+                // });
                 resume(errs, result);
               });
             }
@@ -405,10 +405,10 @@ let transform = (function() {
       let obj = {
         value: val,
         seed: val,
-        steps: [{
-          name: "seed",
-          val: val,
-        }],
+        // steps: [{
+        //   name: "seed",
+        //   val: val,
+        // }],
       };
       resume([], obj);
     });
@@ -421,10 +421,10 @@ let transform = (function() {
         val = {
           value: val,
           stimulus: val,
-          steps: [{
-            name: "stimulus",
-            val: val,
-          }],
+          // steps: [{
+          //   name: "stimulus",
+          //   val: val,
+          // }],
         }
       } else {
         val.stimulus = val.value;
@@ -438,10 +438,10 @@ let transform = (function() {
         val = {
           value: val,
           solution: val,
-          steps: [{
-            name: "solution",
-            val: val,
-          }],
+          // steps: [{
+          //   name: "solution",
+          //   val: val,
+          // }],
         }
       } else {
         val.solution = val.value;
