@@ -392,6 +392,14 @@ let transform = (function() {
       });
     });
   }
+  function value(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        val2.value = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
   function literal(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       let obj = {
@@ -407,6 +415,8 @@ let transform = (function() {
   }
   function stimulus(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
+      console.log("stimulus() options=" + JSON.stringify(options));
+      console.log("stimulus() val=" + JSON.stringify(val));
       if (typeof val === "string") {
         val = {
           value: val,
@@ -493,7 +503,10 @@ let transform = (function() {
   }
   function context(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
+      console.log("context() val1=" + JSON.stringify(val1));
+      options.context = val1;
       visit(node.elts[1], options, function (err2, val2) {
+        console.log("context() val2=" + JSON.stringify(val2, null, 2));
         if (val1 instanceof Array) {
           val1 = val1.join("");
         }
@@ -742,6 +755,13 @@ let transform = (function() {
     // Return a function value.
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
+        let result = val2;
+        let keys = val1;
+        let vals = options.args[0];
+        keys.forEach((k, i) => {
+          val2[k] = vals[i];
+        });
+        console.log("lambda() val2=" + JSON.stringify(val2, null, 2));
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -759,11 +779,10 @@ let transform = (function() {
   }
   function map(node, options, resume) {
     // Apply a function to arguments.
-    let errs = [];
-    let vals = [];
     visit(node.elts[1], options, function (err1, val1) {
       // args
       mapList(val1.values, (val, resume) => {
+        // Call a function for each set of values.
         options.args = [val];
         visit(node.elts[0], options, (err0, val0) => {
           resume([].concat(err0), val0);
@@ -883,6 +902,7 @@ let transform = (function() {
     "DECIMAL": decimal,
     "GEN" : gen,
     "TITLE" : title,
+    "VALUE" : value,
     "NOTES" : notes,
     "CONTEXT" : context,
     "PARAMS" : params,
