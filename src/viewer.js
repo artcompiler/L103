@@ -11,8 +11,21 @@ window.gcexports.viewer = (function () {
     var mySVG = $(el).html();
     return mySVG;
   }
+  function loadScript(src, resume) {
+    var script = document.createElement("script");
+    script.onload = resume;
+    script.src = src;
+    script.type = "text/javascript";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  }
+  function loadStyle(src, resume) {
+    var link = document.createElement("link");
+    link.onload = resume;
+    link.href = src;
+    link.rel = "stylesheet";
+    document.getElementsByTagName("head")[0].appendChild(link);
+  }
   let checks;
-
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
   var ProblemViewer = React.createClass({
@@ -53,13 +66,6 @@ window.gcexports.viewer = (function () {
             });
           }
           let val = d.val;
-          // let val = d.value ? d.value : d.svg ? d.svg : d;
-          // if (val instanceof Array) {
-          //   val = val.join(" ");
-          // }
-          // let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
-          // let {width, height} = getSize(val);
-          // let n = 2*i;
           headElts.push(<th key={headElts.length} x={x} style={{
             padding: "0 40 0 0",
             fontSize: "12px",
@@ -67,8 +73,9 @@ window.gcexports.viewer = (function () {
           }}>{name.toUpperCase()}</th>);
           style.padding = "0 40 0 0";
           bodyElts.push(
-              // <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
-              <td key={bodyElts.length} x={x} y={y} style={style}>{val}</td>);
+              <td key={bodyElts.length} x={x} y={y} style={style}>
+                  <span className="mq">{val}</span>
+              </td>);
         });
         elts.push(<table key={i}>
            <thead><tr>{headElts}</tr></thead>
@@ -78,27 +85,6 @@ window.gcexports.viewer = (function () {
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>
       );
-      function unescapeXML(str) {
-        return String(str)
-          .replace(/&amp;/g, "&")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/&quot;/g, "'");
-      }
-      function getSize(svg) {
-        svg = svg.slice(svg.indexOf("width=") + 7 + 5);
-        var width = svg.slice(0, svg.indexOf("ex")) * 8;  // ex=8px
-        svg = svg.slice(svg.indexOf("height=") + 8 + 5);
-        var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
-        if (isNaN(width) || isNaN(height)) {
-          width = 640;
-          height = 30;
-        }
-        return {
-          width: width,
-          height: height
-        }
-      }
     },
   });
 
@@ -706,12 +692,26 @@ window.gcexports.viewer = (function () {
         ]
       }
     ],
-    componentDidMount: function() {
+    renderMath () {
+      d3.selectAll(".mq").each((v, i, e) => {
+        let MQ = MathQuill.getInterface(2);
+        let mathQuill = MQ.StaticMath(e[i]);
+      });
+    },
+    componentDidUpdate () {
+      this.renderMath();
+    },
+    componentDidMount () {
       let params = this.props.obj.params;
       let keys = Object.keys(params);
       let vals = [];
       keys.forEach((k) => {
         vals.push(params[k]);
+      });
+      loadScript("/mathquill.js", () => {
+        loadStyle("/mathquill.css", () => {
+          this.renderMath();
+        });
       });
     },
     render: function () {

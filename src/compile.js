@@ -1,7 +1,6 @@
 /* Copyright (c) 2016, Art Compiler LLC */
 /* @flow */
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
-import * as mjAPI from "mathjax-node/lib/main.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
@@ -904,43 +903,7 @@ let transform = (function() {
   }
   return transform;
 })();
-mjAPI.config({
-  MathJax: {
-    SVG: {
-      font: "Tex"
-    },
-  }
-});
-mjAPI.start();
 let render = (function() {
-  function tex2SVG(str, resume) {
-    try {
-      mjAPI.typeset({
-        math: str,
-        format: "TeX", //"inline-TeX",
-        svg: true,
-        ex: 6,
-        width: 100,
-      }, function (data) {
-        if (!data.errors) {
-          resume([], data.svg);
-        } else {
-          resume([], "");
-        }
-      });
-    } catch (e) {
-      resume(["MathJAX parsing error"], "");
-    }
-  }
-  function escapeXML(str) {
-    return String(str)
-      .replace(/&(?!\w+;)/g, "&amp;")
-      .replace(/\n/g, " ")
-      .replace(/\\/g, "\\\\")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
   function sympyToLaTeX(val, resume) {
     var errs = [];
     let obj = {
@@ -987,7 +950,7 @@ let render = (function() {
         let cntx = context;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
-          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), v[k]);
+          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "\\(" + v[k] + "\\)");
         });
         lst.push({
           name: "context",
@@ -996,23 +959,10 @@ let render = (function() {
       }
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
-          if (true || v.name === "context") {
-            resume(errs, {
-              name: v.name,
-              val: v.val,
-            });
-          } else {
-            tex2SVG(v.val, (err, svg) => {
-              if (err && err.length) {
-                errs = errs.concat(err);
-              }
-              resume(errs, {
-                name: v.name,
-                val: v.val,
-                svg: escapeXML(svg),
-              });
-            });
-          }
+          resume(errs, {
+            name: v.name,
+            val: v.val,
+          });
         } else {
           resume(errs, null);
         }
