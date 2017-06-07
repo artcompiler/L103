@@ -943,7 +943,7 @@ let render = (function() {
       if (v.solution) {
         lst.push({
           name: "solution",
-          val: "\\(" + v.solution + "\\)",
+          val: v.solution,
         });
       }
       if (context) {

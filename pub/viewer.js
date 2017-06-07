@@ -166,12 +166,12 @@ window.gcexports.viewer = function () {
     link.rel = "stylesheet";
     document.getElementsByTagName("head")[0].appendChild(link);
   }
-  function splitContext(str) {
+  function splitValue(str, allMath) {
     var startMath = str.split("\\(");
     var elts = [];
     startMath.forEach(function (v, i) {
       // Odd indexes are text, evens have LaTeX prefixes.
-      if (i % 2 === 0) {
+      if (i % 2 === 0 && !allMath) {
         elts.push(React.createElement(
           "span",
           null,
@@ -249,7 +249,7 @@ window.gcexports.viewer = function () {
           bodyElts.push(React.createElement(
             "td",
             { key: bodyElts.length, x: x, y: y, style: style },
-            splitContext(val)
+            splitValue(val, name === "solution")
           ));
         });
         elts.push(React.createElement(

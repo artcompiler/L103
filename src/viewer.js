@@ -25,12 +25,12 @@ window.gcexports.viewer = (function () {
     link.rel = "stylesheet";
     document.getElementsByTagName("head")[0].appendChild(link);
   }
-  function splitContext(str) {
+  function splitValue(str, allMath) {
     let startMath = str.split("\\(");
     let elts = [];
     startMath.forEach((v, i) => {
       // Odd indexes are text, evens have LaTeX prefixes.
-      if (i % 2 === 0) {
+      if (i % 2 === 0 && !allMath) {
         elts.push(<span>{v}</span>);
       } else {
         let parts = v.split("\\)");
@@ -89,7 +89,7 @@ window.gcexports.viewer = (function () {
           style.padding = "0 40 0 0";
           bodyElts.push(
               <td key={bodyElts.length} x={x} y={y} style={style}>
-                  {splitContext(val)}
+                  {splitValue(val, name === "solution")}
               </td>);
         });
         elts.push(<table key={i}>
