@@ -25,6 +25,21 @@ window.gcexports.viewer = (function () {
     link.rel = "stylesheet";
     document.getElementsByTagName("head")[0].appendChild(link);
   }
+  function splitContext(str) {
+    let startMath = str.split("\\(");
+    let elts = [];
+    startMath.forEach((v, i) => {
+      // Odd indexes are text, evens have LaTeX prefixes.
+      if (i % 2 === 0) {
+        elts.push(<span>{v}</span>);
+      } else {
+        let parts = v.split("\\)");
+        elts.push(<span className="mq">{parts[0]}</span>);
+        elts.push(<span>{parts[1]}</span>);
+      }
+    });
+    return elts;
+  }
   let checks;
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
@@ -74,7 +89,7 @@ window.gcexports.viewer = (function () {
           style.padding = "0 40 0 0";
           bodyElts.push(
               <td key={bodyElts.length} x={x} y={y} style={style}>
-                  <span className="mq">{val}</span>
+                  {splitContext(val)}
               </td>);
         });
         elts.push(<table key={i}>

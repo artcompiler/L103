@@ -166,6 +166,33 @@ window.gcexports.viewer = function () {
     link.rel = "stylesheet";
     document.getElementsByTagName("head")[0].appendChild(link);
   }
+  function splitContext(str) {
+    var startMath = str.split("\\(");
+    var elts = [];
+    startMath.forEach(function (v, i) {
+      // Odd indexes are text, evens have LaTeX prefixes.
+      if (i % 2 === 0) {
+        elts.push(React.createElement(
+          "span",
+          null,
+          v
+        ));
+      } else {
+        var parts = v.split("\\)");
+        elts.push(React.createElement(
+          "span",
+          { className: "mq" },
+          parts[0]
+        ));
+        elts.push(React.createElement(
+          "span",
+          null,
+          parts[1]
+        ));
+      }
+    });
+    return elts;
+  }
   var checks = void 0;
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
@@ -222,11 +249,7 @@ window.gcexports.viewer = function () {
           bodyElts.push(React.createElement(
             "td",
             { key: bodyElts.length, x: x, y: y, style: style },
-            React.createElement(
-              "span",
-              { className: "mq" },
-              val
-            )
+            splitContext(val)
           ));
         });
         elts.push(React.createElement(

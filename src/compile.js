@@ -934,16 +934,16 @@ let render = (function() {
           val: v.seed
         });
       }
-      if (v.stimulus) {
-        lst.push({
-          name: "stimulus",
-          val: v.stimulus
-        });
-      }
+      // if (v.stimulus) {
+      //   lst.push({
+      //     name: "stimulus",
+      //     val: "\\(" + v.stimulus + "\\)";
+      //   });
+      // }
       if (v.solution) {
         lst.push({
           name: "solution",
-          val: v.solution
+          val: "\\(" + v.solution + "\\)",
         });
       }
       if (context) {
@@ -952,8 +952,9 @@ let render = (function() {
         keys.forEach((k, i) => {
           cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "\\(" + v[k] + "\\)");
         });
-        lst.push({
-          name: "context",
+        // Get the right order.
+        lst.unshift({
+          name: "stimulus",
           val: cntx,
         });
       }
