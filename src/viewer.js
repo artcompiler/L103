@@ -1,5 +1,3 @@
-/* Copyright (c) 2016, Art Compiler LLC */
-/* @flow */
 /* Copyright (c) 2017, Art Compiler LLC */
 /* @flow */
 import {assert, message, messages, reserveCodeRange} from "./assert";
@@ -26,11 +24,12 @@ window.gcexports.viewer = (function () {
     document.getElementsByTagName("head")[0].appendChild(link);
   }
   function splitValue(str, allMath) {
+    // \\(x\\)abc\\(y\\) => ["", "x\\)abc", "y\\)"]
     let startMath = str.split("\\(");
     let elts = [];
     startMath.forEach((v, i) => {
       // Odd indexes are text, evens have LaTeX prefixes.
-      if (i % 2 === 0 && !allMath) {
+      if (i === 0 && !allMath) {
         elts.push(<span>{v}</span>);
       } else {
         let parts = v.split("\\)");
