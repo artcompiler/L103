@@ -951,6 +951,7 @@ let render = (function() {
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
           cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "\\(" + v[k] + "\\)");
+          cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
         lst.unshift({

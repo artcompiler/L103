@@ -47,9 +47,12 @@ window.gcexports.viewer = (function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       let props = this.props;
-      console.log("render() props=" + JSON.stringify(props, null, 2));
       let data = props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
+      checks.forEach((v, i) => {
+        // normalize.
+        checks[i] = +v;
+      });
       var elts = [];
       let y = 0;
       let len = data.length;
@@ -510,7 +513,7 @@ window.gcexports.viewer = (function () {
                 onBlur={onUpdate}
                 onChange={onChange}
                 style={n.style} {...n.attrs}
-                defaultValue={props.obj.context}
+//                defaultValue={props.obj.context}
               >
               </textarea>
           );
@@ -713,6 +716,10 @@ window.gcexports.viewer = (function () {
       });
     },
     componentDidUpdate () {
+      d3.select("#context")
+        .each((d, k, elts) => {
+          elts[k].defaultValue = this.props.obj.context;
+        });
       this.renderMath();
     },
     componentDidMount () {

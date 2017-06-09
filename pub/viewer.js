@@ -202,9 +202,12 @@ window.gcexports.viewer = function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       var props = this.props;
-      console.log("render() props=" + JSON.stringify(props, null, 2));
       var data = props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
+      checks.forEach(function (v, i) {
+        // normalize.
+        checks[i] = +v;
+      });
       var elts = [];
       var y = 0;
       var len = data.length;
@@ -696,9 +699,7 @@ window.gcexports.viewer = function () {
             elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "2",
               onBlur: onUpdate,
               onChange: onChange,
-              style: n.style }, n.attrs, {
-              defaultValue: props.obj.context
-            })));
+              style: n.style }, n.attrs)));
           } else {
             elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
               onBlur: onUpdate,
@@ -878,10 +879,15 @@ window.gcexports.viewer = function () {
       });
     },
     componentDidUpdate: function componentDidUpdate() {
+      var _this = this;
+
+      d3.select("#context").each(function (d, k, elts) {
+        elts[k].defaultValue = _this.props.obj.context;
+      });
       this.renderMath();
     },
     componentDidMount: function componentDidMount() {
-      var _this = this;
+      var _this2 = this;
 
       var params = this.props.obj.params;
       var keys = Object.keys(params);
@@ -891,7 +897,7 @@ window.gcexports.viewer = function () {
       });
       loadScript("/mathquill.js", function () {
         loadStyle("/mathquill.css", function () {
-          _this.renderMath();
+          _this2.renderMath();
         });
       });
     },
