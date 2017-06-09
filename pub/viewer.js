@@ -221,7 +221,7 @@ window.gcexports.viewer = function () {
           React.createElement("input", { type: "checkbox",
             checked: checked,
             className: "check",
-            onClick: onUpdate,
+            onChange: onUpdate,
             style: { margin: "0 10 20 0" } })
         )];
         var name = void 0;
@@ -418,7 +418,7 @@ window.gcexports.viewer = function () {
 
   var codeID = void 0;
   function update(context, params, checks) {
-    dispatcher.dispatch({
+    window.gcexports.dispatcher.dispatch({
       data: {
         params: params,
         checks: checks,

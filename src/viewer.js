@@ -66,7 +66,7 @@ window.gcexports.viewer = (function () {
           <td key="0"><input type="checkbox"
                      checked={checked}
                      className="check"
-                     onClick={onUpdate}
+                     onChange={onUpdate}
                      style={{margin: "0 10 20 0"}}/></td>
         ];
         let name;
@@ -232,7 +232,7 @@ window.gcexports.viewer = (function () {
 
   let codeID;
   function update(context, params, checks) {
-    dispatcher.dispatch({
+    window.gcexports.dispatcher.dispatch({
       data: {
         params: params,
         checks: checks,
