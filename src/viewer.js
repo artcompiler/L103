@@ -720,6 +720,11 @@ window.gcexports.viewer = (function () {
                   "attrs": {
                     "id": "preview",
                   },
+                  "style": {
+                    "background": "rgba(8, 149, 194, 0.05)",  // #0895c2
+                    "borderRadius": "4",
+                    "borderWidth": "1"
+                  },
                   "args": {
                     "type": "str",
                     "value": "PREVIEW"
@@ -732,7 +737,11 @@ window.gcexports.viewer = (function () {
       }
     ],
     clickHandler() {
-      window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+      if (this.props.checks.length > 0) {
+        window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+      } else {
+        alert("Please select one or more questions to preview.");
+      }
     },
     renderMath () {
       d3.selectAll(".mq").each((v, i, e) => {
