@@ -250,10 +250,11 @@ window.gcexports.viewer = (function () {
       // HACK not all arguments are arrays. Not sure they should be.
       nodes = [nodes];
     }
-    nodes.forEach(function (n, i) {
+    nodes.forEach((n, i) => {
       let args = [];
       if (n.args) {
-        args = render(n.args, props);
+        args = render.call(this, n.args, props);
+//        args = render(n.args, props);
       }
       if (typeof n === "object") {
         n.style = n.style ? n.style : {};
@@ -529,9 +530,13 @@ window.gcexports.viewer = (function () {
         break;
       case "button":
         elts.push(
-          <a className="button" key={i} style={n.style} {...n.attrs}>
+          <button
+            key={i}
+            onClick={this.clickHandler}
+            style={n.style}
+            {...n.attrs}>
             {args}
-          </a>
+          </button>
         );
         break;
       case "ul":
@@ -705,15 +710,39 @@ window.gcexports.viewer = (function () {
                 ],
               }
             ],
+          }, {
+            "type": "row",
+            "args": [
+              {
+                "type": "twelveColumns",
+                "args": [{
+                  "type": "button",
+                  "attrs": {
+                    "id": "preview",
+                  },
+                  "args": {
+                    "type": "str",
+                    "value": "PREVIEW"
+                  },
+                }],
+              }
+            ],
           }
         ]
       }
     ],
+    clickHandler() {
+      window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+    },
     renderMath () {
       d3.selectAll(".mq").each((v, i, e) => {
         let MQ = MathQuill.getInterface(2);
         let mathQuill = MQ.StaticMath(e[i]);
       });
+    },
+    getItemID() {
+      let href = window.location.href;
+      return href.substring(href.indexOf("id=") + 3);
     },
     componentDidUpdate () {
       d3.select("#context")
@@ -731,7 +760,7 @@ window.gcexports.viewer = (function () {
       });
       loadScript("/mathquill.js", () => {
         loadStyle("/mathquill.css", () => {
-          this.renderMath();
+          this.componentDidUpdate();
         });
       });
     },

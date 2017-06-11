@@ -431,6 +431,8 @@ window.gcexports.viewer = function () {
     });
   }
   function _render(nodes, props) {
+    var _this = this;
+
     var elts = [];
     if (!(nodes instanceof Array)) {
       // HACK not all arguments are arrays. Not sure they should be.
@@ -439,7 +441,8 @@ window.gcexports.viewer = function () {
     nodes.forEach(function (n, i) {
       var args = [];
       if (n.args) {
-        args = _render(n.args, props);
+        args = _render.call(_this, n.args, props);
+        //        args = render(n.args, props);
       }
       if ((typeof n === "undefined" ? "undefined" : _typeof(n)) === "object") {
         n.style = n.style ? n.style : {};
@@ -709,8 +712,12 @@ window.gcexports.viewer = function () {
           break;
         case "button":
           elts.push(React.createElement(
-            "a",
-            _extends({ className: "button", key: i, style: n.style }, n.attrs),
+            "button",
+            _extends({
+              key: i,
+              onClick: _this.clickHandler,
+              style: n.style
+            }, n.attrs),
             args
           ));
           break;
@@ -870,24 +877,46 @@ window.gcexports.viewer = function () {
           "type": "twelveColumns",
           "args": []
         }]
+      }, {
+        "type": "row",
+        "args": [{
+          "type": "twelveColumns",
+          "args": [{
+            "type": "button",
+            "attrs": {
+              "id": "preview"
+            },
+            "args": {
+              "type": "str",
+              "value": "PREVIEW"
+            }
+          }]
+        }]
       }]
     }],
+    clickHandler: function clickHandler() {
+      window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+    },
     renderMath: function renderMath() {
       d3.selectAll(".mq").each(function (v, i, e) {
         var MQ = MathQuill.getInterface(2);
         var mathQuill = MQ.StaticMath(e[i]);
       });
     },
+    getItemID: function getItemID() {
+      var href = window.location.href;
+      return href.substring(href.indexOf("id=") + 3);
+    },
     componentDidUpdate: function componentDidUpdate() {
-      var _this = this;
+      var _this2 = this;
 
       d3.select("#context").each(function (d, k, elts) {
-        elts[k].defaultValue = _this.props.obj.context;
+        elts[k].defaultValue = _this2.props.obj.context;
       });
       this.renderMath();
     },
     componentDidMount: function componentDidMount() {
-      var _this2 = this;
+      var _this3 = this;
 
       var params = this.props.obj.params;
       var keys = Object.keys(params);
@@ -897,7 +926,7 @@ window.gcexports.viewer = function () {
       });
       loadScript("/mathquill.js", function () {
         loadStyle("/mathquill.css", function () {
-          _this2.renderMath();
+          _this3.componentDidUpdate();
         });
       });
     },
