@@ -696,7 +696,23 @@ window.gcexports.viewer = (function () {
                         ],
                       }
                     ],
-                  }
+                  },
+                  {
+                    "type": "button",
+                    "attrs": {
+                      "id": "preview",
+                    },
+                    "style": {
+                      "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
+                      "borderRadius": "4",
+                      "borderWidth": "1",
+                      "margin": "0 0 30 0",
+                    },
+                    "args": {
+                      "type": "str",
+                      "value": "PREVIEW"
+                    },
+                  },
                 ],
               }
             ],
@@ -708,28 +724,6 @@ window.gcexports.viewer = (function () {
                 "type": "twelveColumns",
                 "args": [
                 ],
-              }
-            ],
-          }, {
-            "type": "row",
-            "args": [
-              {
-                "type": "twelveColumns",
-                "args": [{
-                  "type": "button",
-                  "attrs": {
-                    "id": "preview",
-                  },
-                  "style": {
-                    "background": "rgba(8, 149, 194, 0.20)",  // #0895c2
-                    "borderRadius": "4",
-                    "borderWidth": "1"
-                  },
-                  "args": {
-                    "type": "str",
-                    "value": "PREVIEW"
-                  },
-                }],
               }
             ],
           }
