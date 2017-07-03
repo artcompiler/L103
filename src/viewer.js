@@ -703,6 +703,7 @@ window.gcexports.viewer = (function () {
                       "id": "preview",
                     },
                     "style": {
+                      "width": "100%",
                       "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
                       "borderRadius": "4",
                       "borderWidth": "1",
