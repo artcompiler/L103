@@ -442,7 +442,6 @@ window.gcexports.viewer = function () {
       var args = [];
       if (n.args) {
         args = _render.call(_this, n.args, props);
-        //        args = render(n.args, props);
       }
       if ((typeof n === "undefined" ? "undefined" : _typeof(n)) === "object") {
         n.style = n.style ? n.style : {};
@@ -643,7 +642,7 @@ window.gcexports.viewer = function () {
             elts.push(React.createElement(
               "h4",
               _extends({ key: i, style: n.style }, n.attrs),
-              props.obj.title
+              splitValue(props.obj.title)
             ));
           } else {
             elts.push(React.createElement(
@@ -665,7 +664,7 @@ window.gcexports.viewer = function () {
             elts.push(React.createElement(
               "h6",
               _extends({ key: i, style: n.style }, n.attrs),
-              props.obj.notes
+              splitValue(props.obj.notes)
             ));
           } else {
             elts.push(React.createElement(

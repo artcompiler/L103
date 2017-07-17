@@ -254,7 +254,6 @@ window.gcexports.viewer = (function () {
       let args = [];
       if (n.args) {
         args = render.call(this, n.args, props);
-//        args = render(n.args, props);
       }
       if (typeof n === "object") {
         n.style = n.style ? n.style : {};
@@ -454,7 +453,7 @@ window.gcexports.viewer = (function () {
         if (n.attrs.id === "title" && props.obj.title) {
           elts.push(
               <h4 key={i} style={n.style} {...n.attrs}>
-              {props.obj.title}
+              {splitValue(props.obj.title)}
             </h4>
           );          
         } else {
@@ -476,7 +475,7 @@ window.gcexports.viewer = (function () {
         if (n.attrs.id === "notes" && props.obj.notes) {
           elts.push(
               <h6 key={i} style={n.style} {...n.attrs}>
-              {props.obj.notes}
+              {splitValue(props.obj.notes)}
             </h6>
           );
         } else {

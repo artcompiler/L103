@@ -487,6 +487,14 @@ let transform = (function() {
       });
     });
   }
+  function index(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        val2.index = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
   function notes(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
@@ -896,6 +904,7 @@ let transform = (function() {
     "DECIMAL": decimal,
     "GEN" : gen,
     "TITLE" : title,
+    "INDEX" : index,
     "VALUE" : value,
     "NOTES" : notes,
     "CONTEXT" : context,
@@ -921,6 +930,7 @@ let render = (function() {
     let checks = val.checks;
     let params = val.params;
     let title = val.title;
+    let index = val.index;
     let notes = val.notes;
     let context = val.context ? val.context : "{{stimulus}}";
     var errs = [];
@@ -980,6 +990,7 @@ let render = (function() {
         data: val,
         params: params,
         title: title,
+        index: index,
         notes: notes,
         context: context,
         checks: checks,

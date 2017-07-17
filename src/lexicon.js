@@ -37,5 +37,6 @@ window.gcexports.globalLexicon = {
   "value" : { "tk": 1, "name": "VALUE", "cls": "function", "length": 2 , "arity": 2 },
   "context" : { "tk": 1, "name": "CONTEXT", "cls": "function", "length": 2 , "arity": 2 },
   "notes" : { "tk": 1, "name": "NOTES", "cls": "function", "length": 2 , "arity": 2 },
+  "index" : { "tk": 1, "name": "INDEX", "cls": "function", "length": 2 , "arity": 2 },
   "params" : { "tk": 1, "name": "PARAMS", "cls": "function", "length": 1 , "arity": 1 }
 }
