@@ -772,7 +772,9 @@ window.gcexports.viewer = (function () {
       // owned components.
       let props = this.props;
       codeID = props.obj.gen;
-      injectParamsIntoUI(this.ui, props.obj.params);
+      if (props.obj.params) {
+        injectParamsIntoUI(this.ui, props.obj.params);
+      }
       var data = props.obj ? [].concat(props.obj) : [];
       var elts = render.call(this, this.ui, props, this.dirty);
       return (
