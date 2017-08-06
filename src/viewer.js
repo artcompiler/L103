@@ -235,13 +235,27 @@ window.gcexports.viewer = (function () {
 
   let codeID;
   function update(context, params, checks) {
+    let ids = window.gcexports.decodeID(window.gcexports.id);
     window.gcexports.dispatcher.dispatch({
-      data: {
-        params: params,
-        checks: checks,
-        context: context,
+      "L100": {
+        data: {
+          "preview": undefined,
+          "generator": {
+            langID: ids[0],
+            codeID: ids[1],
+            dataID: window.gcexports.encodeID(ids.slice(2)),
+          },
+        },
       },
-      recompileCode: true,
+      "L122": {
+        data: {
+          codeID: ids[1],
+          params: params,
+          checks: checks,
+          context: context,
+        },
+        recompileCode: true,
+      },
     });
   }
   function render(nodes, props) {
@@ -706,11 +720,28 @@ window.gcexports.viewer = (function () {
                       "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
                       "borderRadius": "4",
                       "borderWidth": "1",
-                      "margin": "0 0 30 0",
+                      "margin": "0 0 10 0",
                     },
                     "args": {
                       "type": "str",
                       "value": "PREVIEW"
+                    },
+                  },
+                  {
+                    "type": "button",
+                    "attrs": {
+                      "id": "save",
+                    },
+                    "style": {
+                      "width": "100%",
+                      "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
+                      "borderRadius": "4",
+                      "borderWidth": "1",
+                      "margin": "0 0 30 0",
+                    },
+                    "args": {
+                      "type": "str",
+                      "value": "SAVE"
                     },
                   },
                 ],
@@ -732,7 +763,20 @@ window.gcexports.viewer = (function () {
     ],
     clickHandler() {
       if (this.props.checks.length > 0) {
-        window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+        window.gcexports.dispatcher.dispatch({
+          "L100": {
+            data: {
+              "preview": {
+                target: "preview",
+                langID: "124",
+                codeID: "522127",
+                dataID: this.getItemID(),
+              },
+            },
+            recompileCode: true,
+          }
+        });
+//        window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
       } else {
         alert("Please select one or more questions to preview.");
       }
