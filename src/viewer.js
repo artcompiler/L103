@@ -27,14 +27,16 @@ window.gcexports.viewer = (function () {
     // \\(x\\)abc\\(y\\) => ["", "x\\)abc", "y\\)"]
     let startMath = str.split("\\(");
     let elts = [];
+    let offset = 0;
     startMath.forEach((v, i) => {
       // Odd indexes are text, evens have LaTeX prefixes.
       if (i === 0 && !allMath) {
-        elts.push(<span>{v}</span>);
+        elts.push(<span key={i+offset}>{v}</span>);
       } else {
         let parts = v.split("\\)");
-        elts.push(<span className="mq">{parts[0]}</span>);
-        elts.push(<span>{parts[1]}</span>);
+        elts.push(<span key={i+offset} className="mq">{parts[0]}</span>);
+        elts.push(<span key={i+offset+1}>{parts[1]}</span>);
+        offset++;
       }
     });
     return elts;

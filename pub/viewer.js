@@ -168,26 +168,28 @@ window.gcexports.viewer = function () {
     // \\(x\\)abc\\(y\\) => ["", "x\\)abc", "y\\)"]
     var startMath = str.split("\\(");
     var elts = [];
+    var offset = 0;
     startMath.forEach(function (v, i) {
       // Odd indexes are text, evens have LaTeX prefixes.
       if (i === 0 && !allMath) {
         elts.push(React.createElement(
           "span",
-          null,
+          { key: i + offset },
           v
         ));
       } else {
         var parts = v.split("\\)");
         elts.push(React.createElement(
           "span",
-          { className: "mq" },
+          { key: i + offset, className: "mq" },
           parts[0]
         ));
         elts.push(React.createElement(
           "span",
-          null,
+          { key: i + offset + 1 },
           parts[1]
         ));
+        offset++;
       }
     });
     return elts;
