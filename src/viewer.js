@@ -239,19 +239,19 @@ window.gcexports.viewer = (function () {
   function update(context, params, checks) {
     let ids = window.gcexports.decodeID(window.gcexports.id);
     window.gcexports.dispatcher.dispatch({
-      "L100": {
-        data: {
-          "preview": undefined,
-          "generator": {
-            langID: ids[0],
-            codeID: ids[1],
-            dataID: window.gcexports.encodeID(ids.slice(2)),
-          },
-        },
-      },
+      // "L100": {
+      //   data: {
+      //     "preview": undefined,
+      //     "generator": {
+      //       langID: ids[0],
+      //       codeID: ids[1],
+      //       dataID: window.gcexports.encodeID(ids.slice(2)),
+      //     },
+      //   },
+      //   recompileCode: true,
+      // },
       "L122": {
         data: {
-          codeID: ids[1],
           params: params,
           checks: checks,
           context: context,
@@ -765,9 +765,15 @@ window.gcexports.viewer = (function () {
     ],
     clickHandler() {
       if (this.props.checks.length > 0) {
+        let ids = window.gcexports.decodeID(window.gcexports.id);
         window.gcexports.dispatcher.dispatch({
           "L100": {
             data: {
+              "generator": {
+                langID: ids[0],
+                codeID: ids[1],
+                dataID: window.gcexports.encodeID(ids.slice(2)),
+              },
               "preview": {
                 target: "preview",
                 langID: "124",
@@ -778,7 +784,6 @@ window.gcexports.viewer = (function () {
             recompileCode: true,
           }
         });
-//        window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
       } else {
         alert("Please select one or more questions to preview.");
       }
