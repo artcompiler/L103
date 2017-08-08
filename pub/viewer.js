@@ -400,7 +400,7 @@ window.gcexports.viewer = function () {
       data = newData;
     }
     checks = [];
-    if (e.target.className === "check") {
+    if (e && e.target && e.target.className === "check") {
       // If target is a checkbox, then save the state of the checks.
       d3.selectAll(".check").nodes().forEach(function (d, i) {
         if (d.checked) {
@@ -413,10 +413,6 @@ window.gcexports.viewer = function () {
       isDirty = false;
       checks = [];
     }
-    // if (e.target.id !== "context" && e.target.value !== "") {
-    //   e.target.placeholder = e.target.value;
-    //   e.target.value = "";
-    // }
     var context = getContext();
     update(context, params, checks);
   }
@@ -440,7 +436,8 @@ window.gcexports.viewer = function () {
         data: {
           params: params,
           checks: checks,
-          context: context
+          context: context,
+          saveID: undefined
         },
         recompileCode: true
       }
@@ -733,7 +730,7 @@ window.gcexports.viewer = function () {
               onClick: _this.clickHandler,
               style: n.style
             }, n.attrs),
-            args
+            n.value
           ));
           break;
         case "ul":
@@ -883,37 +880,42 @@ window.gcexports.viewer = function () {
                 "args": []
               }]
             }]
-          }, {
+          }]
+        }]
+      }, {
+        "type": "row",
+        "args": [{
+          "id": "button1",
+          "type": "sixColumns",
+          "args": [{
             "type": "button",
             "attrs": {
               "id": "preview"
             },
+            "value": "PREVIEW",
             "style": {
               "width": "100%",
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
               "borderRadius": "4",
               "borderWidth": "1",
               "margin": "0 0 10 0"
-            },
-            "args": {
-              "type": "str",
-              "value": "PREVIEW"
             }
-          }, {
+          }]
+        }, {
+          "id": "button2",
+          "type": "sixColumns",
+          "args": [{
             "type": "button",
             "attrs": {
               "id": "save"
             },
+            "value": "SAVE",
             "style": {
               "width": "100%",
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
               "borderRadius": "4",
               "borderWidth": "1",
               "margin": "0 0 30 0"
-            },
-            "args": {
-              "type": "str",
-              "value": "SAVE"
             }
           }]
         }]
@@ -926,29 +928,41 @@ window.gcexports.viewer = function () {
         }]
       }]
     }],
-    clickHandler: function clickHandler() {
-      if (this.props.checks.length > 0) {
+    clickHandler: function clickHandler(e) {
+      if (e.target.id === "preview") {
+        if (this.props.checks && this.props.checks.length > 0) {
+          // let ids = window.gcexports.decodeID(window.gcexports.id);
+          // window.gcexports.dispatcher.dispatch({
+          //   "L100": {
+          //     data: {
+          //       // "generator": {
+          //       //   langID: ids[0],
+          //       //   codeID: ids[1],
+          //       //   dataID: window.gcexports.encodeID(ids.slice(2)),
+          //       // },
+          //       "preview": {
+          //         target: "preview",
+          //         langID: "124",
+          //         codeID: "522127",
+          //         dataID: this.getItemID(),
+          //       },
+          //     },
+          //     recompileCode: true,
+          //   }
+          // });
+          window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+        } else {
+          alert("Please select one or more questions to preview.");
+        }
+      } else if (e.target.id === "save") {
         var ids = window.gcexports.decodeID(window.gcexports.id);
         window.gcexports.dispatcher.dispatch({
-          "L100": {
+          "L122": {
             data: {
-              "generator": {
-                langID: ids[0],
-                codeID: ids[1],
-                dataID: window.gcexports.encodeID(ids.slice(2))
-              },
-              "preview": {
-                target: "preview",
-                langID: "124",
-                codeID: "522127",
-                dataID: this.getItemID()
-              }
-            },
-            recompileCode: true
+              saveID: this.getItemID()
+            }
           }
         });
-      } else {
-        alert("Please select one or more questions to preview.");
       }
     },
     renderMath: function renderMath() {
