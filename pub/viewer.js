@@ -370,6 +370,7 @@ window.gcexports.viewer = function () {
     return table;
   }
   var isDirty = false;
+  var isSaved = false;
   function onChange(e) {
     // Once anything has changed, we use the in memory state,
     // not the compiled state. These should be in sync until
@@ -415,23 +416,13 @@ window.gcexports.viewer = function () {
     }
     var context = getContext();
     update(context, params, checks);
+    isSaved = false;
   }
 
   var codeID = void 0;
   function update(context, params, checks) {
     var ids = window.gcexports.decodeID(window.gcexports.id);
     window.gcexports.dispatcher.dispatch({
-      // "L100": {
-      //   data: {
-      //     "preview": undefined,
-      //     "generator": {
-      //       langID: ids[0],
-      //       codeID: ids[1],
-      //       dataID: window.gcexports.encodeID(ids.slice(2)),
-      //     },
-      //   },
-      //   recompileCode: true,
-      // },
       "L122": {
         data: {
           params: params,
@@ -723,6 +714,7 @@ window.gcexports.viewer = function () {
           }
           break;
         case "button":
+          n.style.background = n.attrs.id === "save" && isSaved ? "#ddd" : "rgba(8, 149, 194, 0.10)";
           elts.push(React.createElement(
             "button",
             _extends({
@@ -885,7 +877,7 @@ window.gcexports.viewer = function () {
       }, {
         "type": "row",
         "args": [{
-          "id": "button1",
+          "id": "saveButton",
           "type": "sixColumns",
           "args": [{
             "type": "button",
@@ -902,7 +894,7 @@ window.gcexports.viewer = function () {
             }
           }]
         }, {
-          "id": "button2",
+          "id": "saveButton",
           "type": "sixColumns",
           "args": [{
             "type": "button",
@@ -960,9 +952,11 @@ window.gcexports.viewer = function () {
           "L122": {
             data: {
               saveID: this.getItemID()
-            }
+            },
+            dontUpdateID: true // Don't update ID and browser location.
           }
         });
+        isSaved = true;
       }
     },
     renderMath: function renderMath() {
