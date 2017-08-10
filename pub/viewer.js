@@ -220,7 +220,8 @@ window.gcexports.viewer = function () {
       data.forEach(function (data, i) {
         var headElts = [React.createElement("td", { key: "0" })];
         var checked = checks.indexOf(i) > -1;
-        var bodyElts = [React.createElement(
+        var bodyElts = [];
+        bodyElts.push(React.createElement(
           "td",
           { key: "0" },
           React.createElement("input", { type: "checkbox",
@@ -228,10 +229,10 @@ window.gcexports.viewer = function () {
             className: "check",
             onChange: onUpdate,
             style: { margin: "0 10 20 0" } })
-        )];
+        ));
         var name = void 0;
         var x = 0;
-        data.val.forEach(function (d, i) {
+        data.val.forEach(function (d) {
           var style = {};
           name = d.name;
           if (d.style) {

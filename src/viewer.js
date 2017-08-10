@@ -67,16 +67,16 @@ window.gcexports.viewer = (function () {
           <td key="0"/>
         ];
         let checked = checks.indexOf(i) > -1;
-        let bodyElts = [
-          <td key="0"><input type="checkbox"
-                     checked={checked}
-                     className="check"
-                     onChange={onUpdate}
-                     style={{margin: "0 10 20 0"}}/></td>
-        ];
+        let bodyElts = [];
+        bodyElts.push(<td key="0"><input type="checkbox"
+                      checked={checked}
+                      className="check"
+                      onChange={onUpdate}
+                      style={{margin: "0 10 20 0"}}/></td>
+                     );
         let name;
         let x = 0;
-        data.val.forEach((d, i) => {
+        data.val.forEach((d) => {
           var style = {};
           name = d.name;
           if (d.style) {
@@ -93,8 +93,8 @@ window.gcexports.viewer = (function () {
           style.padding = "0 40 0 0";
           bodyElts.push(
               <td key={bodyElts.length} x={x} y={y} style={style}>
-                  {splitValue(val, name === "solution")}
-              </td>);
+              {splitValue(val, name === "solution")}
+            </td>);
         });
         elts.push(<table key={i}>
            <thead><tr>{headElts}</tr></thead>

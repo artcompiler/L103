@@ -621,7 +621,9 @@ let transform = (function() {
     visit(node.elts[0], options, function (err1, val1) {
       let params = val1;
       let values = [];
-      let data = options.data && options.data.params ? options.data.params : [[]];
+      let data = options.data && options.data.params 
+                   ? options.data.params
+                   : [Object.values(params)]; // Use defaults.
       if (params) {
         let keys = Object.keys(params);
         // Create first row using param names.
@@ -699,6 +701,7 @@ let transform = (function() {
       return env;
     }
     function evalExpr(env, expr, resume) {
+      console.log("evalExpr() expr=" + expr + " env=" + JSON.stringify(env));
       if (expr.indexOf("=") === 0) {
         expr = expr.substring(1);
         MathCore.evaluateVerbose({
