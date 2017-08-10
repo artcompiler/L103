@@ -701,7 +701,6 @@ let transform = (function() {
       return env;
     }
     function evalExpr(env, expr, resume) {
-      console.log("evalExpr() expr=" + expr + " env=" + JSON.stringify(env));
       if (expr.indexOf("=") === 0) {
         expr = expr.substring(1);
         MathCore.evaluateVerbose({
