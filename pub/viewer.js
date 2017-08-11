@@ -948,11 +948,13 @@ window.gcexports.viewer = function () {
           alert("Please select one or more questions to preview.");
         }
       } else if (e.target.id === "save") {
-        var ids = window.gcexports.decodeID(window.gcexports.id);
+        var itemID = this.getItemID();
+        var ids = window.gcexports.decodeID(itemID);
         window.gcexports.dispatcher.dispatch({
           "L122": {
             data: {
-              saveID: this.getItemID()
+              codeID: ids[1],
+              saveID: itemID
             },
             dontUpdateID: true // Don't update ID and browser location.
           }
