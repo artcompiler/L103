@@ -963,10 +963,12 @@ window.gcexports.viewer = function () {
       }
     },
     renderMath: function renderMath() {
-      d3.selectAll(".mq").each(function (v, i, e) {
-        var MQ = MathQuill.getInterface(2);
-        var mathQuill = MQ.StaticMath(e[i]);
-      });
+      if (window.MathQuill) {
+        d3.selectAll(".mq").each(function (v, i, e) {
+          var MQ = MathQuill.getInterface(2);
+          var mathQuill = MQ.StaticMath(e[i]);
+        });
+      }
     },
     getItemID: function getItemID() {
       var href = window.location.href;

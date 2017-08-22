@@ -804,10 +804,12 @@ window.gcexports.viewer = (function () {
       }
     },
     renderMath () {
-      d3.selectAll(".mq").each((v, i, e) => {
-        let MQ = MathQuill.getInterface(2);
-        let mathQuill = MQ.StaticMath(e[i]);
-      });
+      if (window.MathQuill) {
+        d3.selectAll(".mq").each((v, i, e) => {
+          let MQ = MathQuill.getInterface(2);
+          let mathQuill = MQ.StaticMath(e[i]);
+        });
+      }
     },
     getItemID() {
       let href = window.location.href;
