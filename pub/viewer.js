@@ -220,19 +220,24 @@ window.gcexports.viewer = function () {
       data.forEach(function (data, i) {
         var headElts = [React.createElement("td", { key: "0" })];
         var checked = checks.indexOf(i) > -1;
+        var isTemplate = i === 0;
         var bodyElts = [];
         bodyElts.push(React.createElement(
           "td",
           { key: "0" },
           React.createElement("input", { type: "checkbox",
             checked: checked,
-            className: "check",
+            className: "check" + (isTemplate ? " selectAll" : ""),
             onChange: onUpdate,
             style: { margin: "0 10 20 0" } })
         ));
         var name = void 0;
         var x = 0;
-        data.val.forEach(function (d) {
+        data.val.forEach(function (d, j) {
+          if (isTemplate && j > 0) {
+            // Only display the template stimulus
+            return;
+          }
           var style = {};
           name = d.name;
           if (d.style) {
@@ -402,7 +407,12 @@ window.gcexports.viewer = function () {
       data = newData;
     }
     checks = [];
-    if (e && e.target && e.target.className === "check") {
+    if (e && e.target && e.target.className.indexOf("check") >= 0) {
+      if (e.target.className.indexOf("selectAll") >= 0) {
+        var state = e.target.checked;
+        d3.selectAll(".check").property("checked", state);
+      }
+
       // If target is a checkbox, then save the state of the checks.
       d3.selectAll(".check").nodes().forEach(function (d, i) {
         if (d.checked) {

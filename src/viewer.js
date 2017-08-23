@@ -67,16 +67,21 @@ window.gcexports.viewer = (function () {
           <td key="0"/>
         ];
         let checked = checks.indexOf(i) > -1;
+        let isTemplate = i === 0;
         let bodyElts = [];
         bodyElts.push(<td key="0"><input type="checkbox"
                       checked={checked}
-                      className="check"
+                      className={"check" + (isTemplate ? " selectAll" : "")}
                       onChange={onUpdate}
                       style={{margin: "0 10 20 0"}}/></td>
                      );
         let name;
         let x = 0;
-        data.val.forEach((d) => {
+        data.val.forEach((d, j) => {
+          if (isTemplate && j > 0) {
+            // Only display the template stimulus
+            return;
+          }
           var style = {};
           name = d.name;
           if (d.style) {
@@ -215,7 +220,12 @@ window.gcexports.viewer = (function () {
       data = newData;
     }
     checks = [];
-    if (e && e.target && e.target.className === "check") {
+    if (e && e.target && e.target.className.indexOf("check") >= 0) {
+      if (e.target.className.indexOf("selectAll") >= 0) {
+        let state = e.target.checked;
+        d3.selectAll(".check").property("checked", state);
+      }
+
       // If target is a checkbox, then save the state of the checks.
       d3.selectAll(".check").nodes().forEach((d, i) => {
         if (d.checked) {
