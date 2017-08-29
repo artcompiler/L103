@@ -28,12 +28,14 @@ app.get('/compile', function(req, res) {
     body = JSON.parse(body);
     let code = body.src;
     let data = body.data;
+    let t0 = new Date;
     var obj = compiler.compile(code, data, function (err, val) {
       if (err && err.length) {
         res.status(400).send({
           error: err,
         });
       } else {
+        console.log("GET /compile " + (new Date - t0) + "ms");
         res.send(val);
       }
     });
