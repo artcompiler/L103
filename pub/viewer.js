@@ -953,6 +953,7 @@ window.gcexports.viewer = function () {
           //     recompileCode: true,
           //   }
           // });
+          console.log("clickHandler() getItemID()=" + this.getItemID() + " id=" + window.gcexports.id);
           window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
         } else {
           alert("Please select one or more questions to preview.");
@@ -975,8 +976,12 @@ window.gcexports.viewer = function () {
     renderMath: function renderMath() {
       if (window.MathQuill) {
         d3.selectAll(".mq").each(function (v, i, e) {
-          var MQ = MathQuill.getInterface(2);
-          var mathQuill = MQ.StaticMath(e[i]);
+          try {
+            var MQ = MathQuill.getInterface(2);
+            var mathQuill = MQ.StaticMath(e[i]);
+          } catch (x) {
+            console.log("ERROR rendering MathQuill: " + x);
+          }
         });
       }
     },
