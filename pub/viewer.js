@@ -953,7 +953,6 @@ window.gcexports.viewer = function () {
           //     recompileCode: true,
           //   }
           // });
-          console.log("clickHandler() getItemID()=" + this.getItemID() + " id=" + window.gcexports.id);
           window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
         } else {
           alert("Please select one or more questions to preview.");
