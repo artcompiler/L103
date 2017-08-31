@@ -888,7 +888,7 @@ window.gcexports.viewer = function () {
       }, {
         "type": "row",
         "args": [{
-          "id": "saveButton",
+          "id": "previewButton",
           "type": "sixColumns",
           "args": [{
             "type": "button",

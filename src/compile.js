@@ -946,12 +946,6 @@ let render = (function() {
           val: v.seed
         });
       }
-      // if (v.stimulus) {
-      //   lst.push({
-      //     name: "stimulus",
-      //     val: "\\(" + v.stimulus + "\\)";
-      //   });
-      // }
       if (v.solution) {
         lst.push({
           name: "solution",
