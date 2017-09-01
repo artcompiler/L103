@@ -807,6 +807,7 @@ window.gcexports.viewer = (function () {
               codeID: ids[1],
               saveID: itemID,
             },
+            parentID: ids[1],
             dontUpdateID: true,  // Don't update ID and browser location.
           },
         });
