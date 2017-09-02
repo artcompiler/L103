@@ -931,46 +931,72 @@ window.gcexports.viewer = function () {
         }]
       }]
     }],
+    postData: function postData(data, resume) {
+      // Save the data and get updated itemID.
+      var gcexports = window.gcexports;
+      var user = $("#username").data("user");
+      var lang = gcexports.language;
+      var label = "";
+      var parentID = 0;
+      // Append host language to label.
+      label = label ? lang + " " + label : lang;
+      if (Object.keys(data).length > 0) {
+        $.ajax({
+          type: "PUT",
+          url: "/code",
+          data: {
+            src: JSON.stringify(data) + "..", // Some JSON is valid source.
+            ast: "",
+            obj: JSON.stringify(data),
+            img: "",
+            user: user ? user.id : 1,
+            parent_id: parentID,
+            language: "L113",
+            label: label + " data"
+          },
+          dataType: "json",
+          success: function success(data) {
+            resume(data.id);
+          },
+          error: function error(xhr, msg, err) {
+            console.log("ERROR unable to submit code.");
+          }
+        });
+      }
+    },
     clickHandler: function clickHandler(e) {
+      var _this2 = this;
+
       if (e.target.id === "preview") {
-        if (this.props.checks && this.props.checks.length > 0) {
-          // let ids = window.gcexports.decodeID(window.gcexports.id);
-          // window.gcexports.dispatcher.dispatch({
-          //   "L100": {
-          //     data: {
-          //       // "generator": {
-          //       //   langID: ids[0],
-          //       //   codeID: ids[1],
-          //       //   dataID: window.gcexports.encodeID(ids.slice(2)),
-          //       // },
-          //       "preview": {
-          //         target: "preview",
-          //         langID: "124",
-          //         codeID: "522127",
-          //         dataID: this.getItemID(),
-          //       },
-          //     },
-          //     recompileCode: true,
-          //   }
-          // });
-          window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+        if (checks && checks.length > 0) {
+          var data = this.props.data;
+          data.checks = checks;
+          this.postData(data, function (dataID) {
+            var ids = window.gcexports.decodeID(_this2.getItemID());
+            var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+            window.open("/form?id=VpeuQ1ONsJ" + "+" + id, "L124");
+          });
         } else {
           alert("Please select one or more questions to preview.");
         }
       } else if (e.target.id === "save") {
-        var itemID = this.getItemID();
-        var ids = window.gcexports.decodeID(itemID);
-        window.gcexports.dispatcher.dispatch({
-          "L122": {
-            data: {
-              codeID: ids[1],
-              saveID: itemID
-            },
-            parentID: ids[1],
-            dontUpdateID: true // Don't update ID and browser location.
-          }
+        var _data = this.props.data;
+        _data.checks = []; // Don't save checks.
+        this.postData(_data, function (dataID) {
+          var ids = window.gcexports.decodeID(_this2.getItemID());
+          var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+          window.gcexports.dispatcher.dispatch({
+            "L122": {
+              data: {
+                codeID: ids[1],
+                saveID: id
+              },
+              parentID: ids[1],
+              dontUpdateID: true // Don't update ID and browser location.
+            }
+          });
+          isSaved = true;
         });
-        isSaved = true;
       }
     },
     renderMath: function renderMath() {
@@ -990,15 +1016,15 @@ window.gcexports.viewer = function () {
       return href.substring(href.indexOf("id=") + 3);
     },
     componentDidUpdate: function componentDidUpdate() {
-      var _this2 = this;
+      var _this3 = this;
 
       d3.select("#context").each(function (d, k, elts) {
-        elts[k].defaultValue = _this2.props.obj.context;
+        elts[k].defaultValue = _this3.props.obj.context;
       });
       this.renderMath();
     },
     componentDidMount: function componentDidMount() {
-      var _this3 = this;
+      var _this4 = this;
 
       var params = this.props.obj.params;
       var keys = Object.keys(params);
@@ -1008,7 +1034,7 @@ window.gcexports.viewer = function () {
       });
       loadScript("/mathquill.js", function () {
         loadStyle("/mathquill.css", function () {
-          _this3.componentDidUpdate();
+          _this4.componentDidUpdate();
         });
       });
     },

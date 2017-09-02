@@ -772,46 +772,70 @@ window.gcexports.viewer = (function () {
         ]
       }
     ],
+    postData(data, resume) {
+      // Save the data and get updated itemID.
+      let gcexports = window.gcexports;
+      let user = $("#username").data("user");
+      let lang = gcexports.language;
+      let label = "";
+      let parentID = 0;
+      // Append host language to label.
+      label = label ? lang + " " + label : lang;
+      if (Object.keys(data).length > 0) {
+        $.ajax({
+          type: "PUT",
+          url: "/code",
+          data: {
+            src: JSON.stringify(data) + "..",  // Some JSON is valid source.
+            ast: "",
+            obj: JSON.stringify(data),
+            img: "",
+            user: user ? user.id : 1,
+            parent_id: parentID,
+            language: "L113",
+            label: label + " data",
+          },
+          dataType: "json",
+          success: function(data) {
+            resume(data.id);
+          },
+          error: function(xhr, msg, err) {
+            console.log("ERROR unable to submit code.");
+          }
+        });
+      }
+    },
     clickHandler(e) {
       if (e.target.id === "preview") {
-        if (this.props.checks && this.props.checks.length > 0) {
-          // let ids = window.gcexports.decodeID(window.gcexports.id);
-          // window.gcexports.dispatcher.dispatch({
-          //   "L100": {
-          //     data: {
-          //       // "generator": {
-          //       //   langID: ids[0],
-          //       //   codeID: ids[1],
-          //       //   dataID: window.gcexports.encodeID(ids.slice(2)),
-          //       // },
-          //       "preview": {
-          //         target: "preview",
-          //         langID: "124",
-          //         codeID: "522127",
-          //         dataID: this.getItemID(),
-          //       },
-          //     },
-          //     recompileCode: true,
-          //   }
-          // });
-          window.open("/form?id=VpeuQ1ONsJ" + "+" + this.getItemID(), "L124");
+        if (checks && checks.length > 0) {
+          let data = this.props.data;
+          data.checks = checks;
+          this.postData(data, (dataID)=> {
+            let ids = window.gcexports.decodeID(this.getItemID());
+            let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+            window.open("/form?id=VpeuQ1ONsJ" + "+" + id, "L124");
+          });
         } else {
           alert("Please select one or more questions to preview.");
         }
       } else if (e.target.id === "save") {
-        let itemID = this.getItemID();
-        let ids = window.gcexports.decodeID(itemID);
-        window.gcexports.dispatcher.dispatch({
-          "L122": {
-            data: {
-              codeID: ids[1],
-              saveID: itemID,
+        let data = this.props.data;
+        data.checks = [];  // Don't save checks.
+        this.postData(data, (dataID)=> {
+          let ids = window.gcexports.decodeID(this.getItemID());
+          let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+          window.gcexports.dispatcher.dispatch({
+            "L122": {
+              data: {
+                codeID: ids[1],
+                saveID: id,
+              },
+              parentID: ids[1],
+              dontUpdateID: true,  // Don't update ID and browser location.
             },
-            parentID: ids[1],
-            dontUpdateID: true,  // Don't update ID and browser location.
-          },
+          });
+          isSaved = true;
         });
-        isSaved = true;
       }
     },
     renderMath () {
