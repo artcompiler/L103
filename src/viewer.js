@@ -843,9 +843,10 @@ window.gcexports.viewer = (function () {
           let data = this.props.data;
           data.checks = checks;
           this.postData(data, (dataID)=> {
-            let ids = window.gcexports.decodeID(this.getItemID());
-            let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-            window.open("/data/?id=VpeuQ1ONsJ" + "+" + id, "L124");
+            let dataIDs = window.gcexports.decodeID(this.getItemID());
+            let ids = [131, 536175, 124, 522127].concat(dataIDs);
+            let id = window.gcexports.encodeID(ids);
+            window.open("/data/?id=" + id, "122 SRC");
           });
         } else {
           alert("Please select one or more questions to preview.");

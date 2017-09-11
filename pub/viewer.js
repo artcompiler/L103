@@ -1001,9 +1001,10 @@ window.gcexports.viewer = function () {
           var _data = this.props.data;
           _data.checks = checks;
           this.postData(_data, function (dataID) {
-            var ids = window.gcexports.decodeID(_this2.getItemID());
-            var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-            window.open("/data/?id=VpeuQ1ONsJ" + "+" + id, "L124");
+            var dataIDs = window.gcexports.decodeID(_this2.getItemID());
+            var ids = [131, 536175, 124, 522127].concat(dataIDs);
+            var id = window.gcexports.encodeID(ids);
+            window.open("/data/?id=" + id, "122 SRC");
           });
         } else {
           alert("Please select one or more questions to preview.");
