@@ -889,7 +889,7 @@ window.gcexports.viewer = function () {
         "type": "row",
         "args": [{
           "id": "previewButton",
-          "type": "sixColumns",
+          "type": "fourColumns",
           "args": [{
             "type": "button",
             "attrs": {
@@ -905,8 +905,25 @@ window.gcexports.viewer = function () {
             }
           }]
         }, {
+          "id": "sourceButton",
+          "type": "fourColumns",
+          "args": [{
+            "type": "button",
+            "attrs": {
+              "id": "source"
+            },
+            "value": "SOURCE",
+            "style": {
+              "width": "100%",
+              "background": "rgba(8, 149, 194, 0.10)", // #0895c2
+              "borderRadius": "4",
+              "borderWidth": "1",
+              "margin": "0 0 10 0"
+            }
+          }]
+        }, {
           "id": "saveButton",
-          "type": "sixColumns",
+          "type": "fourColumns",
           "args": [{
             "type": "button",
             "attrs": {
@@ -979,10 +996,22 @@ window.gcexports.viewer = function () {
         } else {
           alert("Please select one or more questions to preview.");
         }
+      } else if (e.target.id === "source") {
+        if (checks && checks.length > 0) {
+          var _data = this.props.data;
+          _data.checks = checks;
+          this.postData(_data, function (dataID) {
+            var ids = window.gcexports.decodeID(_this2.getItemID());
+            var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+            window.open("/data/?id=VpeuQ1ONsJ" + "+" + id, "L124");
+          });
+        } else {
+          alert("Please select one or more questions to preview.");
+        }
       } else if (e.target.id === "save") {
-        var _data = this.props.data;
-        _data.checks = []; // Don't save checks.
-        this.postData(_data, function (dataID) {
+        var _data2 = this.props.data;
+        _data2.checks = []; // Don't save checks.
+        this.postData(_data2, function (dataID) {
           var ids = window.gcexports.decodeID(_this2.getItemID());
           var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
           window.gcexports.dispatcher.dispatch({

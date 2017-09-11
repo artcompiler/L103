@@ -719,7 +719,7 @@ window.gcexports.viewer = (function () {
             "args": [
               {
                 "id": "previewButton",
-                "type": "sixColumns",
+                "type": "fourColumns",
                 "args": [
                   {
                     "type": "button",
@@ -739,7 +739,7 @@ window.gcexports.viewer = (function () {
               },
               {
                 "id": "saveButton",
-                "type": "sixColumns",
+                "type": "fourColumns",
                 "args": [
                   {
                     "type": "button",
@@ -753,6 +753,26 @@ window.gcexports.viewer = (function () {
                       "borderRadius": "4",
                       "borderWidth": "1",
                       "margin": "0 0 30 0",
+                    },
+                  },
+                ],
+              },
+              {
+                "id": "sourceButton",
+                "type": "fourColumns",
+                "args": [
+                  {
+                    "type": "button",
+                    "attrs": {
+                      "id": "source",
+                    },
+                    "value": "SOURCE",
+                    "style": {
+                      "width": "100%",
+                      "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
+                      "borderRadius": "4",
+                      "borderWidth": "1",
+                      "margin": "0 0 10 0",
                     },
                   },
                 ],
@@ -814,6 +834,18 @@ window.gcexports.viewer = (function () {
             let ids = window.gcexports.decodeID(this.getItemID());
             let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
             window.open("/form?id=VpeuQ1ONsJ" + "+" + id, "L124");
+          });
+        } else {
+          alert("Please select one or more questions to preview.");
+        }
+      } else if (e.target.id === "source") {
+        if (checks && checks.length > 0) {
+          let data = this.props.data;
+          data.checks = checks;
+          this.postData(data, (dataID)=> {
+            let ids = window.gcexports.decodeID(this.getItemID());
+            let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+            window.open("/data/?id=VpeuQ1ONsJ" + "+" + id, "L124");
           });
         } else {
           alert("Please select one or more questions to preview.");
