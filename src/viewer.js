@@ -89,7 +89,13 @@ window.gcexports.viewer = (function () {
               style[k] = d.style[k];
             });
           }
-          let val = d.val;
+          let val = d.value ? d.value : d.svg ? d.svg : d;
+          if (val instanceof Array) {
+            val = val.join(" ");
+          }
+          let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+          let {width, height} = getSize(val);
+          let n = 2*i;
           headElts.push(<th key={headElts.length} x={x} style={{
             padding: "0 40 0 0",
             fontSize: "12px",
@@ -97,9 +103,7 @@ window.gcexports.viewer = (function () {
           }}>{name.toUpperCase()}</th>);
           style.padding = "0 40 0 0";
           bodyElts.push(
-              <td key={bodyElts.length} x={x} y={y} style={style}>
-              {splitValue(val, name === "solution")}
-            </td>);
+              <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
         });
         elts.push(<table key={i}>
            <thead><tr>{headElts}</tr></thead>
@@ -109,6 +113,27 @@ window.gcexports.viewer = (function () {
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>
       );
+      function unescapeXML(str) {
+        return String(str)
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, "'");
+      }
+      function getSize(svg) {
+        svg = svg.slice(svg.indexOf("width=") + 7 + 5);
+        var width = svg.slice(0, svg.indexOf("ex")) * 8;  // ex=8px
+        svg = svg.slice(svg.indexOf("height=") + 8 + 5);
+        var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
+        if (isNaN(width) || isNaN(height)) {
+          width = 640;
+          height = 30;
+        }
+        return {
+          width: width,
+          height: height
+        }
+      }
     },
   });
 
@@ -140,6 +165,15 @@ window.gcexports.viewer = (function () {
          context += this.value ? this.value : this.placeholder;
       });
     return context;
+  }
+
+  function getTemplate() {
+    let template = "";
+    d3.select("#template")
+      .each(function(d, k, ta) {
+         template += this.value || "";
+      });
+    return template;
   }
 
   function getTable(strs) {
@@ -239,12 +273,13 @@ window.gcexports.viewer = (function () {
       checks = [];
     }
     let context = getContext();
-    update(context, params, checks);
+    let template = getTemplate();
+    update(context, template, params, checks);
     isSaved = false;
   }
 
   let codeID;
-  function update(context, params, checks) {
+  function update(context, template, params, checks) {
     let ids = window.gcexports.decodeID(window.gcexports.id);
     window.gcexports.dispatcher.dispatch({
       "L122": {
@@ -252,6 +287,7 @@ window.gcexports.viewer = (function () {
           params: params,
           checks: checks,
           context: context,
+          template: template,
           saveID: undefined,
         },
         recompileCode: true,
@@ -527,7 +563,15 @@ window.gcexports.viewer = (function () {
                 onBlur={onUpdate}
                 onChange={onChange}
                 style={n.style} {...n.attrs}
-//                defaultValue={props.obj.context}
+              >
+              </textarea>
+          );
+        } else if (n.attrs.id === "template" && props.obj.context) {
+          elts.push(
+              <textarea className="u-full-width" key={i} rows="2"
+                onBlur={onUpdate}
+                onChange={onChange}
+                style={n.style} {...n.attrs}
               >
               </textarea>
           );
@@ -623,7 +667,7 @@ window.gcexports.viewer = (function () {
 
   function injectParamsIntoUI(ui, params) {
     let grid = ui[0];
-    let table = grid.args[0].args[0].args[3];  // This is extremely brittle!
+    let table = grid.args[0].args[0].args[4];  // This is extremely brittle!
     let thead = table.args[0];
     let tbody = table.args[1];
     thead.args[0].args = [];
@@ -643,7 +687,8 @@ window.gcexports.viewer = (function () {
         args: {
           type: "textarea",
           attrs: {
-            "placeholder": val
+//            "placeholder": val
+            defaultValue: val
           },
           style: {
             width: "100"
@@ -685,6 +730,16 @@ window.gcexports.viewer = (function () {
                     "type": "textarea",
                     "attrs": {
                       id: "context",
+                    },
+                    args: [],
+                  },
+                  {
+                    "type": "textarea",
+                    "attrs": {
+                      id: "template",
+                    },
+                    "style": {
+                      "margin": "10 0 0 0",
                     },
                     args: [],
                   },
@@ -871,28 +926,9 @@ window.gcexports.viewer = (function () {
         });
       }
     },
-    renderMath () {
-      if (window.MathQuill) {
-        d3.selectAll(".mq").each((v, i, e) => {
-          try {
-            let MQ = MathQuill.getInterface(2);
-            let mathQuill = MQ.StaticMath(e[i]);
-          } catch (x) {
-            console.log("ERROR rendering MathQuill: " + x);
-          }
-        });
-      }
-    },
     getItemID() {
       let href = window.location.href;
       return href.substring(href.indexOf("id=") + 3);
-    },
-    componentDidUpdate () {
-      d3.select("#context")
-        .each((d, k, elts) => {
-          elts[k].defaultValue = this.props.obj.context;
-        });
-      this.renderMath();
     },
     componentDidMount () {
       let params = this.props.obj.params;
@@ -900,11 +936,6 @@ window.gcexports.viewer = (function () {
       let vals = [];
       keys.forEach((k) => {
         vals.push(params[k]);
-      });
-      loadScript("/mathquill.js", () => {
-        loadStyle("/mathquill.css", () => {
-          this.componentDidUpdate();
-        });
       });
     },
     render: function () {

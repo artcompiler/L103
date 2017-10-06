@@ -245,7 +245,17 @@ window.gcexports.viewer = function () {
               style[k] = d.style[k];
             });
           }
-          var val = d.val;
+          var val = d.value ? d.value : d.svg ? d.svg : d;
+          if (val instanceof Array) {
+            val = val.join(" ");
+          }
+          var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+
+          var _getSize = getSize(val),
+              width = _getSize.width,
+              height = _getSize.height;
+
+          var n = 2 * i;
           headElts.push(React.createElement(
             "th",
             { key: headElts.length, x: x, style: {
@@ -259,7 +269,7 @@ window.gcexports.viewer = function () {
           bodyElts.push(React.createElement(
             "td",
             { key: bodyElts.length, x: x, y: y, style: style },
-            splitValue(val, name === "solution")
+            React.createElement("img", { width: width, height: height, src: src })
           ));
         });
         elts.push(React.createElement(
@@ -290,6 +300,23 @@ window.gcexports.viewer = function () {
         null,
         elts
       ) : React.createElement("div", null);
+      function unescapeXML(str) {
+        return String(str).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "'");
+      }
+      function getSize(svg) {
+        svg = svg.slice(svg.indexOf("width=") + 7 + 5);
+        var width = svg.slice(0, svg.indexOf("ex")) * 8; // ex=8px
+        svg = svg.slice(svg.indexOf("height=") + 8 + 5);
+        var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
+        if (isNaN(width) || isNaN(height)) {
+          width = 640;
+          height = 30;
+        }
+        return {
+          width: width,
+          height: height
+        };
+      }
     }
   });
 
@@ -316,6 +343,14 @@ window.gcexports.viewer = function () {
       context += this.value ? this.value : this.placeholder;
     });
     return context;
+  }
+
+  function getTemplate() {
+    var template = "";
+    d3.select("#template").each(function (d, k, ta) {
+      template += this.value || "";
+    });
+    return template;
   }
 
   function getTable(strs) {
@@ -426,12 +461,13 @@ window.gcexports.viewer = function () {
       checks = [];
     }
     var context = getContext();
-    update(context, params, checks);
+    var template = getTemplate();
+    update(context, template, params, checks);
     isSaved = false;
   }
 
   var codeID = void 0;
-  function update(context, params, checks) {
+  function update(context, template, params, checks) {
     var ids = window.gcexports.decodeID(window.gcexports.id);
     window.gcexports.dispatcher.dispatch({
       "L122": {
@@ -439,6 +475,7 @@ window.gcexports.viewer = function () {
           params: params,
           checks: checks,
           context: context,
+          template: template,
           saveID: undefined
         },
         recompileCode: true
@@ -717,6 +754,11 @@ window.gcexports.viewer = function () {
               onBlur: onUpdate,
               onChange: onChange,
               style: n.style }, n.attrs)));
+          } else if (n.attrs.id === "template" && props.obj.context) {
+            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "2",
+              onBlur: onUpdate,
+              onChange: onChange,
+              style: n.style }, n.attrs)));
           } else {
             elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
               onBlur: onUpdate,
@@ -808,7 +850,7 @@ window.gcexports.viewer = function () {
 
   function injectParamsIntoUI(ui, params) {
     var grid = ui[0];
-    var table = grid.args[0].args[0].args[3]; // This is extremely brittle!
+    var table = grid.args[0].args[0].args[4]; // This is extremely brittle!
     var thead = table.args[0];
     var tbody = table.args[1];
     thead.args[0].args = [];
@@ -828,7 +870,8 @@ window.gcexports.viewer = function () {
         args: {
           type: "textarea",
           attrs: {
-            "placeholder": val
+            //            "placeholder": val
+            defaultValue: val
           },
           style: {
             width: "100"
@@ -866,6 +909,15 @@ window.gcexports.viewer = function () {
             "type": "textarea",
             "attrs": {
               id: "context"
+            },
+            args: []
+          }, {
+            "type": "textarea",
+            "attrs": {
+              id: "template"
+            },
+            "style": {
+              "margin": "10 0 0 0"
             },
             args: []
           }, {
@@ -1029,43 +1081,16 @@ window.gcexports.viewer = function () {
         });
       }
     },
-    renderMath: function renderMath() {
-      if (window.MathQuill) {
-        d3.selectAll(".mq").each(function (v, i, e) {
-          try {
-            var MQ = MathQuill.getInterface(2);
-            var mathQuill = MQ.StaticMath(e[i]);
-          } catch (x) {
-            console.log("ERROR rendering MathQuill: " + x);
-          }
-        });
-      }
-    },
     getItemID: function getItemID() {
       var href = window.location.href;
       return href.substring(href.indexOf("id=") + 3);
     },
-    componentDidUpdate: function componentDidUpdate() {
-      var _this3 = this;
-
-      d3.select("#context").each(function (d, k, elts) {
-        elts[k].defaultValue = _this3.props.obj.context;
-      });
-      this.renderMath();
-    },
     componentDidMount: function componentDidMount() {
-      var _this4 = this;
-
       var params = this.props.obj.params;
       var keys = Object.keys(params);
       var vals = [];
       keys.forEach(function (k) {
         vals.push(params[k]);
-      });
-      loadScript("/mathquill.js", function () {
-        loadStyle("/mathquill.css", function () {
-          _this4.componentDidUpdate();
-        });
       });
     },
 

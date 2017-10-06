@@ -46,7 +46,6 @@ function bundle(debug) {
   console.log("Bundling...");
   exec("cp ./src/lexicon.js ./pub");
   exec("cp ./src/style.css ./pub");
-  exec("cp ./src/mathquill.* ./pub");
   if (debug) {
     exec("browserify ./lib/viewer.js -s viewer > ./pub/viewer.js");
   } else {

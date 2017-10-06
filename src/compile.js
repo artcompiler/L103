@@ -1,6 +1,7 @@
 /* Copyright (c) 2016, Art Compiler LLC */
 /* @flow */
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
+import * as mjAPI from "mathjax-node/lib/main.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
@@ -418,10 +419,6 @@ let transform = (function() {
         val = {
           value: val,
           stimulus: val,
-          // steps: [{
-          //   name: "stimulus",
-          //   val: val,
-          // }],
         }
       } else {
         val.stimulus = val.value;
@@ -435,10 +432,6 @@ let transform = (function() {
         val = {
           value: val,
           solution: val,
-          // steps: [{
-          //   name: "solution",
-          //   val: val,
-          // }],
         }
       } else {
         val.solution = val.value;
@@ -514,6 +507,18 @@ let transform = (function() {
           val1 = val1.join("");
         }
         val2.context = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function template(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      options.template = val1;
+      visit(node.elts[1], options, function (err2, val2) {
+        if (val1 instanceof Array) {
+          val1 = val1.join("");
+        }
+        val2.template = val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -853,10 +858,9 @@ let transform = (function() {
     }
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
-      val.checks = options.data ? options.data.checks : undefined;
-      val.context = options.data && options.data.context ? options.data.context 
-                  : val.context ? val.context
-                  : "{{stimulus}}";
+      val.checks = options.data && options.data.checks || undefined;
+      val.context = options.data && options.data.context || val.context || "{{stimulus}}";
+      val.template = options.data && options.data.template || val.template || "";
       resume(err, val);
     });
   }
@@ -910,11 +914,48 @@ let transform = (function() {
     "VALUE" : value,
     "NOTES" : notes,
     "CONTEXT" : context,
+    "TEMPLATE" : template,
     "PARAMS" : params,
   }
   return transform;
 })();
 let render = (function() {
+  mjAPI.config({
+    MathJax: {
+      SVG: {
+        font: "Tex"
+      },
+    }
+  });
+  mjAPI.start();
+  function tex2SVG(str, resume) {
+    try {
+      mjAPI.typeset({
+        math: str,
+        format: "TeX", //"inline-TeX",
+        svg: true,
+        ex: 6,
+        width: 100,
+      }, function (data) {
+        if (!data.errors) {
+          resume([], data.svg);
+        } else {
+          resume([], "");
+        }
+      });
+    } catch (e) {
+      resume(["MathJAX parsing error"], "");
+    }
+  }
+  function escapeXML(str) {
+    return String(str)
+      .replace(/&(?!\w+;)/g, "&amp;")
+      .replace(/\n/g, " ")
+      .replace(/\\/g, "\\\\")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
   function sympyToLaTeX(val, resume) {
     var errs = [];
     let obj = {
@@ -934,7 +975,8 @@ let render = (function() {
     let title = val.title;
     let index = val.index;
     let notes = val.notes;
-    let context = val.context ? val.context : "{{stimulus}}";
+    let context = val.context || "{{stimulus}}";
+    let template = val.template || "";
     var errs = [];
     var vals = [];
     let lst = [].concat(val.gen);
@@ -946,17 +988,34 @@ let render = (function() {
           val: v.seed
         });
       }
-      if (v.solution) {
-        lst.push({
+      // if (v.solution) {
+      //   console.log("render() solution=" + v.solution);
+      //   console.log("render() v=" + JSON.stringify(v));
+      //   lst.push({
+      //     name: "solution",
+      //     val: v.solution,
+      //   });
+      // }
+      if (template) {
+        let tmpl = template;
+        let keys = Object.keys(v);
+        keys.forEach((k, i) => {
+          tmpl = tmpl.replace(new RegExp("{{" + k + "}}","g"), v[k]);
+          tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"),
+                              "\\text{" + v[k] + "\\}");
+        });
+        // Get the right order.
+        lst.unshift({
           name: "solution",
-          val: v.solution,
+          val: tmpl,
         });
       }
       if (context) {
         let cntx = context;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
-          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "\\(" + v[k] + "\\)");
+          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), v[k]);
+//          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "\\(" + v[k] + "\\)");
           cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
@@ -966,10 +1025,19 @@ let render = (function() {
         });
       }
       mapList(lst, (v, resume) => {
+        console.log("[0] render() v=" + JSON.stringify(v));
         if (typeof v.val === "string") {
-          resume(errs, {
-            name: v.name,
-            val: v.val,
+          console.log("[1] render() v.val=" + v.val);
+          tex2SVG(v.val, (err, svg) => {
+            console.log("[2] render() svg=" + svg);
+            if (err && err.length) {
+              errs = errs.concat(err);
+            }
+            resume(errs, {
+              name: v.name,
+              val: v.val,
+              svg: escapeXML(svg),
+            });
           });
         } else {
           resume(errs, null);
@@ -989,6 +1057,7 @@ let render = (function() {
         index: index,
         notes: notes,
         context: context,
+        template: template,
         checks: checks,
       });
     });
