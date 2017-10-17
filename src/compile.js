@@ -480,10 +480,35 @@ let transform = (function() {
       });
     });
   }
+  function parseIndex(str) {
+    var parts = str.split(".");
+    var val = 1;
+    var index;
+    parts.reverse().forEach(p => {
+      index = {};
+      index[p] = val;
+      val = index;
+    });
+    return index;
+  }
+  function expandIndex(val) {
+    // Expand path strings to indexes.
+    let keys = Object.keys(val);
+    keys.forEach(k => {
+      let v = val[k];
+      if (typeof v === "string") {
+        v = parseIndex(v);
+      } else {
+        v = expandIndex(v);
+      }
+      val[k] = v;
+    });
+    return val;
+  }
   function index(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
-        val2.index = val1;
+        val2.index = expandIndex(val1);
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -969,6 +994,59 @@ let render = (function() {
       resume(errs, data);
     });
   }
+  function nontrivial(str) {
+    for (let i = 0; i < str.length; i++) {
+      let c = str[i];
+      if (c !== " " &&
+          c !== "}" &&
+          c !== "]") {
+        return true;
+      }
+    }
+    return false;
+  }
+  function escapeSpaces(str) {
+    return str.replace(new RegExp(" ","g"), "\\ ");
+  }
+  function getLaTeX(str) {
+//    console.log("[1] getLaTeX() str = |" + str + "|");
+    // {{x}}abc{{y}} => x\\text{abc}y
+    // [[x]]abc[[y]] => \\text{x}\\text{abc}\text{y}
+    let startMath, offset;
+    startMath = str.split("{{");
+    offset = 0;
+    let outStr = "";
+    // startMath.forEach((v, i) => {
+    //   // Even indexes are text, odd have LaTeX prefixes.
+    //   if (i === 0) {
+    //     console.log("[1a] v=|" + v + "|");
+    //     outStr += nontrivial(v) ? "\\text{" + v + "}" : "";
+    //   } else {
+    //     let parts = v.split("}}");
+    //     outStr += parts[0];
+    //     console.log("[1b] parts[1]=|" + parts[1] + "|");
+    //     outStr += nontrivial(parts[1]) ? "\\text{" + parts[1] + "}" : "";
+    //     offset++;
+    //   }
+    // });
+    // str = outStr;
+    // console.log("[2] getLaTeX() str = |" + str + "|");
+    startMath = str.split("[[");
+    offset = 0;
+    outStr = "";
+    startMath.forEach((v, i) => {
+      // Odd indexes are text
+      if (i === 0) {
+        outStr += v;
+      } else {
+        let parts = v.split("]]");
+        outStr += nontrivial(parts[0]) ? "\\text{" + parts[0] + "}" : "";
+        outStr += parts[1];
+        offset++;
+      }
+    });
+    return outStr;
+  }
   function render(val, resume) {
     let checks = val.checks;
     let params = val.params;
@@ -988,14 +1066,6 @@ let render = (function() {
           val: v.seed
         });
       }
-      // if (v.solution) {
-      //   console.log("render() solution=" + v.solution);
-      //   console.log("render() v=" + JSON.stringify(v));
-      //   lst.push({
-      //     name: "solution",
-      //     val: v.solution,
-      //   });
-      // }
       if (template) {
         let tmpl = template;
         let keys = Object.keys(v);
@@ -1007,7 +1077,7 @@ let render = (function() {
         // Get the right order.
         lst.unshift({
           name: "solution",
-          val: tmpl,
+          val: getLaTeX(tmpl),
         });
       }
       if (context) {
@@ -1015,21 +1085,18 @@ let render = (function() {
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
           cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), v[k]);
-//          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "\\(" + v[k] + "\\)");
-          cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
+          cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"),
+                              "\\text{" + v[k] + "\\}");
         });
         // Get the right order.
         lst.unshift({
           name: "stimulus",
-          val: cntx,
+          val: getLaTeX(cntx),
         });
       }
       mapList(lst, (v, resume) => {
-        console.log("[0] render() v=" + JSON.stringify(v));
         if (typeof v.val === "string") {
-          console.log("[1] render() v.val=" + v.val);
           tex2SVG(v.val, (err, svg) => {
-            console.log("[2] render() svg=" + svg);
             if (err && err.length) {
               errs = errs.concat(err);
             }
