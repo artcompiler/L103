@@ -3,7 +3,6 @@
 import {assert, message, messages, reserveCodeRange} from "./assert";
 import * as React from "react";
 import * as d3 from "d3";
-
 window.gcexports.viewer = (function () {
   function capture(el) {
     var mySVG = $(el).html();

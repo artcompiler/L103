@@ -480,30 +480,34 @@ let transform = (function() {
       });
     });
   }
-  function parseIndex(str) {
-    var parts = str.split(".");
-    var val = 1;
-    var index;
-    parts.reverse().forEach(p => {
-      index = {};
-      index[p] = val;
-      val = index;
-    });
-    return index;
+  function parseIndex(str, val) {
+    let t = {};
+    if (typeof val === "string") {
+      t[val] = 1;
+      val = t;
+    } else {
+    //  t[str] = val;
+    }
+    let obj;
+    while (str) {
+      obj = {};
+      obj["\\text{" + str + "}"] = val;
+      str = str.substring(0, str.lastIndexOf("."));
+      val = obj;
+    }
+    return obj;
   }
   function expandIndex(val) {
     // Expand path strings to indexes.
+    // If "key": "val" --> parse key and assign val.
+    // If "key": val --> expand val
     let keys = Object.keys(val);
+    let obj = {};
     keys.forEach(k => {
       let v = val[k];
-      if (typeof v === "string") {
-        v = parseIndex(v);
-      } else {
-        v = expandIndex(v);
-      }
-      val[k] = v;
+      obj = Object.assign(obj, parseIndex(k, v));
     });
-    return val;
+    return obj;
   }
   function index(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
