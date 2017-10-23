@@ -1013,28 +1013,44 @@ let render = (function() {
     return str.replace(new RegExp(" ","g"), "\\ ");
   }
   function getLaTeX(str) {
-//    console.log("[1] getLaTeX() str = |" + str + "|");
     // {{x}}abc{{y}} => x\\text{abc}y
     // [[x]]abc[[y]] => \\text{x}\\text{abc}\text{y}
     let startMath, offset;
     startMath = str.split("{{");
     offset = 0;
     let outStr = "";
-    // startMath.forEach((v, i) => {
-    //   // Even indexes are text, odd have LaTeX prefixes.
-    //   if (i === 0) {
-    //     console.log("[1a] v=|" + v + "|");
-    //     outStr += nontrivial(v) ? "\\text{" + v + "}" : "";
-    //   } else {
-    //     let parts = v.split("}}");
-    //     outStr += parts[0];
-    //     console.log("[1b] parts[1]=|" + parts[1] + "|");
-    //     outStr += nontrivial(parts[1]) ? "\\text{" + parts[1] + "}" : "";
-    //     offset++;
-    //   }
-    // });
-    // str = outStr;
-    // console.log("[2] getLaTeX() str = |" + str + "|");
+    startMath.forEach((v, i) => {
+      // Even indexes are text, odd have LaTeX prefixes.
+      if (i === 0) {
+        outStr += nontrivial(v) ? "\\text{" + v + "}" : "";
+      } else {
+        let parts = [""];
+        let n = 0;
+        done:
+        for (let i = 0; i < v.length; i++) {
+          // Look for closing }}.
+          if (v[i] === "{") {
+            parts[0] += v[i];
+            n++;
+          } else if (v[i] === "}") {
+            if (n > 0) {
+              parts[0] += v[i];
+              n--;
+            } else if (v[i+1] === "}") {
+              // Found }}.
+              parts[1] = v.substring(i+2);
+              break done;
+            }
+          } else {
+            parts[0] += v[i];
+          }
+        }
+        outStr += parts[0];
+        outStr += nontrivial(parts[1]) ? "\\text{" + parts[1] + "}" : "";
+        offset++;
+      }
+    });
+    str = outStr;
     startMath = str.split("[[");
     offset = 0;
     outStr = "";
@@ -1074,9 +1090,8 @@ let render = (function() {
         let tmpl = template;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
-          tmpl = tmpl.replace(new RegExp("{{" + k + "}}","g"), v[k]);
-          tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"),
-                              "\\text{" + v[k] + "\\}");
+          tmpl = tmpl.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
+          tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
         lst.unshift({
@@ -1088,9 +1103,8 @@ let render = (function() {
         let cntx = context;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
-          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), v[k]);
-          cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"),
-                              "\\text{" + v[k] + "\\}");
+          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
+          cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
         lst.unshift({
