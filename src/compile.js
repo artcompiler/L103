@@ -655,7 +655,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err1, val1) {
       let params = val1;
       let values = [];
-      let data = options.data && options.data.params 
+      let data = options.data && options.data.params
                    ? options.data.params
                    : [Object.values(params)]; // Use defaults.
       if (params) {
@@ -952,7 +952,11 @@ let render = (function() {
   mjAPI.config({
     MathJax: {
       SVG: {
-        font: "Tex"
+        font: "Tex",
+        linebreaks: {
+          automatic: true,
+          width: "50em",
+        },
       },
     }
   });
@@ -961,10 +965,11 @@ let render = (function() {
     try {
       mjAPI.typeset({
         math: str,
-        format: "TeX", //"inline-TeX",
+        format: "inline-TeX",
         svg: true,
         ex: 6,
-        width: 100,
+        width: 60,
+        linebreaks: true,
       }, function (data) {
         if (!data.errors) {
           resume([], data.svg);
@@ -999,7 +1004,7 @@ let render = (function() {
     });
   }
   function nontrivial(str) {
-    for (let i = 0; i < str.length; i++) {
+    for (let i = 0; str && i < str.length; i++) {
       let c = str[i];
       if (c !== " " &&
           c !== "}" &&
@@ -1012,6 +1017,26 @@ let render = (function() {
   function escapeSpaces(str) {
     return str.replace(new RegExp(" ","g"), "\\ ");
   }
+  function textualize(str) {
+    const LONG = 50;
+    // Wrap long text in multiple text blocks to enable line
+    // breaking.
+    let blocks = [];
+    let substr = "";
+    for (let i = 0; i < str.length; i++) {
+      if (!nontrivial(str[i]) && !nontrivial(substr)) {
+        substr += str[i];
+        blocks.push("\\text{" + substr + "} ");
+        substr = "";
+      } else {
+        substr += str[i];
+      }
+    }
+    if (nontrivial(substr)) {
+      blocks.push("\\text{" + substr + "} ");
+    }
+    return blocks.join("{{\\ }}");
+  }
   function getLaTeX(str) {
     // {{x}}abc{{y}} => x\\text{abc}y
     // [[x]]abc[[y]] => \\text{x}\\text{abc}\text{y}
@@ -1022,7 +1047,7 @@ let render = (function() {
     startMath.forEach((v, i) => {
       // Even indexes are text, odd have LaTeX prefixes.
       if (i === 0) {
-        outStr += nontrivial(v) ? "\\text{" + v + "}" : "";
+        outStr += nontrivial(v) ? textualize(v) : " ";
       } else {
         let parts = [""];
         let n = 0;
@@ -1038,15 +1063,21 @@ let render = (function() {
               n--;
             } else if (v[i+1] === "}") {
               // Found }}.
-              parts[1] = v.substring(i+2);
+              if (parts[0] === "response") {
+                parts[0] = parts[0].substring(0, parts[0].length - "response".length);
+                parts[1] = "{{response}}";  // Is actually part of the text.
+              } else {
+                parts[1] = "";
+              }
+              parts[1] += v.substring(i+2);
               break done;
             }
           } else {
             parts[0] += v[i];
           }
         }
-        outStr += parts[0];
-        outStr += nontrivial(parts[1]) ? "\\text{" + parts[1] + "}" : "";
+        outStr += nontrivial(parts[0]) ? parts[0] : " ";
+        outStr += nontrivial(parts[1]) ? textualize(parts[1]) : " ";
         offset++;
       }
     });
@@ -1060,7 +1091,7 @@ let render = (function() {
         outStr += v;
       } else {
         let parts = v.split("]]");
-        outStr += nontrivial(parts[0]) ? "\\text{" + parts[0] + "}" : "";
+        outStr += nontrivial(parts[0]) ? textualize(parts[0]) : " ";
         outStr += parts[1];
         offset++;
       }
@@ -1090,6 +1121,9 @@ let render = (function() {
         let tmpl = template;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
+          if (typeof v[k] !== "string") {
+            return;
+          }
           tmpl = tmpl.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
           tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });

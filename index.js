@@ -14,10 +14,11 @@ app.get('/', function(req, res) {
   res.send("Hello, L" + langID + "!");
 });
 app.listen(app.get('port'), function() {
+  global.port = +app.get('port');
   console.log("Node app is running at localhost:" + app.get('port'))
 });
 process.on('uncaughtException', function(err) {
-  console.log('Caught exception: ' + err);
+  console.log('Caught exception: ' + err.stack);
 });
 app.get("/version", function(req, res) {
   res.send(compiler.version || "v0.0.0");
