@@ -1049,7 +1049,7 @@ let render = (function() {
       if (i === 0) {
         outStr += nontrivial(v) ? textualize(v) : " ";
       } else {
-        let parts = [""];
+        let parts = ["", ""];
         let n = 0;
         done:
         for (let i = 0; i < v.length; i++) {
@@ -1063,9 +1063,14 @@ let render = (function() {
               n--;
             } else if (v[i+1] === "}") {
               // Found }}.
-              if (parts[0] === "response") {
-                parts[0] = parts[0].substring(0, parts[0].length - "response".length);
-                parts[1] = "{{response}}";  // Is actually part of the text.
+              let start;
+              if ((start = parts[0].indexOf("response")) >= 0) {
+                // response 10 => \left[\left[10\right\right]\begin{Vmatrix}10\end{Vmatrix}
+                parts[0] =
+                  "\\left[\\left[" +
+                  parts[0].substring("response".length) +
+                  "\\right]\\right]";
+                //parts[1] = "{{response}}";  // Is actually part of the text.
               } else {
                 parts[1] = "";
               }
@@ -1125,6 +1130,7 @@ let render = (function() {
             return;
           }
           tmpl = tmpl.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
+          tmpl = tmpl.replace(new RegExp("==" + k + "}}","g"), v[k] + "}}");
           tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
@@ -1138,6 +1144,7 @@ let render = (function() {
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
           cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
+          cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}}");
           cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
