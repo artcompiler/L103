@@ -1037,17 +1037,17 @@ let render = (function() {
     }
     return blocks.join("{{\\ }}");
   }
-  function getLaTeX(str) {
+  function getLaTeX(str, hasText) {
     // {{x}}abc{{y}} => x\\text{abc}y
     // [[x]]abc[[y]] => \\text{x}\\text{abc}\text{y}
-    let startMath, offset;
-    startMath = str.split("{{");
+    let outStr, startMath, offset;
+    startMath = str.split("{{response");
     offset = 0;
-    let outStr = "";
+    outStr = "";
     startMath.forEach((v, i) => {
       // Even indexes are text, odd have LaTeX prefixes.
       if (i === 0) {
-        outStr += nontrivial(v) ? textualize(v) : " ";
+        outStr += v;
       } else {
         let parts = ["", ""];
         let n = 0;
@@ -1064,16 +1064,11 @@ let render = (function() {
             } else if (v[i+1] === "}") {
               // Found }}.
               let start;
-              if ((start = parts[0].indexOf("response")) >= 0) {
-                // response 10 => \left[\left[10\right\right]\begin{Vmatrix}10\end{Vmatrix}
-                parts[0] =
-                  "\\left[\\left[" +
-                  parts[0].substring("response".length) +
-                  "\\right]\\right]";
-                //parts[1] = "{{response}}";  // Is actually part of the text.
-              } else {
-                parts[1] = "";
-              }
+              // {{response10}} => \left[\left[10\right]\right]
+              parts[0] =
+                "\\left[\\left[" +
+                parts[0] +
+                "\\right]\\right]";
               parts[1] += v.substring(i+2);
               break done;
             }
@@ -1082,22 +1077,41 @@ let render = (function() {
           }
         }
         outStr += nontrivial(parts[0]) ? parts[0] : " ";
-        outStr += nontrivial(parts[1]) ? textualize(parts[1]) : " ";
+        outStr += nontrivial(parts[1]) ? parts[1] : " ";
         offset++;
       }
     });
-    str = outStr;
-    startMath = str.split("[[");
-    offset = 0;
+    startMath = outStr.split("{{");
     outStr = "";
+    offset = 0;
     startMath.forEach((v, i) => {
-      // Odd indexes are text
+      // Even indexes are text, odd have LaTeX prefixes.
       if (i === 0) {
-        outStr += v;
+        outStr += hasText ? (nontrivial(v) ? textualize(v) : "") : v;
       } else {
-        let parts = v.split("]]");
-        outStr += nontrivial(parts[0]) ? textualize(parts[0]) : " ";
-        outStr += parts[1];
+        let parts = ["", ""];
+        let n = 0;
+        done:
+        for (let i = 0; i < v.length; i++) {
+          // Look for closing }}.
+          if (v[i] === "{") {
+            parts[0] += v[i];
+            n++;
+          } else if (v[i] === "}") {
+            if (n > 0) {
+              parts[0] += v[i];
+              n--;
+            } else if (v[i+1] === "}") {
+              // Found }}.
+              parts[1] = v.substring(i+2);
+              break done;
+            }
+          } else {
+            parts[0] += v[i];
+          }
+        }
+        outStr += nontrivial(parts[0]) ? parts[0] : " ";
+        outStr += hasText ? (nontrivial(parts[1]) ? textualize(parts[1]) : "") : parts[1];
         offset++;
       }
     });
@@ -1113,8 +1127,8 @@ let render = (function() {
     let template = val.template || "";
     var errs = [];
     var vals = [];
-    let lst = [].concat(val.gen);
-    mapList(lst, (v, resume) => {
+    let genList = [].concat(val.gen);
+    mapList(genList, (v, resume) => {
       let lst = [];
       if (v.seed) {
         lst.push({
@@ -1136,7 +1150,7 @@ let render = (function() {
         // Get the right order.
         lst.unshift({
           name: "solution",
-          val: getLaTeX(tmpl),
+          val: getLaTeX(tmpl, false),
         });
       }
       if (context) {
@@ -1150,7 +1164,7 @@ let render = (function() {
         // Get the right order.
         lst.unshift({
           name: "stimulus",
-          val: getLaTeX(cntx),
+          val: getLaTeX(cntx, true),
         });
       }
       mapList(lst, (v, resume) => {
