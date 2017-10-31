@@ -563,6 +563,7 @@ window.gcexports.viewer = (function () {
                 onChange={onChange}
                 style={n.style} {...n.attrs}
               >
+              {props.obj.context}
               </textarea>
           );
         } else if (n.attrs.id === "template" && props.obj.context) {
@@ -572,6 +573,7 @@ window.gcexports.viewer = (function () {
                 onChange={onChange}
                 style={n.style} {...n.attrs}
               >
+              {props.obj.template}
               </textarea>
           );
         } else {
@@ -686,7 +688,6 @@ window.gcexports.viewer = (function () {
         args: {
           type: "textarea",
           attrs: {
-//            "placeholder": val
             defaultValue: val
           },
           style: {
@@ -886,7 +887,8 @@ window.gcexports.viewer = (function () {
           data.checks = checks;
           this.postData(data, (dataID)=> {
             let ids = window.gcexports.decodeID(this.getItemID());
-            let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+            let id = window.gcexports.encodeID(
+              [ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
             window.open("/form?id=VpeuQ1ONsJ" + "+" + id, "L124");
           });
         } else {

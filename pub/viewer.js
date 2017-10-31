@@ -750,15 +750,23 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           if (n.attrs.id === "context" && props.obj.context) {
-            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "2",
-              onBlur: onUpdate,
-              onChange: onChange,
-              style: n.style }, n.attrs)));
+            elts.push(React.createElement(
+              "textarea",
+              _extends({ className: "u-full-width", key: i, rows: "2",
+                onBlur: onUpdate,
+                onChange: onChange,
+                style: n.style }, n.attrs),
+              props.obj.context
+            ));
           } else if (n.attrs.id === "template" && props.obj.context) {
-            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "2",
-              onBlur: onUpdate,
-              onChange: onChange,
-              style: n.style }, n.attrs)));
+            elts.push(React.createElement(
+              "textarea",
+              _extends({ className: "u-full-width", key: i, rows: "2",
+                onBlur: onUpdate,
+                onChange: onChange,
+                style: n.style }, n.attrs),
+              props.obj.template
+            ));
           } else {
             elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
               onBlur: onUpdate,
@@ -870,7 +878,6 @@ window.gcexports.viewer = function () {
         args: {
           type: "textarea",
           attrs: {
-            //            "placeholder": val
             defaultValue: val
           },
           style: {
