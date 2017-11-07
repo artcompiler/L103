@@ -194,6 +194,34 @@ window.gcexports.viewer = function () {
     });
     return elts;
   }
+  var Editor = React.createClass({
+    displayName: 'Editor',
+    propTypes: {
+      name: React.PropTypes.string.isRequired
+    },
+    componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+      if (nextProps.initValue !== this.props.initValue) {
+        this.setState({
+          value: nextProps.initValue
+        });
+      }
+      // Otherwise the value has been set by handleChange or initial rendering.
+    },
+
+    handleChange: function handleChange(event) {
+      this.setState({ value: event.target.value });
+    },
+    render: function render() {
+      var props = this.props;
+      return React.createElement("textarea", { id: this.props.name,
+        value: this.state && this.state.value ? this.state.value : props.initValue,
+        onChange: this.handleChange,
+        onBlur: onUpdate,
+        className: "u-full-width",
+        style: this.props.style,
+        rows: this.props.rows });
+    }
+  });
   var checks = void 0;
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
@@ -326,7 +354,7 @@ window.gcexports.viewer = function () {
       vals.push([]);
       d3.select(tr[j]).selectAll("td").each(function (d, i, td) {
         d3.select(td[i]).selectAll("textarea").each(function (d, k, ta) {
-          vals[j].push(this.value ? this.value : this.placeholder);
+          vals[j].push(this.value);
         });
       });
     });
@@ -750,28 +778,21 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           if (n.attrs.id === "context" && props.obj.context) {
-            elts.push(React.createElement(
-              "textarea",
-              _extends({ className: "u-full-width", key: i, rows: "2",
-                onBlur: onUpdate,
-                onChange: onChange,
-                style: n.style }, n.attrs),
-              props.obj.context
-            ));
-          } else if (n.attrs.id === "template" && props.obj.context) {
-            elts.push(React.createElement(
-              "textarea",
-              _extends({ className: "u-full-width", key: i, rows: "2",
-                onBlur: onUpdate,
-                onChange: onChange,
-                style: n.style }, n.attrs),
-              props.obj.template
-            ));
+            var e = React.createElement(Editor, _extends({ name: "context", style: n.style }, _this.props, {
+              initValue: _this.props.obj.context, rows: "2" }));
+            elts.push(e);
+          } else if (n.attrs.id === "template" && props.obj.template) {
+            elts.push(React.createElement(Editor, _extends({ name: "template", style: n.style }, _this.props, {
+              initValue: _this.props.obj.template, rows: "2" })));
           } else {
-            elts.push(React.createElement("textarea", _extends({ className: "u-full-width", key: i, rows: "1",
-              onBlur: onUpdate,
-              onChange: onChange,
-              style: n.style }, n.attrs)));
+            elts.push(React.createElement(Editor, _extends({ style: n.style }, _this.props, {
+              initValue: n.args[0], rows: "1" }))
+            // <textarea className="u-full-width" key={i} rows="1"
+            //         onBlur={onUpdate}
+            //         onChange={onChange}
+            //         style={n.style} {...n.attrs}>
+            // </textarea>
+            );
           }
           break;
         case "button":
@@ -877,9 +898,7 @@ window.gcexports.viewer = function () {
         type: "td",
         args: {
           type: "textarea",
-          attrs: {
-            defaultValue: val
-          },
+          attrs: {},
           style: {
             width: "100"
           },

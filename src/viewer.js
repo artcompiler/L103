@@ -40,6 +40,37 @@ window.gcexports.viewer = (function () {
     });
     return elts;
   }
+  var Editor = React.createClass({
+    displayName: 'Editor',
+    propTypes: {
+      name: React.PropTypes.string.isRequired
+    },
+    componentWillReceiveProps(nextProps) {
+      if(nextProps.initValue !== this.props.initValue) {
+        this.setState({
+          value: nextProps.initValue
+        });
+      }
+      // Otherwise the value has been set by handleChange or initial rendering.
+    },
+    handleChange: function(event) {
+      this.setState({value: event.target.value});
+    },
+    render: function() {
+      let props = this.props;
+      return (
+          <textarea id={this.props.name}
+                    value={this.state && this.state.value
+                           ? this.state.value
+                           : props.initValue}
+                    onChange={this.handleChange}
+                    onBlur={onUpdate}
+                    className="u-full-width"
+                    style={this.props.style}
+                    rows={this.props.rows} />
+      );
+    }
+  });
   let checks;
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
@@ -146,7 +177,7 @@ window.gcexports.viewer = (function () {
           d3.select(td[i])
             .selectAll("textarea")
             .each(function(d, k, ta) {
-              vals[j].push(this.value ? this.value : this.placeholder);
+              vals[j].push(this.value);
             });
         });
     });
@@ -504,7 +535,7 @@ window.gcexports.viewer = (function () {
               <h4 key={i} style={n.style} {...n.attrs}>
               {splitValue(props.obj.title)}
             </h4>
-          );          
+          );
         } else {
           elts.push(
               <h4 key={i} style={n.style} {...n.attrs}>
@@ -557,37 +588,28 @@ window.gcexports.viewer = (function () {
         break;
       case "textarea":
         if (n.attrs.id === "context" && props.obj.context) {
+          let e = <Editor name="context" style={n.style} {...this.props}
+                          initValue={this.props.obj.context} rows="2"/>
+          elts.push(e);
+        } else if (n.attrs.id === "template" && props.obj.template) {
           elts.push(
-              <textarea className="u-full-width" key={i} rows="2"
-                onBlur={onUpdate}
-                onChange={onChange}
-                style={n.style} {...n.attrs}
-              >
-              {props.obj.context}
-              </textarea>
-          );
-        } else if (n.attrs.id === "template" && props.obj.context) {
-          elts.push(
-              <textarea className="u-full-width" key={i} rows="2"
-                onBlur={onUpdate}
-                onChange={onChange}
-                style={n.style} {...n.attrs}
-              >
-              {props.obj.template}
-              </textarea>
+              <Editor name="template" style={n.style} {...this.props}
+                      initValue={this.props.obj.template} rows="2"/>
           );
         } else {
           elts.push(
-            <textarea className="u-full-width" key={i} rows="1"
-                    onBlur={onUpdate}
-                    onChange={onChange}
-                    style={n.style} {...n.attrs}>
-            </textarea>
+            <Editor style={n.style} {...this.props}
+                    initValue={n.args[0]} rows="1" />
+            // <textarea className="u-full-width" key={i} rows="1"
+            //         onBlur={onUpdate}
+            //         onChange={onChange}
+            //         style={n.style} {...n.attrs}>
+            // </textarea>
           );
         }
         break;
       case "button":
-        n.style.background = n.attrs.id === "save" && isSaved ? "#ddd" : "rgba(8, 149, 194, 0.10)"; 
+        n.style.background = n.attrs.id === "save" && isSaved ? "#ddd" : "rgba(8, 149, 194, 0.10)";
         elts.push(
           <button
             key={i}
@@ -687,9 +709,7 @@ window.gcexports.viewer = (function () {
         type: "td",
         args: {
           type: "textarea",
-          attrs: {
-            defaultValue: val
-          },
+          attrs: {},
           style: {
             width: "100"
           },
