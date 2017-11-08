@@ -40,8 +40,8 @@ window.gcexports.viewer = (function () {
     });
     return elts;
   }
-  var Editor = React.createClass({
-    displayName: 'Editor',
+  var TextArea = React.createClass({
+    displayName: 'TextArea',
     propTypes: {
       name: React.PropTypes.string.isRequired
     },
@@ -588,23 +588,18 @@ window.gcexports.viewer = (function () {
         break;
       case "textarea":
         if (n.attrs.id === "context" && props.obj.context) {
-          let e = <Editor name="context" style={n.style} {...this.props}
+          let e = <TextArea key={i} name="context" style={n.style} {...this.props}
                           initValue={this.props.obj.context} rows="2"/>
           elts.push(e);
         } else if (n.attrs.id === "template" && props.obj.template) {
           elts.push(
-              <Editor name="template" style={n.style} {...this.props}
+              <TextArea key={i} name="template" style={n.style} {...this.props}
                       initValue={this.props.obj.template} rows="2"/>
           );
         } else {
           elts.push(
-            <Editor style={n.style} {...this.props}
+            <TextArea key={i} name="param" style={n.style} {...this.props}
                     initValue={n.args[0]} rows="1" />
-            // <textarea className="u-full-width" key={i} rows="1"
-            //         onBlur={onUpdate}
-            //         onChange={onChange}
-            //         style={n.style} {...n.attrs}>
-            // </textarea>
           );
         }
         break;
