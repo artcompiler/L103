@@ -307,11 +307,10 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val0) {
       if (typeof val0 !== "string") {
         result = val0;
-        val0 = val0.value;
+        val0 = typeof val0.value === "string" ? val0.value  : " ";
       } else {
         result = {
           value: val0,
-          // steps: [],
         }
       }
       if (err && err.length) {
