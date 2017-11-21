@@ -1019,7 +1019,7 @@ let render = (function() {
     return str.replace(new RegExp(" ","g"), "\\ ");
   }
   function textualize(str) {
-    const LONG = 60;
+    const LONG = 50;
     // Wrap long text in multiple text blocks to enable line
     // breaking.
     let blocks = [];
