@@ -958,6 +958,7 @@ let render = (function() {
           width: "50em",
         },
       },
+      displayAlign: "left",
     }
   });
   mjAPI.start();
@@ -965,7 +966,7 @@ let render = (function() {
     try {
       mjAPI.typeset({
         math: str,
-        format: "inline-TeX",
+        format: "TeX",
         svg: true,
         ex: 6,
         width: 60,
@@ -1018,13 +1019,13 @@ let render = (function() {
     return str.replace(new RegExp(" ","g"), "\\ ");
   }
   function textualize(str) {
-    const LONG = 50;
+    const LONG = 60;
     // Wrap long text in multiple text blocks to enable line
     // breaking.
     let blocks = [];
     let substr = "";
     for (let i = 0; i < str.length; i++) {
-      if (!nontrivial(str[i]) && !nontrivial(substr)) {
+      if (!nontrivial(str[i]) && substr.length > LONG) {
         substr += str[i];
         blocks.push("\\text{" + substr + "} ");
         substr = "";
@@ -1035,7 +1036,7 @@ let render = (function() {
     if (nontrivial(substr)) {
       blocks.push("\\text{" + substr + "} ");
     }
-    return blocks.join("{{\\ }}");
+    return blocks.join("\\\\ ");
   }
   function getLaTeX(str, hasText) {
     // {{x}}abc{{y}} => x\\text{abc}y
