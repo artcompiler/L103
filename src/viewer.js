@@ -60,7 +60,7 @@ window.gcexports.viewer = (function () {
       let props = this.props;
       return (
           <textarea id={this.props.name}
-                    value={this.state && this.state.value
+                    value={this.state && this.state.value !== undefined
                            ? this.state.value
                            : props.initValue}
                     onChange={this.handleChange}

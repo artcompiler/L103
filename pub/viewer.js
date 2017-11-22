@@ -214,7 +214,7 @@ window.gcexports.viewer = function () {
     render: function render() {
       var props = this.props;
       return React.createElement("textarea", { id: this.props.name,
-        value: this.state && this.state.value ? this.state.value : props.initValue,
+        value: this.state && this.state.value !== undefined ? this.state.value : props.initValue,
         onChange: this.handleChange,
         onBlur: onUpdate,
         className: "u-full-width",
