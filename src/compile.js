@@ -968,7 +968,7 @@ let render = (function() {
         format: "TeX",
         svg: true,
         ex: 6,
-        width: 60,
+        width: 40,
         linebreaks: true,
       }, function (data) {
         if (!data.errors) {
@@ -1033,7 +1033,7 @@ let render = (function() {
       }
     }
     if (nontrivial(substr)) {
-      blocks.push("\\text{" + substr + "} ");
+      blocks.push("\\text{" + substr + "} \\\\");
     }
     return blocks.join("\\\\ ");
   }
