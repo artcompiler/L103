@@ -968,7 +968,7 @@ let render = (function() {
         format: "TeX",
         svg: true,
         ex: 6,
-        width: 40,
+        width: 60,
         linebreaks: true,
       }, function (data) {
         if (!data.errors) {
