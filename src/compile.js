@@ -887,7 +887,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
       val.checks = options.data && options.data.checks || undefined;
-      val.context = options.data && options.data.context || val.context || "{{stimulus}}";
+      val.context = options.data && options.data.context || val.context || "{stimulus}";
       val.template = options.data && options.data.template || val.template || "";
       resume(err, val);
     });
@@ -1038,10 +1038,10 @@ let render = (function() {
     return blocks.join("\\\\ ");
   }
   function getLaTeX(str, hasText) {
-    // {{x}}abc{{y}} => x\\text{abc}y
+    // {x}abc{y} => x\\text{abc}y
     // [[x]]abc[[y]] => \\text{x}\\text{abc}\text{y}
     let outStr, startMath, offset;
-    startMath = str.split("{{response");
+    startMath = str.split("{response");
     offset = 0;
     outStr = "";
     startMath.forEach((v, i) => {
@@ -1053,7 +1053,7 @@ let render = (function() {
         let n = 0;
         done:
         for (let i = 0; i < v.length; i++) {
-          // Look for closing }}.
+          // Look for closing }.
           if (v[i] === "{") {
             parts[0] += v[i];
             n++;
@@ -1061,15 +1061,15 @@ let render = (function() {
             if (n > 0) {
               parts[0] += v[i];
               n--;
-            } else if (v[i+1] === "}") {
-              // Found }}.
+            } else {
+              // Found closing }.
               let start;
-              // {{response10}} => \left[\left[10\right]\right]
+              // {response==10} => \left[\left[10\right]\right]
               parts[0] =
                 "\\left[\\left[" +
                 parts[0] +
                 "\\right]\\right]";
-              parts[1] += v.substring(i+2);
+              parts[1] += v.substring(i+1);
               break done;
             }
           } else {
@@ -1081,7 +1081,7 @@ let render = (function() {
         offset++;
       }
     });
-    startMath = outStr.split("{{");
+    startMath = outStr.split("${");
     outStr = "";
     offset = 0;
     startMath.forEach((v, i) => {
@@ -1093,7 +1093,7 @@ let render = (function() {
         let n = 0;
         done:
         for (let i = 0; i < v.length; i++) {
-          // Look for closing }}.
+          // Look for closing }
           if (v[i] === "{") {
             parts[0] += v[i];
             n++;
@@ -1101,9 +1101,9 @@ let render = (function() {
             if (n > 0) {
               parts[0] += v[i];
               n--;
-            } else if (v[i+1] === "}") {
-              // Found }}.
-              parts[1] = v.substring(i+2);
+            } else {
+              // Found closing }.
+              parts[1] = v.substring(i+1);
               break done;
             }
           } else {
@@ -1123,7 +1123,7 @@ let render = (function() {
     let title = val.title;
     let index = val.index;
     let notes = val.notes;
-    let context = val.context || "{{stimulus}}";
+    let context = val.context || "{stimulus}";
     let template = val.template || "";
     var errs = [];
     var vals = [];
@@ -1143,8 +1143,8 @@ let render = (function() {
           if (typeof v[k] !== "string") {
             return;
           }
-          tmpl = tmpl.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
-          tmpl = tmpl.replace(new RegExp("==" + k + "}}","g"), v[k] + "}}");
+          tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), v[k]);
+          tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
           tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
@@ -1157,8 +1157,8 @@ let render = (function() {
         let cntx = context;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
-          cntx = cntx.replace(new RegExp("{{" + k + "}}","g"), "{{" + v[k] + "}}");
-          cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}}");
+          cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${" + v[k] + "}");
+          cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}");
           cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
         // Get the right order.
