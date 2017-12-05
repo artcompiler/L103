@@ -1219,6 +1219,7 @@ let render = (function() {
       }
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
+          console.log("render() v.val=" + v.val);
           tex2SVG(v.val, (err, svg) => {
             if (err && err.length) {
               errs = errs.concat(err);
