@@ -1147,13 +1147,13 @@ let render = (function() {
           tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
           tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
+        console.log("tmpl=" + tmpl);
         // Get the right order.
         lst.unshift({
           name: "solution",
           val: getLaTeX(tmpl, false),
         });
       }
-      console.log("tmpl=" + tmpl);
       if (context) {
         let cntx = context;
         let keys = Object.keys(v);
@@ -1210,13 +1210,13 @@ let render = (function() {
           }
         });
         cntx = outStr;
+        console.log("cntx=" + cntx);
         // Get the right order.
         lst.unshift({
           name: "stimulus",
           val: getLaTeX(cntx, true),
         });
       }
-      console.log("cntx=" + cntx);
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
           tex2SVG(v.val, (err, svg) => {
