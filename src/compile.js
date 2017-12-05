@@ -1147,6 +1147,8 @@ let render = (function() {
           tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
           tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
+
+
         // Get the right order.
         lst.unshift({
           name: "solution",
@@ -1161,6 +1163,54 @@ let render = (function() {
           cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}");
           cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
+
+        let startMath = cntx.split("{{");
+        let outStr = "";
+        let offset = 0;
+        startMath.forEach((v, i) => {
+          // Even indexes are text, odd have LaTeX prefixes.
+          if (i === 0) {
+            outStr += nontrivial(v) ? v : "";
+          } else {
+            let parts = ["", ""];
+            let level = 0;
+            let eraseClosing = 0;
+            done:
+            for (let i = 0; i < v.length; i++) {
+              // Look for closing }
+              if (v[i] === "{") {
+                if (v[i-1] === "$") {
+                  // Skip ${
+                  parts[0] = parts[0].substring(0, parts[0].length - 1);
+                  eraseClosing = level; // Save closing brace level
+                } else {
+                  parts[0] += v[i];
+                }
+                level++;
+              } else if (v[i] === "}") {
+                if (level > 0) {
+                  // Have a nested brace.
+                  if (eraseClosing === level) {
+                    eraseClosing = 0;  // Clear erase brace level.
+                  } else {
+                    parts[0] += v[i];
+                  }
+                  level--;
+                } else if (v[i+1] === "}") {
+                  // Found closing }}.
+                  parts[1] = v.substring(i+2);
+                  break done;
+                }
+              } else {
+                parts[0] += v[i];
+              }
+            }
+            outStr += nontrivial(parts[0]) ? "${" + parts[0] + "}": " ";
+            outStr += nontrivial(parts[1]) ? parts[1] : "";
+            offset++;
+          }
+        });
+        cntx = outStr;
         // Get the right order.
         lst.unshift({
           name: "stimulus",
