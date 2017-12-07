@@ -425,16 +425,22 @@ let transform = (function() {
       resume([], val);
     });
   }
+  function result(node, options, resume) {
+    resume([], options.result);
+  }
   function solution(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       if (typeof val === "string") {
         val = {
           value: val,
           solution: val,
+          result: val,
         }
       } else {
+        val.result = val.value;
         val.solution = val.value;
       }
+      options.result = val.value;
       resume([], val);
     });
   }
@@ -528,25 +534,25 @@ let transform = (function() {
     });
   }
   function context(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      options.context = val1;
-      visit(node.elts[1], options, function (err2, val2) {
-        if (val1 instanceof Array) {
-          val1 = val1.join("");
+    visit(node.elts[1], options, function (err2, val2) {
+      visit(node.elts[0], options, function (err1, val1) {
+        if (typeof val1 !== "string") {
+          val1 = val1.value;
         }
-        val2.context = val1;
+        val2.context = options.data.context || val1;
+        options.context = options.context || val2.context;  // save first one.
         resume([].concat(err1).concat(err2), val2);
       });
     });
   }
   function template(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      options.template = val1;
-      visit(node.elts[1], options, function (err2, val2) {
-        if (val1 instanceof Array) {
-          val1 = val1.join("");
+    // Evaluate from right to left.
+    visit(node.elts[1], options, function (err2, val2) {
+      visit(node.elts[0], options, function (err1, val1) {
+        if (typeof val1 !== "string") {
+          val1 = val1.value;
         }
-        val2.template = val1;
+        options.template = val2.template = options.data.template || val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -797,6 +803,7 @@ let transform = (function() {
         let keys = val1;
         let vals = options.args[0];
         keys.forEach((k, i) => {
+          // 
           val2[k] = vals[i];
         });
         resume([].concat(err1).concat(err2), val2);
@@ -887,8 +894,8 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
       val.checks = options.data && options.data.checks || undefined;
-      val.context = options.data && options.data.context || val.context || "{stimulus}";
-      val.template = options.data && options.data.template || val.template || "";
+      val.context = options.data && options.data.context || options.context || "{stimulus}";
+      val.template = options.data && options.data.template || options.template || "";
       resume(err, val);
     });
   }
@@ -922,6 +929,7 @@ let transform = (function() {
     "LITERAL": literal,
     "STIMULUS": stimulus,
     "SOLUTION": solution,
+    "RESULT": result,
     "VARIABLE": variable,
     "PRECISION": precision,
     "DOMAIN": domain,
@@ -1123,12 +1131,16 @@ let render = (function() {
     let title = val.title;
     let index = val.index;
     let notes = val.notes;
-    let context = val.context || "{stimulus}";
-    let template = val.template || "";
+    let origContext = val.context;
+    let origTemplate = val.template;
     var errs = [];
     var vals = [];
     let genList = [].concat(val.gen);
     mapList(genList, (v, resume) => {
+      // TODO if user context or template exists, use it.
+      let context = v.context || "{stimulus}";
+      let template = v.template || "";
+      // For each set of arguments...
       let lst = [];
       if (v.seed) {
         lst.push({
@@ -1147,7 +1159,6 @@ let render = (function() {
           tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
           tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
-        console.log("tmpl=" + tmpl);
         // Get the right order.
         lst.unshift({
           name: "solution",
@@ -1162,7 +1173,6 @@ let render = (function() {
           cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}");
           cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
         });
-
         let startMath = cntx.split("{{");
         let outStr = "";
         let offset = 0;
@@ -1178,6 +1188,7 @@ let render = (function() {
             for (let i = 0; i < v.length; i++) {
               // Look for closing }
               if (v[i] === "{") {
+                level++;
                 if (v[i-1] === "$") {
                   // Skip ${
                   parts[0] = parts[0].substring(0, parts[0].length - 1);
@@ -1185,7 +1196,6 @@ let render = (function() {
                 } else {
                   parts[0] += v[i];
                 }
-                level++;
               } else if (v[i] === "}") {
                 if (level > 0) {
                   // Have a nested brace.
@@ -1210,7 +1220,6 @@ let render = (function() {
           }
         });
         cntx = outStr;
-        console.log("cntx=" + cntx);
         // Get the right order.
         lst.unshift({
           name: "stimulus",
@@ -1219,7 +1228,6 @@ let render = (function() {
       }
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
-          console.log("render() v.val=" + v.val);
           tex2SVG(v.val, (err, svg) => {
             if (err && err.length) {
               errs = errs.concat(err);
@@ -1247,8 +1255,8 @@ let render = (function() {
         title: title,
         index: index,
         notes: notes,
-        context: context,
-        template: template,
+        context: origContext,
+        template: origTemplate,
         checks: checks,
       });
     });
