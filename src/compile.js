@@ -1157,7 +1157,7 @@ let render = (function() {
           }
           tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), v[k]);
           tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
-          tmpl = tmpl.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
+          tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{" + v[k] + "}");
         });
         // Get the right order.
         lst.unshift({
@@ -1171,7 +1171,7 @@ let render = (function() {
         keys.forEach((k, i) => {
           cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${" + v[k] + "}");
           cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}");
-          cntx = cntx.replace(new RegExp("\\[\\[" + k + "\\]\\]","g"), v[k]);
+          cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), v[k]);
         });
         let startMath = cntx.split("{{");
         let outStr = "";
