@@ -895,7 +895,7 @@ let transform = (function() {
       // Copy checks into object code.
       val.checks = options.data && options.data.checks || undefined;
       val.context = options.data && options.data.context || options.context || "{stimulus}";
-      val.template = options.data && options.data.template || options.template || "";
+      val.template = options.data && options.data.template || options.template || "{response}";
       resume(err, val);
     });
   }
@@ -1139,7 +1139,7 @@ let render = (function() {
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
       let context = v.context || "{stimulus}";
-      let template = v.template || "";
+      let template = v.template || "{response}";
       // For each set of arguments...
       let lst = [];
       if (v.seed) {
