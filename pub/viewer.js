@@ -273,7 +273,7 @@ window.gcexports.viewer = function () {
               style[k] = d.style[k];
             });
           }
-          var val = d.value ? d.value : d.svg ? d.svg : d;
+          var val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
           }

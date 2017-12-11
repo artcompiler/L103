@@ -119,7 +119,7 @@ window.gcexports.viewer = (function () {
               style[k] = d.style[k];
             });
           }
-          let val = d.value ? d.value : d.svg ? d.svg : d;
+          let val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
           }
