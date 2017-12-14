@@ -311,18 +311,18 @@ window.gcexports.viewer = (function () {
   let codeID;
   function update(context, template, params, checks) {
     let ids = window.gcexports.decodeID(window.gcexports.id);
-    window.gcexports.dispatcher.dispatch({
-      "L122": {
-        data: {
-          params: params,
-          checks: checks,
-          context: context,
-          template: template,
-          saveID: undefined,
-        },
-        recompileCode: true,
+    let state = {}
+    state[window.gcexports.id] = {
+      data: {
+        params: params,
+        checks: checks,
+        context: context,
+        template: template,
+        saveID: undefined,
       },
-    });
+      recompileCode: true,
+    };
+    window.gcexports.dispatcher.dispatch(state);
   }
   function render(nodes, props) {
     let elts = [];
@@ -928,8 +928,9 @@ window.gcexports.viewer = (function () {
         this.postData(data, (dataID)=> {
           let ids = window.gcexports.decodeID(this.getItemID());
           let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-          window.gcexports.dispatcher.dispatch({
-            "L122": {
+          let state = {}
+          state[id] = {
+            data: {
               data: {
                 codeID: ids[1],
                 saveID: id,
@@ -937,7 +938,8 @@ window.gcexports.viewer = (function () {
               parentID: ids[1],
               dontUpdateID: true,  // Don't update ID and browser location.
             },
-          });
+          };
+          window.gcexports.dispatcher.dispatch(state);
           isSaved = true;
         });
       }
