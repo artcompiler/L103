@@ -493,7 +493,6 @@ window.gcexports.viewer = function () {
     update(context, template, params, checks);
     isSaved = false;
   }
-
   var codeID = void 0;
   function update(context, template, params, checks) {
     var ids = window.gcexports.decodeID(window.gcexports.id);
@@ -777,13 +776,15 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "textarea":
-          if (n.attrs.id === "context" && props.obj.context) {
+          if (n.attrs.id === "context") {
+            var context = props.data.context || props.obj.context;
             var e = React.createElement(TextArea, _extends({ key: i, name: "context", style: n.style }, _this.props, {
-              initValue: _this.props.obj.context, rows: "2" }));
+              initValue: context, rows: "2" }));
             elts.push(e);
-          } else if (n.attrs.id === "template" && props.obj.template) {
+          } else if (n.attrs.id === "template") {
+            var template = props.data.template || props.obj.template;
             elts.push(React.createElement(TextArea, _extends({ key: i, name: "template", style: n.style }, _this.props, {
-              initValue: _this.props.obj.template, rows: "2" })));
+              initValue: template, rows: "2" })));
           } else {
             elts.push(React.createElement(TextArea, _extends({ key: i, name: "param", style: n.style }, _this.props, {
               initValue: n.args[0], rows: "1" })));
@@ -1061,9 +1062,10 @@ window.gcexports.viewer = function () {
           var data = this.props.data;
           data.checks = checks;
           this.postData(data, function (dataID) {
-            var ids = window.gcexports.decodeID(_this2.getItemID());
-            var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-            window.open("/form?id=VpeuQ1ONsJ" + "+" + id, "L124");
+            var dataIDs = window.gcexports.decodeID(_this2.getItemID());
+            var ids = [124, 522127].concat(dataIDs);
+            var id = window.gcexports.encodeID(ids);
+            window.open("/form?id=" + id, "L124");
           });
         } else {
           alert("Please select one or more questions to preview.");

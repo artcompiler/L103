@@ -307,7 +307,6 @@ window.gcexports.viewer = (function () {
     update(context, template, params, checks);
     isSaved = false;
   }
-
   let codeID;
   function update(context, template, params, checks) {
     let ids = window.gcexports.decodeID(window.gcexports.id);
@@ -587,14 +586,16 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "textarea":
-        if (n.attrs.id === "context" && props.obj.context) {
+        if (n.attrs.id === "context") {
+          let context = props.data.context || props.obj.context;
           let e = <TextArea key={i} name="context" style={n.style} {...this.props}
-                          initValue={this.props.obj.context} rows="2"/>
+                          initValue={context} rows="2"/>
           elts.push(e);
-        } else if (n.attrs.id === "template" && props.obj.template) {
+        } else if (n.attrs.id === "template") {
+          let template = props.data.template || props.obj.template;
           elts.push(
               <TextArea key={i} name="template" style={n.style} {...this.props}
-                      initValue={this.props.obj.template} rows="2"/>
+                      initValue={template} rows="2"/>
           );
         } else {
           elts.push(
@@ -901,10 +902,10 @@ window.gcexports.viewer = (function () {
           let data = this.props.data;
           data.checks = checks;
           this.postData(data, (dataID)=> {
-            let ids = window.gcexports.decodeID(this.getItemID());
-            let id = window.gcexports.encodeID(
-              [ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-            window.open("/form?id=VpeuQ1ONsJ" + "+" + id, "L124");
+            let dataIDs = window.gcexports.decodeID(this.getItemID());
+            let ids = [124, 522127].concat(dataIDs);
+            let id = window.gcexports.encodeID(ids);
+            window.open("/form?id=" + id, "L124");
           });
         } else {
           alert("Please select one or more questions to preview.");
