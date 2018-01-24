@@ -167,21 +167,33 @@ window.gcexports.viewer = (function () {
     },
   });
 
-  function valuesOfTable(table) {
-    let vals = [];
+  function getParams(table) {
+    let keys = [];
+    let paramsList = [];
+    table.select("thead").selectAll("tr").each((d, j, tr) => {
+      d3.select(tr[j])
+        .selectAll("th")
+        .each((d, i, th) => {
+          d3.select(th[i])
+            .selectAll("span")
+            .each(function(d, k, ta) {
+              keys[i] = this.textContent;
+            });
+        });
+    });
     table.select("tbody").selectAll("tr").each((d, j, tr) => {
-      vals.push([]);
+      paramsList[j] = {};
       d3.select(tr[j])
         .selectAll("td")
         .each((d, i, td) => {
           d3.select(td[i])
             .selectAll("textarea")
             .each(function(d, k, ta) {
-              vals[j].push(this.value);
+              paramsList[j][keys[i]] = this.value;
             });
         });
     });
-    return vals;
+    return paramsList;
   }
 
   function encode(str) {
@@ -206,11 +218,11 @@ window.gcexports.viewer = (function () {
     return template;
   }
 
-  function getTable(strs) {
-    let table = []
-    strs = strs[0];
-    strs.forEach(s => {
-      let exprs = s.split(",");
+  function getTable(params) {
+    let table = [];
+    Object.keys(params).forEach(key => {
+      let val = params[key];
+      let exprs = val.split(",");
       let vals = [];
       exprs.forEach(expr => {
         let [r, incr=1] = expr.split(":");
@@ -263,7 +275,7 @@ window.gcexports.viewer = (function () {
   function onUpdate(e) {
     // Update the state of the view. If the update target is a checkbox, then
     // we don't get the checks from the code.
-    let params = valuesOfTable(d3.select("table"));
+    let params = getParams(d3.select("table"))[0]; // Only one params in paramsList for now.
     let table = getTable(params);
     let data = [];
     for (let i = 0; i < table.length; i++) {
@@ -962,8 +974,9 @@ window.gcexports.viewer = (function () {
       // owned components.
       let props = this.props;
       codeID = props.obj.gen;
-      if (props.obj.params) {
-        injectParamsIntoUI(this.ui, props.obj.params);
+      let params = props.data.params || props.obj.params;
+      if (params) {
+        injectParamsIntoUI(this.ui, params);
       }
       var data = props.obj ? [].concat(props.obj) : [];
       var elts = render.call(this, this.ui, props, this.dirty);

@@ -348,17 +348,25 @@ window.gcexports.viewer = function () {
     }
   });
 
-  function valuesOfTable(table) {
-    var vals = [];
-    table.select("tbody").selectAll("tr").each(function (d, j, tr) {
-      vals.push([]);
-      d3.select(tr[j]).selectAll("td").each(function (d, i, td) {
-        d3.select(td[i]).selectAll("textarea").each(function (d, k, ta) {
-          vals[j].push(this.value);
+  function getParams(table) {
+    var keys = [];
+    var paramsList = [];
+    table.select("thead").selectAll("tr").each(function (d, j, tr) {
+      d3.select(tr[j]).selectAll("th").each(function (d, i, th) {
+        d3.select(th[i]).selectAll("span").each(function (d, k, ta) {
+          keys[i] = this.textContent;
         });
       });
     });
-    return vals;
+    table.select("tbody").selectAll("tr").each(function (d, j, tr) {
+      paramsList[j] = {};
+      d3.select(tr[j]).selectAll("td").each(function (d, i, td) {
+        d3.select(td[i]).selectAll("textarea").each(function (d, k, ta) {
+          paramsList[j][keys[i]] = this.value;
+        });
+      });
+    });
+    return paramsList;
   }
 
   function encode(str) {
@@ -381,11 +389,11 @@ window.gcexports.viewer = function () {
     return template;
   }
 
-  function getTable(strs) {
+  function getTable(params) {
     var table = [];
-    strs = strs[0];
-    strs.forEach(function (s) {
-      var exprs = s.split(",");
+    Object.keys(params).forEach(function (key) {
+      var val = params[key];
+      var exprs = val.split(",");
       var vals = [];
       exprs.forEach(function (expr) {
         var _expr$split = expr.split(":"),
@@ -449,7 +457,7 @@ window.gcexports.viewer = function () {
   function onUpdate(e) {
     // Update the state of the view. If the update target is a checkbox, then
     // we don't get the checks from the code.
-    var params = valuesOfTable(d3.select("table"));
+    var params = getParams(d3.select("table"))[0]; // Only one params in paramsList for now.
     var table = getTable(params);
     var data = [];
     for (var i = 0; i < table.length; i++) {
@@ -1123,8 +1131,9 @@ window.gcexports.viewer = function () {
       // owned components.
       var props = this.props;
       codeID = props.obj.gen;
-      if (props.obj.params) {
-        injectParamsIntoUI(this.ui, props.obj.params);
+      var params = props.data.params || props.obj.params;
+      if (params) {
+        injectParamsIntoUI(this.ui, params);
       }
       var data = props.obj ? [].concat(props.obj) : [];
       var elts = _render.call(this, this.ui, props, this.dirty);

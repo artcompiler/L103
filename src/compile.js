@@ -659,22 +659,22 @@ let transform = (function() {
   }
   function params(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      let params = val1;
       let values = [];
-      let data = options.data && options.data.params
+      let params = options.data && options.data.params
                    ? options.data.params
-                   : [Object.values(params)]; // Use defaults.
+                   : val1; // Use defaults.
       if (params) {
         let keys = Object.keys(params);
+        let vals = Object.values(params);
         // Create first row using param names.
-        data[0].forEach((d, i) => {
+        vals.forEach((d, i) => {
           // Replace default values with actual values.
           let k = keys[i];
           params[k] = d;
         });
         values.push(keys);
+        values = values.concat(generateDataFromArgs(params, vals));
       }
-      values = values.concat(generateDataFromArgs(params, data));
       resume([], {
         params: params,
         values: values,
@@ -682,7 +682,7 @@ let transform = (function() {
     });
     function expandArgs(params, args) {
       let table = [];
-      args = args ? args[0] : []; // NOTE this only supports one row of args.
+      args = args ? args : []; // NOTE this only supports one row of args.
       args.forEach(s => {
         let exprs = s.split(",");
         let vals = [];
