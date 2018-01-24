@@ -552,7 +552,8 @@ let transform = (function() {
         if (typeof val1 !== "string") {
           val1 = val1.value;
         }
-        options.template = val2.template = options.data.template || val1;
+        options.template = val2.template = options.data.template !== undefined
+          ? options.data.template : val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });

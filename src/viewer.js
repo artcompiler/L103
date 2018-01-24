@@ -587,12 +587,12 @@ window.gcexports.viewer = (function () {
         break;
       case "textarea":
         if (n.attrs.id === "context") {
-          let context = props.data.context || props.obj.context;
+          let context = props.data.context !== undefined ? props.data.context : props.obj.context;
           let e = <TextArea key={i} name="context" style={n.style} {...this.props}
                           initValue={context} rows="2"/>
           elts.push(e);
         } else if (n.attrs.id === "template") {
-          let template = props.data.template || props.obj.template;
+          let template = props.data.template !== undefined ? props.data.template : props.obj.template;
           elts.push(
               <TextArea key={i} name="template" style={n.style} {...this.props}
                       initValue={template} rows="2"/>
