@@ -444,6 +444,15 @@ let transform = (function() {
       resume([], val);
     });
   }
+  function choices(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      console.log("choices() val=" + JSON.stringify(val));
+      assert(val instanceof Array);
+      resume([], {
+        choices: val,
+      });
+    });
+  }
   function solve(node, options, resume) {
     evalSympy("solveset", node, options, resume);
   }
@@ -536,6 +545,9 @@ let transform = (function() {
   function context(node, options, resume) {
     visit(node.elts[1], options, function (err2, val2) {
       visit(node.elts[0], options, function (err1, val1) {
+        console.log("context() options=" + JSON.stringify(options, null, 2));
+        console.log("context() val1=" + JSON.stringify(val1, null, 2));
+        console.log("context() val2=" + JSON.stringify(val2, null, 2));
         if (typeof val1 !== "string") {
           val1 = val1.value;
         }
@@ -561,6 +573,16 @@ let transform = (function() {
   function gen(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
+        gen: val.values,
+        params: val.params,
+      });
+    });
+  }
+  function mcq(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      console.log("mcq() val=" + JSON.stringify(val, null, 2));
+      resume([].concat(err), {
+        type: "mcq",
         gen: val.values,
         params: val.params,
       });
@@ -930,6 +952,7 @@ let transform = (function() {
     "LITERAL": literal,
     "STIMULUS": stimulus,
     "SOLUTION": solution,
+    "CHOICES": choices,
     "RESULT": result,
     "VARIABLE": variable,
     "PRECISION": precision,
@@ -946,6 +969,7 @@ let transform = (function() {
     "MAP" : map,
     "DECIMAL": decimal,
     "GEN" : gen,
+    "MCQ" : mcq,
     "TITLE" : title,
     "INDEX" : index,
     "VALUE" : value,
@@ -1127,8 +1151,10 @@ let render = (function() {
     return outStr;
   }
   function render(val, resume) {
+    console.log("render() val=" + JSON.stringify(val, null, 2));
     let checks = val.checks;
     let params = val.params;
+    let type = val.type || "formula";
     let title = val.title;
     let index = val.index;
     let notes = val.notes;
@@ -1160,6 +1186,7 @@ let render = (function() {
           tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
           tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{" + v[k] + "}");
         });
+        console.log("render() tmpl=" + tmpl);
         let startMath = tmpl.split("[[");
         let outStr = "";
         let offset = 0;
@@ -1218,7 +1245,6 @@ let render = (function() {
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
           cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${" + v[k] + "}");
-          cntx = cntx.replace(new RegExp("==" + k + "}}","g"), v[k] + "}");
           cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), v[k]);
         });
         let startMath = cntx.split("{{");
@@ -1298,6 +1324,7 @@ let render = (function() {
       });
     }, (err, val) => {
       resume([], {
+        type: type,
         data: val,
         params: params,
         title: title,
