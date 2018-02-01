@@ -545,9 +545,9 @@ let transform = (function() {
   function context(node, options, resume) {
     visit(node.elts[1], options, function (err2, val2) {
       visit(node.elts[0], options, function (err1, val1) {
-        console.log("context() options=" + JSON.stringify(options, null, 2));
-        console.log("context() val1=" + JSON.stringify(val1, null, 2));
-        console.log("context() val2=" + JSON.stringify(val2, null, 2));
+        // console.log("context() options=" + JSON.stringify(options, null, 2));
+        // console.log("context() val1=" + JSON.stringify(val1, null, 2));
+        // console.log("context() val2=" + JSON.stringify(val2, null, 2));
         if (typeof val1 !== "string") {
           val1 = val1.value;
         }
@@ -585,7 +585,14 @@ let transform = (function() {
         type: "mcq",
         gen: val.values,
         params: val.params,
+        latex: val.latex,
       });
+    });
+  }
+  function latex(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      val.latex = true;
+      resume([].concat(err), val);
     });
   }
   function match(node, options, resume) {
@@ -970,6 +977,7 @@ let transform = (function() {
     "DECIMAL": decimal,
     "GEN" : gen,
     "MCQ" : mcq,
+    "LATEX" : latex,
     "TITLE" : title,
     "INDEX" : index,
     "VALUE" : value,
@@ -1066,9 +1074,11 @@ let render = (function() {
       }
     }
     if (nontrivial(substr)) {
-      blocks.push("\\text{" + substr + "} \\\\");
+//      blocks.push("\\text{" + substr + "}\\\\");
+      blocks.push("\\text{" + substr + "} ");
     }
-    return blocks.join("\\\\ ");
+//    return blocks.join("\\\\ ");
+    return blocks.join(" ");
   }
   function getLaTeX(str, hasText) {
     // {x}abc{y} => x\\text{abc}y
@@ -1154,6 +1164,7 @@ let render = (function() {
     console.log("render() val=" + JSON.stringify(val, null, 2));
     let checks = val.checks;
     let params = val.params;
+    let latex = val.latex;
     let type = val.type || "formula";
     let title = val.title;
     let index = val.index;
@@ -1333,6 +1344,7 @@ let render = (function() {
         context: origContext,
         template: origTemplate,
         checks: checks,
+        latex: latex,
       });
     });
   }
