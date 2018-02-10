@@ -92,21 +92,14 @@ window.gcexports.viewer = (function () {
         // Not ready yet.
         return <div/>;
       }
+      let key = 0
       data.forEach((data, i) => {
-        let headElts = [
-          <td key="0"/>
-        ];
         let checked = checks.indexOf(i) > -1;
         let isTemplate = i === 0;
-        let bodyElts = [];
-        bodyElts.push(<td key="0"><input type="checkbox"
-                      checked={checked}
-                      className={"check" + (isTemplate ? " selectAll" : "")}
-                      onChange={onUpdate}
-                      style={{margin: "0 10 20 0"}}/></td>
-                     );
         let name;
         let x = 0;
+        let bodyElts = [
+        ];
         data.val.forEach((d, j) => {
           if (isTemplate && j > 0) {
             // Only display the template stimulus
@@ -119,6 +112,8 @@ window.gcexports.viewer = (function () {
               style[k] = d.style[k];
             });
           }
+          style.padding = "10 0 10 10";
+          let bottomStyle = Object.assign({}, style, {borderTop: "0.5px solid #ddd"});
           let val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
@@ -126,19 +121,26 @@ window.gcexports.viewer = (function () {
           let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
           let {width, height} = getSize(val);
           let n = 2*i;
-          headElts.push(<th key={headElts.length} x={x} style={{
-            padding: "0 40 0 0",
-            fontSize: "12px",
-            color: "rgba(8, 149, 194, 0.5)",
-          }}>{name.toUpperCase()}</th>);
-          style.padding = "0 40 0 0";
+          let leftCol;
+          if (j === 0) {
+            leftCol = <td key="0" width="20" style={style}><input type="checkbox"
+                      checked={checked}
+                      className={"check" + (isTemplate ? " selectAll" : "")}
+                      onChange={onUpdate}
+                      style={{borderBottom: 0}}/></td>
+          } else {
+            leftCol = <td key="0" width="20" style={style}/>;
+          }
           bodyElts.push(
-              <td key={bodyElts.length} x={x} y={y} style={style}><img width={width} height={height} src={src}/></td>);
+              <tr key={j}>
+                {leftCol}
+                <td key="1" x={x} y={y} style={j === 0 ? style : bottomStyle}><img width={width} height={height} src={src}/></td>
+              </tr>);
         });
-        elts.push(<table key={i}>
-           <thead><tr>{headElts}</tr></thead>
-           <tbody><tr>{bodyElts}</tr></tbody>
-        </table>);
+        key++;
+        elts.push(<table key={key} style={{marginBottom: "0", marginTop: "20", background: "#f3f3f3"}} width="100%">
+                  <tbody>{bodyElts}</tbody>
+                  </table>);
       });
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>

@@ -245,22 +245,13 @@ window.gcexports.viewer = function () {
         // Not ready yet.
         return React.createElement("div", null);
       }
+      var key = 0;
       data.forEach(function (data, i) {
-        var headElts = [React.createElement("td", { key: "0" })];
         var checked = checks.indexOf(i) > -1;
         var isTemplate = i === 0;
-        var bodyElts = [];
-        bodyElts.push(React.createElement(
-          "td",
-          { key: "0" },
-          React.createElement("input", { type: "checkbox",
-            checked: checked,
-            className: "check" + (isTemplate ? " selectAll" : ""),
-            onChange: onUpdate,
-            style: { margin: "0 10 20 0" } })
-        ));
         var name = void 0;
         var x = 0;
+        var bodyElts = [];
         data.val.forEach(function (d, j) {
           if (isTemplate && j > 0) {
             // Only display the template stimulus
@@ -273,6 +264,8 @@ window.gcexports.viewer = function () {
               style[k] = d.style[k];
             });
           }
+          style.padding = "10 0 10 10";
+          var bottomStyle = Object.assign({}, style, { borderTop: "0.5px solid #ddd" });
           var val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
           if (val instanceof Array) {
             val = val.join(" ");
@@ -284,42 +277,39 @@ window.gcexports.viewer = function () {
               height = _getSize.height;
 
           var n = 2 * i;
-          headElts.push(React.createElement(
-            "th",
-            { key: headElts.length, x: x, style: {
-                padding: "0 40 0 0",
-                fontSize: "12px",
-                color: "rgba(8, 149, 194, 0.5)"
-              } },
-            name.toUpperCase()
-          ));
-          style.padding = "0 40 0 0";
+          var leftCol = void 0;
+          if (j === 0) {
+            leftCol = React.createElement(
+              "td",
+              { key: "0", width: "20", style: style },
+              React.createElement("input", { type: "checkbox",
+                checked: checked,
+                className: "check" + (isTemplate ? " selectAll" : ""),
+                onChange: onUpdate,
+                style: { borderBottom: 0 } })
+            );
+          } else {
+            leftCol = React.createElement("td", { key: "0", width: "20", style: style });
+          }
           bodyElts.push(React.createElement(
-            "td",
-            { key: bodyElts.length, x: x, y: y, style: style },
-            React.createElement("img", { width: width, height: height, src: src })
+            "tr",
+            { key: j },
+            leftCol,
+            React.createElement(
+              "td",
+              { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
+              React.createElement("img", { width: width, height: height, src: src })
+            )
           ));
         });
+        key++;
         elts.push(React.createElement(
           "table",
-          { key: i },
-          React.createElement(
-            "thead",
-            null,
-            React.createElement(
-              "tr",
-              null,
-              headElts
-            )
-          ),
+          { key: key, style: { marginBottom: "0", marginTop: "20", background: "#f3f3f3" }, width: "100%" },
           React.createElement(
             "tbody",
             null,
-            React.createElement(
-              "tr",
-              null,
-              bodyElts
-            )
+            bodyElts
           )
         ));
       });
