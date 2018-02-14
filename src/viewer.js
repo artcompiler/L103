@@ -72,6 +72,7 @@ window.gcexports.viewer = (function () {
     }
   });
   let checks;
+  let defaultData;
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
   var ProblemViewer = React.createClass({
@@ -79,7 +80,7 @@ window.gcexports.viewer = (function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       let props = this.props;
-      let data = props.obj.data ? props.obj.data : [];
+      let data = defaultData = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
       checks.forEach((v, i) => {
         // normalize.
@@ -266,6 +267,10 @@ window.gcexports.viewer = (function () {
     })
     return table;
   }
+  // State Machine
+  // start
+  //   |--[text]---> dirty
+  //   |--[check]--> dirty
   let isDirty = false;
   let isSaved = false;
   function onChange(e) {
@@ -298,12 +303,12 @@ window.gcexports.viewer = (function () {
       data = newData;
     }
     checks = [];
+    let recompileCode;
     if (e && e.target && e.target.className.indexOf("check") >= 0) {
       if (e.target.className.indexOf("selectAll") >= 0) {
         let state = e.target.checked;
         d3.selectAll(".check").property("checked", state);
       }
-
       // If target is a checkbox, then save the state of the checks.
       d3.selectAll(".check").nodes().forEach((d, i) => {
         if (d.checked) {
@@ -311,19 +316,20 @@ window.gcexports.viewer = (function () {
         }
       });
       isDirty = true;
+      recompileCode = true;
     } else {
       // Otherwise, clear the dirty flag and the checks.
       isDirty = false;
       checks = [];
+      recompileCode = true;
     }
     let context = getContext();
     let template = getTemplate();
-    update(context, template, params, checks);
+    update(context, template, params, checks, recompileCode);
     isSaved = false;
   }
   let codeID;
-  function update(context, template, params, checks) {
-    let ids = window.gcexports.decodeID(window.gcexports.id);
+  function update(context, template, params, checks, recompileCode) {
     let state = {}
     state[window.gcexports.id] = {
       data: {
@@ -333,7 +339,7 @@ window.gcexports.viewer = (function () {
         template: template,
         saveID: undefined,
       },
-      recompileCode: true,
+      recompileCode: recompileCode,
     };
     window.gcexports.dispatcher.dispatch(state);
   }
@@ -917,7 +923,8 @@ window.gcexports.viewer = (function () {
           data.checks = checks;
           this.postData(data, (dataID)=> {
             let dataIDs = window.gcexports.decodeID(this.getItemID());
-            let ids = [124, 522127].concat(dataIDs);
+//            let ids = [124, 522127].concat(dataIDs);
+            let ids = [124, 6426].concat(dataIDs);
             let id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
@@ -930,7 +937,8 @@ window.gcexports.viewer = (function () {
           data.checks = checks;
           this.postData(data, (dataID)=> {
             let dataIDs = window.gcexports.decodeID(this.getItemID());
-            let ids = [131, 536175, 124, 522127].concat(dataIDs);
+//            let ids = [131, 536175, 124, 522127].concat(dataIDs);
+            let ids = [131, 6425, 124, 6426].concat(dataIDs);
             let id = window.gcexports.encodeID(ids);
             window.open("/data/?id=" + id, "122 SRC");
           });

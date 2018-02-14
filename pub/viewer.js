@@ -223,6 +223,7 @@ window.gcexports.viewer = function () {
     }
   });
   var checks = void 0;
+  var defaultData = void 0;
   // Graffiticode looks for this React class named Viewer. The compiled code is
   // passed via props in the renderer.
   var ProblemViewer = React.createClass({
@@ -232,7 +233,7 @@ window.gcexports.viewer = function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       var props = this.props;
-      var data = props.obj.data ? props.obj.data : [];
+      var data = defaultData = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
       checks.forEach(function (v, i) {
         // normalize.
@@ -436,6 +437,10 @@ window.gcexports.viewer = function () {
     });
     return table;
   }
+  // State Machine
+  // start
+  //   |--[text]---> dirty
+  //   |--[check]--> dirty
   var isDirty = false;
   var isSaved = false;
   function onChange(e) {
@@ -468,12 +473,12 @@ window.gcexports.viewer = function () {
       data = newData;
     }
     checks = [];
+    var recompileCode = void 0;
     if (e && e.target && e.target.className.indexOf("check") >= 0) {
       if (e.target.className.indexOf("selectAll") >= 0) {
         var state = e.target.checked;
         d3.selectAll(".check").property("checked", state);
       }
-
       // If target is a checkbox, then save the state of the checks.
       d3.selectAll(".check").nodes().forEach(function (d, i) {
         if (d.checked) {
@@ -481,19 +486,20 @@ window.gcexports.viewer = function () {
         }
       });
       isDirty = true;
+      recompileCode = true;
     } else {
       // Otherwise, clear the dirty flag and the checks.
       isDirty = false;
       checks = [];
+      recompileCode = true;
     }
     var context = getContext();
     var template = getTemplate();
-    update(context, template, params, checks);
+    update(context, template, params, checks, recompileCode);
     isSaved = false;
   }
   var codeID = void 0;
-  function update(context, template, params, checks) {
-    var ids = window.gcexports.decodeID(window.gcexports.id);
+  function update(context, template, params, checks, recompileCode) {
     var state = {};
     state[window.gcexports.id] = {
       data: {
@@ -503,7 +509,7 @@ window.gcexports.viewer = function () {
         template: template,
         saveID: undefined
       },
-      recompileCode: true
+      recompileCode: recompileCode
     };
     window.gcexports.dispatcher.dispatch(state);
   }
@@ -1061,7 +1067,8 @@ window.gcexports.viewer = function () {
           data.checks = checks;
           this.postData(data, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            var ids = [124, 522127].concat(dataIDs);
+            //            let ids = [124, 522127].concat(dataIDs);
+            var ids = [124, 6426].concat(dataIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
@@ -1074,7 +1081,8 @@ window.gcexports.viewer = function () {
           _data.checks = checks;
           this.postData(_data, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            var ids = [131, 536175, 124, 522127].concat(dataIDs);
+            //            let ids = [131, 536175, 124, 522127].concat(dataIDs);
+            var ids = [131, 6425, 124, 6426].concat(dataIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/data/?id=" + id, "122 SRC");
           });
