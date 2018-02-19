@@ -31,15 +31,14 @@ app.get("/compile", function(req, res) {
   req.on('end', function () {
     body = JSON.parse(body);
     let auth = body.auth;
-    // validate(auth, (err, data) => {
-    // let err;
-    //   if (err) {
-    //     res.send(err);
-    //   } else {
-    //     if (data.access.indexOf("compile") === -1) {
-    //       // Don't have compile access.
-    //       res.sendStatus(401).send(err);
-    //     } else {
+    validate(auth, (err, data) => {
+      if (err) {
+        res.send(err);
+      } else {
+        if (data.access.indexOf("compile") === -1) {
+          // Don't have compile access.
+          res.sendStatus(401).send(err);
+        } else {
           let code = body.src;
           let data = body.data;
           data.REFRESH = body.refresh; // Stowaway flag.
@@ -54,9 +53,9 @@ app.get("/compile", function(req, res) {
               res.json(val);
             }
           });
-    //     }
-    //   }
-    // });
+        }
+      }
+    });
   });
   req.on('error', function(e) {
     console.log(e);

@@ -446,7 +446,6 @@ let transform = (function() {
   }
   function choices(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      console.log("choices() val=" + JSON.stringify(val));
       assert(val instanceof Array);
       resume([], {
         choices: val,
@@ -580,7 +579,6 @@ let transform = (function() {
   }
   function mcq(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      console.log("mcq() val=" + JSON.stringify(val, null, 2));
       resume([].concat(err), {
         type: "mcq",
         gen: val.values,
@@ -1161,7 +1159,6 @@ let render = (function() {
     return outStr;
   }
   function render(val, resume) {
-    console.log("render() val=" + JSON.stringify(val, null, 2));
     let checks = val.checks;
     let params = val.params;
     let latex = val.latex;
@@ -1197,7 +1194,6 @@ let render = (function() {
           tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
           tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{" + v[k] + "}");
         });
-        console.log("render() tmpl=" + tmpl);
         let startMath = tmpl.split("[[");
         let outStr = "";
         let offset = 0;

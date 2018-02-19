@@ -1067,8 +1067,8 @@ window.gcexports.viewer = function () {
           data.checks = checks;
           this.postData(data, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            //            let ids = [124, 522127].concat(dataIDs);
-            var ids = [124, 6426].concat(dataIDs);
+            var ids = [124, 522127].concat(dataIDs);
+            //            let ids = [124, 6426].concat(dataIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
@@ -1081,8 +1081,8 @@ window.gcexports.viewer = function () {
           _data.checks = checks;
           this.postData(_data, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            //            let ids = [131, 536175, 124, 522127].concat(dataIDs);
-            var ids = [131, 6425, 124, 6426].concat(dataIDs);
+            var ids = [131, 536175, 124, 522127].concat(dataIDs);
+            //            let ids = [131, 6425, 124, 6426].concat(dataIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/data/?id=" + id, "122 SRC");
           });
