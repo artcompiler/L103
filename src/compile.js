@@ -1156,6 +1156,9 @@ let render = (function() {
         offset++;
       }
     });
+    outStr = outStr.replace(new RegExp("<<response>>","g"), "{{response}}");
+    outStr = outStr.replace(new RegExp("<<","g"), "{{");
+    outStr = outStr.replace(new RegExp(">>","g"), "}}");
     return outStr;
   }
   function render(val, resume) {
@@ -1171,6 +1174,10 @@ let render = (function() {
     var errs = [];
     var vals = [];
     let genList = [].concat(val.gen);
+    let dynaData = [];
+    let dynaTemplate;
+    let dynaContext;
+    let isFirst = true;
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
       let context = v.context || "{stimulus}";
@@ -1183,16 +1190,27 @@ let render = (function() {
           val: v.seed
         });
       }
+      let data = {};
       if (template) {
         let tmpl = template;
         let keys = Object.keys(v);
+        dynaTemplate = tmpl;
         keys.forEach((k, i) => {
           if (typeof v[k] !== "string") {
             return;
           }
-          tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), v[k]);
-          tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
-          tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{" + v[k] + "}");
+          if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(tmpl)) {
+            if (isFirst) {
+              tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), "{{var:" + k + "}}");
+              tmpl = tmpl.replace(new RegExp("{response==" + k + "}","g"), "<<response>>"); // Erase value.
+              tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{ {{var:" + k + "}} }");
+            } else {
+              data[k] = v[k].replace(/\\/g, "\\\\");
+              tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), v[k]);
+              tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
+              tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{" + v[k] + "}");
+            }
+          }
         });
         let startMath = tmpl.split("[[");
         let outStr = "";
@@ -1250,9 +1268,18 @@ let render = (function() {
       if (context) {
         let cntx = context;
         let keys = Object.keys(v);
+        dynaContext = cntx;
         keys.forEach((k, i) => {
-          cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${" + v[k] + "}");
-          cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), v[k]);
+          if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(cntx)) {
+            if (isFirst) {
+              cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${ <<var:" + k + ">> }");
+              cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), "<<var:" + k + ">>");
+            } else {
+              data[k] = v[k].replace(/\\/g, "\\\\");
+              cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${" + v[k] + "}");
+              cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), v[k]);
+            }
+          }
         });
         let startMath = cntx.split("{{");
         let outStr = "";
@@ -1306,6 +1333,10 @@ let render = (function() {
           name: "stimulus",
           val: getLaTeX(cntx, true),
         });
+        isFirst = false;
+      }
+      if (Object.keys(data).length > 0) {
+        dynaData.push(data);
       }
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
@@ -1341,6 +1372,9 @@ let render = (function() {
         template: origTemplate,
         checks: checks,
         latex: latex,
+        dynaData: dynaData,
+        dynaTemplate: dynaTemplate,
+        dynaContext: dynaContext,
       });
     });
   }

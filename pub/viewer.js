@@ -982,14 +982,14 @@ window.gcexports.viewer = function () {
             }
           }]
         }, {
-          "id": "sourceButton",
+          "id": "saveButton",
           "type": "fourColumns",
           "args": [{
             "type": "button",
             "attrs": {
-              "id": "source"
+              "id": "save"
             },
-            "value": "GET SOURCE",
+            "value": "SAVE ITEMS",
             "style": {
               "width": "100%",
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
@@ -999,14 +999,14 @@ window.gcexports.viewer = function () {
             }
           }]
         }, {
-          "id": "saveButton",
+          "id": "sourceButton",
           "type": "fourColumns",
           "args": [{
             "type": "button",
             "attrs": {
-              "id": "save"
+              "id": "source"
             },
-            "value": "SAVE",
+            "value": "VIEW SOURCE",
             "style": {
               "width": "100%",
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
@@ -1090,25 +1090,39 @@ window.gcexports.viewer = function () {
           alert("Please select one or more questions to preview.");
         }
       } else if (e.target.id === "save") {
-        var _data2 = this.props.data;
-        _data2.checks = []; // Don't save checks.
-        this.postData(_data2, function (dataID) {
-          var ids = window.gcexports.decodeID(_this2.getItemID());
-          var id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-          var state = {};
-          state[id] = {
-            data: {
-              data: {
-                codeID: ids[1],
-                saveID: id
-              },
-              parentID: ids[1],
-              dontUpdateID: true // Don't update ID and browser location.
-            }
-          };
-          window.gcexports.dispatcher.dispatch(state);
-          isSaved = true;
-        });
+        // 124+557801+0
+        if (checks && checks.length > 0) {
+          var _data2 = this.props.data;
+          _data2.checks = checks;
+          this.postData(_data2, function (dataID) {
+            var dataIDs = window.gcexports.decodeID(_this2.getItemID());
+            // save questions..
+            var ids = [124, 557801].concat(dataIDs);
+            var id = window.gcexports.encodeID(ids);
+            window.open("/data/?id=" + id, "122 SRC");
+          });
+        } else {
+          alert("Please select one or more questions to preview.");
+        }
+        // let data = this.props.data;
+        // data.checks = [];  // Don't save checks.
+        // this.postData(data, (dataID)=> {
+        //   let ids = window.gcexports.decodeID(this.getItemID());
+        //   let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
+        //   let state = {}
+        //   state[id] = {
+        //     data: {
+        //       data: {
+        //         codeID: ids[1],
+        //         saveID: id,
+        //       },
+        //       parentID: ids[1],
+        //       dontUpdateID: true,  // Don't update ID and browser location.
+        //     },
+        //   };
+        //   window.gcexports.dispatcher.dispatch(state);
+        //   isSaved = true;
+        // });
       }
     },
     getItemID: function getItemID() {
