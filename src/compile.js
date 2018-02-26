@@ -1175,8 +1175,6 @@ let render = (function() {
     var vals = [];
     let genList = [].concat(val.gen);
     let dynaData = [];
-    let dynaTemplate;
-    let dynaContext;
     let isFirst = true;
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
@@ -1194,7 +1192,6 @@ let render = (function() {
       if (template) {
         let tmpl = template;
         let keys = Object.keys(v);
-        dynaTemplate = tmpl;
         keys.forEach((k, i) => {
           if (typeof v[k] !== "string") {
             return;
@@ -1202,7 +1199,7 @@ let render = (function() {
           if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(tmpl)) {
             if (isFirst) {
               tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), "{{var:" + k + "}}");
-              tmpl = tmpl.replace(new RegExp("{response==" + k + "}","g"), "<<response>>"); // Erase value.
+              tmpl = tmpl.replace(new RegExp("{response==" + k + "}","g"), "<<response==var:" + k + ">>"); // Erase value.
               tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{ {{var:" + k + "}} }");
             } else {
               data[k] = v[k].replace(/\\/g, "\\\\");
@@ -1268,7 +1265,6 @@ let render = (function() {
       if (context) {
         let cntx = context;
         let keys = Object.keys(v);
-        dynaContext = cntx;
         keys.forEach((k, i) => {
           if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(cntx)) {
             if (isFirst) {
@@ -1373,8 +1369,6 @@ let render = (function() {
         checks: checks,
         latex: latex,
         dynaData: dynaData,
-        dynaTemplate: dynaTemplate,
-        dynaContext: dynaContext,
       });
     });
   }
