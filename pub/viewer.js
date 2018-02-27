@@ -966,7 +966,7 @@ window.gcexports.viewer = function () {
         "type": "row",
         "args": [{
           "id": "previewButton",
-          "type": "fourColumns",
+          "type": "sixColumns",
           "args": [{
             "type": "button",
             "attrs": {
@@ -983,30 +983,13 @@ window.gcexports.viewer = function () {
           }]
         }, {
           "id": "saveButton",
-          "type": "fourColumns",
+          "type": "sixColumns",
           "args": [{
             "type": "button",
             "attrs": {
               "id": "save"
             },
             "value": "SAVE ITEMS",
-            "style": {
-              "width": "100%",
-              "background": "rgba(8, 149, 194, 0.10)", // #0895c2
-              "borderRadius": "4",
-              "borderWidth": "1",
-              "margin": "0 0 10 0"
-            }
-          }]
-        }, {
-          "id": "sourceButton",
-          "type": "fourColumns",
-          "args": [{
-            "type": "button",
-            "attrs": {
-              "id": "source"
-            },
-            "value": "VIEW SOURCE",
             "style": {
               "width": "100%",
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
@@ -1067,7 +1050,7 @@ window.gcexports.viewer = function () {
           data.checks = checks;
           this.postData(data, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            var ids = [124, 522127].concat(dataIDs);
+            var ids = [124, 557802].concat(dataIDs);
             //            let ids = [124, 6426].concat(dataIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
@@ -1075,27 +1058,12 @@ window.gcexports.viewer = function () {
         } else {
           alert("Please select one or more questions to preview.");
         }
-      } else if (e.target.id === "source") {
+      } else if (e.target.id === "save") {
+        // 124+557801+0
         if (checks && checks.length > 0) {
           var _data = this.props.data;
           _data.checks = checks;
           this.postData(_data, function (dataID) {
-            var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            var ids = [131, 536156, 124, 522127].concat(dataIDs);
-            //            let ids = [131, 536175, 124, 522127].concat(dataIDs);
-            //            let ids = [131, 6425, 124, 6426].concat(dataIDs);
-            var id = window.gcexports.encodeID(ids);
-            window.open("/data/?id=" + id, "122 SRC");
-          });
-        } else {
-          alert("Please select one or more questions to preview.");
-        }
-      } else if (e.target.id === "save") {
-        // 124+557801+0
-        if (checks && checks.length > 0) {
-          var _data2 = this.props.data;
-          _data2.checks = checks;
-          this.postData(_data2, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
             // save questions..
             var ids = [124, 557801].concat(dataIDs);

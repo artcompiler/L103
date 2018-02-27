@@ -810,7 +810,7 @@ window.gcexports.viewer = (function () {
             "args": [
               {
                 "id": "previewButton",
-                "type": "fourColumns",
+                "type": "sixColumns",
                 "args": [
                   {
                     "type": "button",
@@ -830,7 +830,7 @@ window.gcexports.viewer = (function () {
               },
               {
                 "id": "saveButton",
-                "type": "fourColumns",
+                "type": "sixColumns",
                 "args": [
                   {
                     "type": "button",
@@ -848,26 +848,26 @@ window.gcexports.viewer = (function () {
                   },
                 ],
               },
-              {
-                "id": "sourceButton",
-                "type": "fourColumns",
-                "args": [
-                  {
-                    "type": "button",
-                    "attrs": {
-                      "id": "source",
-                    },
-                    "value": "VIEW SOURCE",
-                    "style": {
-                      "width": "100%",
-                      "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
-                      "borderRadius": "4",
-                      "borderWidth": "1",
-                      "margin": "0 0 10 0",
-                    },
-                  },
-                ],
-              },
+              // {
+              //   "id": "sourceButton",
+              //   "type": "fourColumns",
+              //   "args": [
+              //     {
+              //       "type": "button",
+              //       "attrs": {
+              //         "id": "source",
+              //       },
+              //       "value": "VIEW SOURCE",
+              //       "style": {
+              //         "width": "100%",
+              //         "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
+              //         "borderRadius": "4",
+              //         "borderWidth": "1",
+              //         "margin": "0 0 10 0",
+              //       },
+              //     },
+              //   ],
+              // },
             ],
           }, {
             "type": "row",
@@ -923,25 +923,10 @@ window.gcexports.viewer = (function () {
           data.checks = checks;
           this.postData(data, (dataID)=> {
             let dataIDs = window.gcexports.decodeID(this.getItemID());
-            let ids = [124, 522127].concat(dataIDs);
+            let ids = [124, 557802].concat(dataIDs);
 //            let ids = [124, 6426].concat(dataIDs);
             let id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
-          });
-        } else {
-          alert("Please select one or more questions to preview.");
-        }
-      } else if (e.target.id === "source") {
-        if (checks && checks.length > 0) {
-          let data = this.props.data;
-          data.checks = checks;
-          this.postData(data, (dataID)=> {
-            let dataIDs = window.gcexports.decodeID(this.getItemID());
-            let ids = [131, 536156, 124, 522127].concat(dataIDs);
-//            let ids = [131, 536175, 124, 522127].concat(dataIDs);
-//            let ids = [131, 6425, 124, 6426].concat(dataIDs);
-            let id = window.gcexports.encodeID(ids);
-            window.open("/data/?id=" + id, "122 SRC");
           });
         } else {
           alert("Please select one or more questions to preview.");
