@@ -223,7 +223,6 @@ window.gcexports.viewer = function () {
     }
   });
   var checks = void 0;
-  var defaultData = void 0;
   var ProblemViewer = React.createClass({
     displayName: "ProblemViewer",
 
@@ -231,7 +230,6 @@ window.gcexports.viewer = function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       var props = this.props;
-      //      let data = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
       var data = props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
       checks.forEach(function (v, i) {
@@ -467,8 +465,6 @@ window.gcexports.viewer = function () {
         }
       });
       isDirty = true;
-      defaultData = this.props.obj.data ? this.props.obj.data : [];
-      //      recompileCode = true;
     } else {
       // Otherwise, clear the dirty flag and the checks.
       isDirty = false;
@@ -1031,8 +1027,9 @@ window.gcexports.viewer = function () {
           var data = this.props.data;
           data.checks = checks;
           this.postData(data, function (dataID) {
-            var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            var ids = [124, 557802].concat(dataIDs);
+            var generatorIDs = window.gcexports.decodeID(_this2.getItemID());
+            var checksIDs = window.gcexports.decodeID(dataID);
+            var ids = [124, 557802].concat(generatorIDs.slice(0, 2)).concat(checksIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
@@ -1045,9 +1042,9 @@ window.gcexports.viewer = function () {
           var _data = this.props.data;
           _data.checks = checks;
           this.postData(_data, function (dataID) {
-            var dataIDs = window.gcexports.decodeID(_this2.getItemID());
-            // save questions..
-            var ids = [124, 557801].concat(dataIDs);
+            var generatorIDs = window.gcexports.decodeID(_this2.getItemID());
+            var checksIDs = window.gcexports.decodeID(dataID);
+            var ids = [124, 557801].concat(generatorIDs.slice(0, 2)).concat(checksIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/data/?id=" + id, "122 SRC");
           });
