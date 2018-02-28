@@ -73,14 +73,13 @@ window.gcexports.viewer = (function () {
   });
   let checks;
   let defaultData;
-  // Graffiticode looks for this React class named Viewer. The compiled code is
-  // passed via props in the renderer.
   var ProblemViewer = React.createClass({
     render: function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       let props = this.props;
-      let data = defaultData = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
+//      let data = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
+      let data = props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
       checks.forEach((v, i) => {
         // normalize.
@@ -273,35 +272,17 @@ window.gcexports.viewer = (function () {
   //   |--[check]--> dirty
   let isDirty = false;
   let isSaved = false;
-  function onChange(e) {
-    // Once anything has changed, we use the in memory state,
-    // not the compiled state. These should be in sync until
-    // the next refesh.
-    isDirty = true;
-  }
+  // function onChange(e) {
+  //   // Once anything has changed, we use the in memory state,
+  //   // not the compiled state. These should be in sync until
+  //   // the next refesh.
+  //   isDirty = true;
+  // }
   function onUpdate(e) {
     // Update the state of the view. If the update target is a checkbox, then
     // we don't get the checks from the code.
     let params = getParams(d3.select("table"))[0]; // Only one params in paramsList for now.
     let table = getTable(params);
-    let data = [];
-    for (let i = 0; i < table.length; i++) {
-      let row;
-      let len = data.length;
-      let newData = [];
-      for (let j = 0; j < table[i].length; j++) {
-        let col = table[i][j];
-        if (len > 0) {
-          for (let k = 0; k < len; k++) {
-            row = [].concat(data[k]).concat(col);
-            newData.push(row);
-          }
-        } else {
-          newData.push([col]);
-        }
-      }
-      data = newData;
-    }
     checks = [];
     let recompileCode;
     if (e && e.target && e.target.className.indexOf("check") >= 0) {
@@ -316,7 +297,8 @@ window.gcexports.viewer = (function () {
         }
       });
       isDirty = true;
-      recompileCode = true;
+      defaultData = this.props.obj.data ? this.props.obj.data : [];
+//      recompileCode = true;
     } else {
       // Otherwise, clear the dirty flag and the checks.
       isDirty = false;
@@ -924,7 +906,6 @@ window.gcexports.viewer = (function () {
           this.postData(data, (dataID)=> {
             let dataIDs = window.gcexports.decodeID(this.getItemID());
             let ids = [124, 557802].concat(dataIDs);
-//            let ids = [124, 6426].concat(dataIDs);
             let id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
@@ -946,25 +927,6 @@ window.gcexports.viewer = (function () {
         } else {
           alert("Please select one or more questions to preview.");
         }
-        // let data = this.props.data;
-        // data.checks = [];  // Don't save checks.
-        // this.postData(data, (dataID)=> {
-        //   let ids = window.gcexports.decodeID(this.getItemID());
-        //   let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-        //   let state = {}
-        //   state[id] = {
-        //     data: {
-        //       data: {
-        //         codeID: ids[1],
-        //         saveID: id,
-        //       },
-        //       parentID: ids[1],
-        //       dontUpdateID: true,  // Don't update ID and browser location.
-        //     },
-        //   };
-        //   window.gcexports.dispatcher.dispatch(state);
-        //   isSaved = true;
-        // });
       }
     },
     getItemID() {
@@ -988,7 +950,7 @@ window.gcexports.viewer = (function () {
       if (params) {
         injectParamsIntoUI(this.ui, params);
       }
-      var data = props.obj ? [].concat(props.obj) : [];
+//      var data = props.obj ? [].concat(props.obj) : [];
       var elts = render.call(this, this.ui, props, this.dirty);
       return (
         <div className="section">

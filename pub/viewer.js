@@ -224,8 +224,6 @@ window.gcexports.viewer = function () {
   });
   var checks = void 0;
   var defaultData = void 0;
-  // Graffiticode looks for this React class named Viewer. The compiled code is
-  // passed via props in the renderer.
   var ProblemViewer = React.createClass({
     displayName: "ProblemViewer",
 
@@ -233,7 +231,8 @@ window.gcexports.viewer = function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       var props = this.props;
-      var data = defaultData = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
+      //      let data = isDirty ? defaultData : props.obj.data ? props.obj.data : [];
+      var data = props.obj.data ? props.obj.data : [];
       checks = isDirty ? checks : props.checks ? props.checks : [];
       checks.forEach(function (v, i) {
         // normalize.
@@ -443,35 +442,17 @@ window.gcexports.viewer = function () {
   //   |--[check]--> dirty
   var isDirty = false;
   var isSaved = false;
-  function onChange(e) {
-    // Once anything has changed, we use the in memory state,
-    // not the compiled state. These should be in sync until
-    // the next refesh.
-    isDirty = true;
-  }
+  // function onChange(e) {
+  //   // Once anything has changed, we use the in memory state,
+  //   // not the compiled state. These should be in sync until
+  //   // the next refesh.
+  //   isDirty = true;
+  // }
   function onUpdate(e) {
     // Update the state of the view. If the update target is a checkbox, then
     // we don't get the checks from the code.
     var params = getParams(d3.select("table"))[0]; // Only one params in paramsList for now.
     var table = getTable(params);
-    var data = [];
-    for (var i = 0; i < table.length; i++) {
-      var row = void 0;
-      var len = data.length;
-      var newData = [];
-      for (var j = 0; j < table[i].length; j++) {
-        var col = table[i][j];
-        if (len > 0) {
-          for (var k = 0; k < len; k++) {
-            row = [].concat(data[k]).concat(col);
-            newData.push(row);
-          }
-        } else {
-          newData.push([col]);
-        }
-      }
-      data = newData;
-    }
     checks = [];
     var recompileCode = void 0;
     if (e && e.target && e.target.className.indexOf("check") >= 0) {
@@ -486,7 +467,8 @@ window.gcexports.viewer = function () {
         }
       });
       isDirty = true;
-      recompileCode = true;
+      defaultData = this.props.obj.data ? this.props.obj.data : [];
+      //      recompileCode = true;
     } else {
       // Otherwise, clear the dirty flag and the checks.
       isDirty = false;
@@ -1051,7 +1033,6 @@ window.gcexports.viewer = function () {
           this.postData(data, function (dataID) {
             var dataIDs = window.gcexports.decodeID(_this2.getItemID());
             var ids = [124, 557802].concat(dataIDs);
-            //            let ids = [124, 6426].concat(dataIDs);
             var id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
@@ -1073,25 +1054,6 @@ window.gcexports.viewer = function () {
         } else {
           alert("Please select one or more questions to preview.");
         }
-        // let data = this.props.data;
-        // data.checks = [];  // Don't save checks.
-        // this.postData(data, (dataID)=> {
-        //   let ids = window.gcexports.decodeID(this.getItemID());
-        //   let id = window.gcexports.encodeID([ids[0], ids[1]].concat(window.gcexports.decodeID(dataID)));
-        //   let state = {}
-        //   state[id] = {
-        //     data: {
-        //       data: {
-        //         codeID: ids[1],
-        //         saveID: id,
-        //       },
-        //       parentID: ids[1],
-        //       dontUpdateID: true,  // Don't update ID and browser location.
-        //     },
-        //   };
-        //   window.gcexports.dispatcher.dispatch(state);
-        //   isSaved = true;
-        // });
       }
     },
     getItemID: function getItemID() {
@@ -1116,7 +1078,7 @@ window.gcexports.viewer = function () {
       if (params) {
         injectParamsIntoUI(this.ui, params);
       }
-      var data = props.obj ? [].concat(props.obj) : [];
+      //      var data = props.obj ? [].concat(props.obj) : [];
       var elts = _render.call(this, this.ui, props, this.dirty);
       return React.createElement(
         "div",
