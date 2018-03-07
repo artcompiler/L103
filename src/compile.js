@@ -454,12 +454,12 @@ let transform = (function() {
   }
   function format(node, options, resume) {
     var errs = [];
-    visit(node.elts[0], options, function (err, val) {
+    visit(node.elts[0], options, function (err, val1) {
       errs = errs.concat(err);
-      var pattern = val;
-      visit(node.elts[1], options, function (err, val) {
+      var pattern = val1;
+      visit(node.elts[1], options, function (err, val2) {
         errs = errs.concat(err);
-        let response = val.value;
+        let response = val2.value;
         if (response) {
           MathCore.evaluateVerbose({
             method: "format",
@@ -469,9 +469,8 @@ let transform = (function() {
             if (err && err.length) {
               errs = errs.concat(error(err, node.elts[1]));
             }
-            resume(errs, {
-              value: val.result,
-            });
+            val2.value = val.result;
+            resume(errs, val2);
           });
         }
       });
@@ -569,9 +568,6 @@ let transform = (function() {
   function context(node, options, resume) {
     visit(node.elts[1], options, function (err2, val2) {
       visit(node.elts[0], options, function (err1, val1) {
-        // console.log("context() options=" + JSON.stringify(options, null, 2));
-        // console.log("context() val1=" + JSON.stringify(val1, null, 2));
-        // console.log("context() val2=" + JSON.stringify(val2, null, 2));
         if (typeof val1 !== "string") {
           val1 = val1.value;
         }
