@@ -422,6 +422,7 @@ let transform = (function() {
       } else {
         val.stimulus = val.value;
       }
+      console.log("stimulus() val=" + JSON.stringify(val));
       resume([], val);
     });
   }
@@ -449,6 +450,39 @@ let transform = (function() {
       assert(val instanceof Array);
       resume([], {
         choices: val,
+      });
+    });
+  }
+  function format(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      console.log("[1] format() val=" + JSON.stringify(val));
+      errs = errs.concat(err);
+      var pattern = val;
+      visit(node.elts[1], options, function (err, val) {
+        console.log("[2] format() val=" + JSON.stringify(val));
+        errs = errs.concat(err);
+        let response = val;
+        let score = val.score || 1;
+        let methods = "format " + (val.methods || "");
+        if (response) {
+          options.strict = true;
+          delete options.data;
+          console.log("format() pattern=" + pattern);
+          MathCore.evaluateVerbose({
+            method: "format",
+            options: options,
+            value: pattern,
+          }, response, function (err, val) {
+            delete options.strict;
+            if (err && err.length) {
+              errs = errs.concat(error(err, node.elts[1]));
+            }
+            resume(errs, {
+              value: val.result,
+            });
+          });
+        }
       });
     });
   }
@@ -957,6 +991,7 @@ let transform = (function() {
     "LITERAL": literal,
     "STIMULUS": stimulus,
     "SOLUTION": solution,
+    "FORMAT": format,
     "CHOICES": choices,
     "RESULT": result,
     "VARIABLE": variable,
