@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 50f80af
+ * Mathcore unversioned - 3392054
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -610,7 +610,6 @@ var Model = function() {
     return node
   };
   var render = function render(n) {
-    console.log("render() n=" + JSON.stringify(n));
     var text = "";
     if(typeof n === "string") {
       text = n
@@ -11352,6 +11351,7 @@ var MathCore = function() {
           break;
         case "variables":
           result = solutionNode.variables();
+          break;
         case "format":
           result = valueNode.format(solutionNode);
           break;

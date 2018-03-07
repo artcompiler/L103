@@ -422,7 +422,6 @@ let transform = (function() {
       } else {
         val.stimulus = val.value;
       }
-      console.log("stimulus() val=" + JSON.stringify(val));
       resume([], val);
     });
   }
@@ -456,25 +455,17 @@ let transform = (function() {
   function format(node, options, resume) {
     var errs = [];
     visit(node.elts[0], options, function (err, val) {
-      console.log("[1] format() val=" + JSON.stringify(val));
       errs = errs.concat(err);
       var pattern = val;
       visit(node.elts[1], options, function (err, val) {
-        console.log("[2] format() val=" + JSON.stringify(val));
         errs = errs.concat(err);
-        let response = val;
-        let score = val.score || 1;
-        let methods = "format " + (val.methods || "");
+        let response = val.value;
         if (response) {
-          options.strict = true;
-          delete options.data;
-          console.log("format() pattern=" + pattern);
           MathCore.evaluateVerbose({
             method: "format",
-            options: options,
+            options: {},  // blank options
             value: pattern,
           }, response, function (err, val) {
-            delete options.strict;
             if (err && err.length) {
               errs = errs.concat(error(err, node.elts[1]));
             }
