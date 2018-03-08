@@ -590,7 +590,7 @@ let transform = (function() {
       });
     });
   }
-  function gen(node, options, resume) {
+  function formula(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
         gen: val.values,
@@ -995,7 +995,8 @@ let transform = (function() {
     "APPLY" : apply,
     "MAP" : map,
     "DECIMAL": decimal,
-    "GEN" : gen,
+    "GEN" : formula,
+    "FORMULA" : formula,
     "MCQ" : mcq,
     "LATEX" : latex,
     "TITLE" : title,
