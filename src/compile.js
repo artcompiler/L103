@@ -590,9 +590,39 @@ let transform = (function() {
       });
     });
   }
+  function desmos(node, options, resume) {
+    visit(node.elts[0], options, function (err, val1) {
+      visit(node.elts[1], options, function (err, val2) {
+        let values = [];
+        val2.values.forEach(v => {
+          values.push({
+            slope: v.m || v.slope,
+            intercept: v.b || v.intercept,
+          });
+        });
+        resume([].concat(err), {
+          type: "desmos",
+          subtype: val1,
+          gen: val2.values,
+          params: val2.params,
+          values: values,
+        });
+      });
+    });
+  }
+  function formulaEssay(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      resume([].concat(err), {
+        type: "formulaessay",
+        gen: val.values,
+        params: val.params,
+      });
+    });
+  }
   function formula(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
+        type: "formula",
         gen: val.values,
         params: val.params,
       });
@@ -996,7 +1026,9 @@ let transform = (function() {
     "MAP" : map,
     "DECIMAL": decimal,
     "GEN" : formula,
+    "DESMOS" : desmos,
     "FORMULA" : formula,
+    "FORMULA-ESSAY" : formulaEssay,
     "MCQ" : mcq,
     "LATEX" : latex,
     "TITLE" : title,
@@ -1194,6 +1226,7 @@ let render = (function() {
     let notes = val.notes;
     let origContext = val.context;
     let origTemplate = val.template;
+    let values = val.values;
     var errs = [];
     var vals = [];
     let genList = [].concat(val.gen);
@@ -1392,6 +1425,7 @@ let render = (function() {
         checks: checks,
         latex: latex,
         dynaData: dynaData,
+        values: values,
       });
     });
   }
