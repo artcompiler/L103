@@ -600,6 +600,7 @@ let transform = (function() {
             intercept: v.b || v.intercept,
           });
         });
+        console.log("desmos() val1=" + JSON.stringify(val1));
         resume([].concat(err), {
           type: "desmos",
           subtype: val1,
@@ -1221,6 +1222,7 @@ let render = (function() {
     let params = val.params;
     let latex = val.latex;
     let type = val.type || "formula";
+    let subtype = val.subtype || undefined;
     let title = val.title;
     let index = val.index;
     let notes = val.notes;
@@ -1415,6 +1417,7 @@ let render = (function() {
     }, (err, val) => {
       resume([], {
         type: type,
+        subtype: subtype,
         data: val,
         params: params,
         title: title,

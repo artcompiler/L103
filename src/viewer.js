@@ -902,7 +902,7 @@ window.gcexports.viewer = (function () {
           this.postData(data, (dataID)=> {
             let generatorIDs = window.gcexports.decodeID(this.getItemID());
             let checksIDs = window.gcexports.decodeID(dataID);
-            let ids = [124, 557802].concat(generatorIDs.slice(0,2)).concat(checksIDs);
+            let ids = [124, 558705].concat(generatorIDs.slice(0,2)).concat(checksIDs);
             let id = window.gcexports.encodeID(ids);
             window.open("/form?id=" + id, "L124");
           });
