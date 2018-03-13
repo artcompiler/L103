@@ -595,12 +595,30 @@ let transform = (function() {
       visit(node.elts[1], options, function (err, val2) {
         let values = [];
         val2.values.forEach(v => {
-          values.push({
-            slope: v.m || v.slope,
-            intercept: v.b || v.intercept,
-          });
+          if (val1 === "desmos_slope_intercept_question") {
+            values.push({
+              slope: v.m || v.slope,
+              intercept: v.b || v.intercept,
+            });
+          } else if (val1 === "desmos_sqrt_question") {
+            values.push({
+              vertex_x: v.h || v.vertex_x,
+              vertex_y: v.k || v.vertex_y,
+              leading_coefficient: v.a || v.leading_coefficient,
+              direction: v.d || v.direction,
+            });
+          } else if (val1 === "desmos_parabola_question") {
+            values.push({
+              "y-intercept": v.c || v["y-intercept"],
+              "vertex_y": v.k || v.vertex_y,
+              "vertex_x": v.h || v.vertex_x,
+              "leading_coefficient": v.a || v.leading_coefficient,
+              "number_of_solutions": v.n || v.number_of_solutions,
+            });
+          } else {
+            assert(false);
+          }
         });
-        console.log("desmos() val1=" + JSON.stringify(val1));
         resume([].concat(err), {
           type: "desmos",
           subtype: val1,
@@ -1324,6 +1342,9 @@ let render = (function() {
         let cntx = context;
         let keys = Object.keys(v);
         keys.forEach((k, i) => {
+          if (typeof v[k] !== "string") {
+            return;
+          }
           if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(cntx)) {
             if (isFirst) {
               cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${ <<var:" + k + ">> }");

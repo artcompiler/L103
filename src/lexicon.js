@@ -38,6 +38,7 @@ window.gcexports.globalLexicon = {
   "desmos" : { "tk": 1, "name": "DESMOS", "cls": "function", "length": 2 , "arity": 2 },
   "slope-intercept" : { "tk": 1, "cls": "string", "val": "desmos_slope_intercept_question", "length": 0, "arity": 1  },
   "sqrt" : { "tk": 1, "cls": "string", "val": "desmos_sqrt_question", "length": 0, "arity": 1  },
+  "parabola" : { "tk": 1, "cls": "string", "val": "desmos_parabola_question", "length": 0, "arity": 1  },
   "formula" : { "tk": 1, "name": "FORMULA", "cls": "function", "length": 1 , "arity": 1 },
   "formula-essay" : { "tk": 1, "name": "FORMULA-ESSAY", "cls": "function", "length": 1 , "arity": 1 },
   "mcq" : { "tk": 1, "name": "MCQ", "cls": "function", "length": 1 , "arity": 1 },
