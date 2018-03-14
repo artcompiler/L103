@@ -615,8 +615,14 @@ let transform = (function() {
               "leading_coefficient": v.a || v.leading_coefficient,
               "number_of_solutions": v.n || v.number_of_solutions,
             });
+          } else if (val1 === "desmos_circle_question") {
+            values.push({
+              "center_x": v.x || v.center_x,
+              "center_y": v.y || v.center_y,
+              "radius": v.r || v.radius,
+            });
           } else {
-            assert(false);
+            assert(false, val1);
           }
         });
         resume([].concat(err), {
