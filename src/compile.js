@@ -621,6 +621,11 @@ let transform = (function() {
               "center_y": v.y || v.center_y,
               "radius": v.r || v.radius,
             });
+          } else if (val1 === "desmos_rectangle_question") {
+            values.push({
+              "area": v.A || v.area,
+              "perimeter": v.P || v.perimeter,
+            });
           } else {
             assert(false, val1);
           }
