@@ -458,1972 +458,6 @@ var Ast = function() {
   }
   return Ast
 }();
-var Model = function() {
-  function error(str) {
-    trace("error: " + str)
-  }
-  function Model() {
-  }
-  Model.fn = {};
-  Model.env = env = {};
-  var envStack = [];
-  var env = {};
-  Model.pushEnv = function pushEnv(e) {
-    envStack.push(env);
-    Model.env = env = e
-  };
-  Model.popEnv = function popEnv() {
-    assert(envStack.length > 0, "1000: Empty envStack");
-    Model.env = env = envStack.pop()
-  };
-  function isChemCore() {
-    return!!Model.env["Au"]
-  }
-  var Mp = Model.prototype = new Ast;
-  Assert.reserveCodeRange(1E3, 1999, "model");
-  Assert.messages[1E3] = "Internal error. %1.";
-  Assert.messages[1001] = "Invalid syntax. '%1' expected, '%2' found.";
-  Assert.messages[1002] = "Only one decimal separator can be specified.";
-  Assert.messages[1003] = "Extra characters in input at position: %1, lexeme: %2, prefix: %3.";
-  Assert.messages[1004] = "Invalid character '%1' (%2) in input.";
-  Assert.messages[1005] = "Misplaced thousands separator.";
-  Assert.messages[1006] = "Invalid syntax. Expression expected, %1 found.";
-  Assert.messages[1007] = "Unexpected character: '%1' in '%2'.";
-  Assert.messages[1008] = "The same character '%1' is being used as a thousands and decimal separators.";
-  Assert.messages[1009] = "Missing argument for '%1' command.";
-  Assert.messages[1010] = "Expecting an operator between numbers.";
-  var message = Assert.message;
-  Model.create = Mp.create = function create(node, location) {
-    assert(node != undefined, message(1011));
-    if(node instanceof Model) {
-      if(location) {
-        node.location = location
-      }
-      return node
-    }
-    var model;
-    if(node instanceof Array) {
-      model = [];
-      forEach(node, function(n) {
-        model.push(create(n, location))
-      });
-      return model
-    }
-    if(!(this instanceof Model)) {
-      return(new Model).create(node, location)
-    }
-    model = create(this);
-    model.location = location;
-    if(typeof node === "string") {
-      var parser = parse(node, Model.env);
-      node = parser.expr()
-    }else {
-      node = JSON.parse(JSON.stringify(node))
-    }
-    forEach(keys(Model.fn), function(v, i) {
-      if(!Mp.hasOwnProperty(v)) {
-        Mp[v] = function() {
-          var fn = Model.fn[v];
-          if(arguments.length > 1 && arguments[1] instanceof Model) {
-            return fn.apply(this, arguments)
-          }else {
-            var args = [this];
-            for(var i = 0;i < arguments.length;i++) {
-              args.push(arguments[i])
-            }
-            return fn.apply(this, args)
-          }
-        }
-      }
-    });
-    forEach(keys(node), function(v, i) {
-      model[v] = node[v]
-    });
-    return model
-  };
-  Model.fromLaTeX = Mp.fromLaTeX = function fromLaTex(src) {
-    assert(typeof src === "string", "1000: Model.prototype.fromLaTex");
-    if(!this) {
-      return Model.create(src)
-    }
-    return this.create(src)
-  };
-  Mp.toLaTeX = function toLaTeX(node) {
-    return render(node)
-  };
-  var OpStr = {ADD:"+", SUB:"-", MUL:"mul", TIMES:"times", COEFF:"coeff", DIV:"div", FRAC:"frac", EQL:"=", ATAN2:"atan2", SQRT:"sqrt", VEC:"vec", PM:"pm", SIN:"sin", COS:"cos", TAN:"tan", SEC:"sec", COT:"cot", CSC:"csc", ARCSIN:"arcsin", ARCCOS:"arccos", ARCTAN:"arctan", SINH:"sinh", COSH:"cosh", TANH:"tanh", SECH:"sech", COTH:"coth", CSCH:"csch", ARCSINH:"arcsinh", ARCCOSH:"arccosh", ARCTANH:"arctanh", LOG:"log", LN:"ln", LG:"lg", VAR:"var", NUM:"num", CST:"cst", COMMA:",", POW:"^", SUBSCRIPT:"_", 
-  ABS:"abs", PAREN:"()", HIGHLIGHT:"hi", LT:"lt", LE:"le", GT:"gt", GE:"ge", NE:"ne", NGTR:"ngtr", NLESS:"nless", APPROX:"approx", INTERVAL:"interval", LIST:"list", EXISTS:"exists", IN:"in", FORALL:"forall", LIM:"lim", EXP:"exp", TO:"to", SUM:"sum", INT:"int", PROD:"prod", PERCENT:"%", M:"M", RIGHTARROW:"->", FACT:"fact", BINOM:"binom", ROW:"row", COL:"col", COLON:"colon", MATRIX:"matrix", FORMAT:"format", OVERSET:"overset", UNDERSET:"underset", OVERLINE:"overline", DEGREE:"degree", BACKSLASH:"backslash", 
-  MATHBF:"mathbf", DOT:"dot", NONE:"none"};
-  forEach(keys(OpStr), function(v, i) {
-    Model[v] = OpStr[v]
-  });
-  var OpToLaTeX = {};
-  OpToLaTeX[OpStr.ADD] = "+";
-  OpToLaTeX[OpStr.SUB] = "-";
-  OpToLaTeX[OpStr.MUL] = "\\times";
-  OpToLaTeX[OpStr.TIMES] = "\\times";
-  OpToLaTeX[OpStr.DIV] = "\\div";
-  OpToLaTeX[OpStr.FRAC] = "\\frac";
-  OpToLaTeX[OpStr.EQL] = "=";
-  OpToLaTeX[OpStr.ATAN2] = "\\atan2";
-  OpToLaTeX[OpStr.POW] = "^";
-  OpToLaTeX[OpStr.SUBSCRIPT] = "_";
-  OpToLaTeX[OpStr.PM] = "\\pm";
-  OpToLaTeX[OpStr.SIN] = "\\sin";
-  OpToLaTeX[OpStr.COS] = "\\cos";
-  OpToLaTeX[OpStr.TAN] = "\\tan";
-  OpToLaTeX[OpStr.ARCSIN] = "\\arcsin";
-  OpToLaTeX[OpStr.ARCCOS] = "\\arccos";
-  OpToLaTeX[OpStr.ARCTAN] = "\\arctan";
-  OpToLaTeX[OpStr.SEC] = "\\sec";
-  OpToLaTeX[OpStr.COT] = "\\cot";
-  OpToLaTeX[OpStr.CSC] = "\\csc";
-  OpToLaTeX[OpStr.SINH] = "\\sinh";
-  OpToLaTeX[OpStr.COSH] = "\\cosh";
-  OpToLaTeX[OpStr.TANH] = "\\tanh";
-  OpToLaTeX[OpStr.ARCSINH] = "\\arcsinh";
-  OpToLaTeX[OpStr.ARCCOSH] = "\\arccosh";
-  OpToLaTeX[OpStr.ARCTANH] = "\\arctanh";
-  OpToLaTeX[OpStr.SECH] = "\\sech";
-  OpToLaTeX[OpStr.COTH] = "\\coth";
-  OpToLaTeX[OpStr.CSCH] = "\\csch";
-  OpToLaTeX[OpStr.LN] = "\\ln";
-  OpToLaTeX[OpStr.COMMA] = ",";
-  OpToLaTeX[OpStr.M] = "\\M";
-  OpToLaTeX[OpStr.BINOM] = "\\binom";
-  OpToLaTeX[OpStr.COLON] = "\\colon";
-  Model.fold = function fold(node, env) {
-    var args = [], val;
-    forEach(node.args, function(n) {
-      args.push(fold(n, env))
-    });
-    node.args = args;
-    switch(node.op) {
-      case OpStr.VAR:
-        if(val = env[node.args[0]]) {
-          node = val
-        }
-        break;
-      default:
-        break
-    }
-    return node
-  };
-  var render = function render(n) {
-    var text = "";
-    if(typeof n === "string") {
-      text = n
-    }else {
-      if(typeof n === "number") {
-        text = n
-      }else {
-        if(typeof n === "object") {
-          var args = [];
-          for(var i = 0;i < n.args.length;i++) {
-            args[i] = render(n.args[i])
-          }
-          switch(n.op) {
-            case OpStr.VAR:
-            ;
-            case OpStr.CST:
-            ;
-            case OpStr.NUM:
-              text = n.args[0];
-              break;
-            case OpStr.SUB:
-              if(n.args.length === 1) {
-                text = OpToLaTeX[n.op] + " " + args[0]
-              }else {
-                text = args[0] + " " + OpToLaTeX[n.op] + " " + args[1]
-              }
-              break;
-            case OpStr.DIV:
-            ;
-            case OpStr.PM:
-            ;
-            case OpStr.EQL:
-              text = args[0] + " " + OpToLaTeX[n.op] + " " + args[1];
-              break;
-            case OpStr.POW:
-              var lhs = n.args[0];
-              var rhs = n.args[1];
-              if(lhs.args && lhs.args.length === 2 || rhs.args && rhs.args.length === 2) {
-                if(lhs.op === OpStr.ADD || (lhs.op === OpStr.SUB || (lhs.op === OpStr.MUL || (lhs.op === OpStr.DIV || lhs.op === OpStr.SQRT)))) {
-                  args[0] = " (" + args[0] + ") "
-                }
-              }
-              text = args[0] + "^{" + args[1] + "}";
-              break;
-            case OpStr.SIN:
-            ;
-            case OpStr.COS:
-            ;
-            case OpStr.TAN:
-            ;
-            case OpStr.ARCSIN:
-            ;
-            case OpStr.ARCCOS:
-            ;
-            case OpStr.ARCTAN:
-            ;
-            case OpStr.SEC:
-            ;
-            case OpStr.COT:
-            ;
-            case OpStr.CSC:
-            ;
-            case OpStr.SINH:
-            ;
-            case OpStr.COSH:
-            ;
-            case OpStr.TANH:
-            ;
-            case OpStr.ARCSINH:
-            ;
-            case OpStr.ARCCOSH:
-            ;
-            case OpStr.ARCTANH:
-            ;
-            case OpStr.SECH:
-            ;
-            case OpStr.COTH:
-            ;
-            case OpStr.CSCH:
-            ;
-            case OpStr.LN:
-            ;
-            case OpStr.M:
-              text = OpToLaTeX[n.op] + "{" + args[0] + "}";
-              break;
-            case OpStr.FRAC:
-              text = "\\frac{" + args[0] + "}{" + args[1] + "}";
-              break;
-            case OpStr.BINOM:
-              text = "\\binom{" + args[0] + "}{" + args[1] + "}";
-              break;
-            case OpStr.SQRT:
-              switch(args.length) {
-                case 1:
-                  text = "\\sqrt{" + args[0] + "}";
-                  break;
-                case 2:
-                  text = "\\sqrt[" + args[0] + "]{" + args[1] + "}";
-                  break
-              }
-              break;
-            case OpStr.VEC:
-              text = "\\vec{" + args[0] + "}";
-              break;
-            case OpStr.MUL:
-              var prevTerm;
-              text = "";
-              forEach(n.args, function(term, index) {
-                if(term.args && term.args.length >= 2) {
-                  if(term.op === OpStr.ADD || term.op === OpStr.SUB) {
-                    args[index] = "(" + args[index] + ")"
-                  }
-                  if(index !== 0 && typeof term === "number") {
-                    text += OpToLaTeX[n.op] + " "
-                  }
-                  text += args[index]
-                }else {
-                  if(term.op === OpStr.PAREN || (term.op === OpStr.VAR || (term.op === OpStr.CST || (typeof prevTerm === "number" && typeof term !== "number" || n.isMixedNumber)))) {
-                    text += args[index]
-                  }else {
-                    if(term.op === Model.POW && term.args[1].args[0] === "-1") {
-                      text += "/" + args[index]
-                    }else {
-                      if(index !== 0) {
-                        text += " " + OpToLaTeX[n.op] + " "
-                      }
-                      text += args[index]
-                    }
-                  }
-                }
-                prevTerm = term
-              });
-              break;
-            case OpStr.ADD:
-            ;
-            case OpStr.COMMA:
-              forEach(args, function(value, index) {
-                if(index === 0) {
-                  text = value
-                }else {
-                  text = text + " " + OpToLaTeX[n.op] + " " + value
-                }
-              });
-              break;
-            default:
-              assert(false, "1000: Unimplemented eval operator");
-              break
-          }
-        }else {
-          assert(false, "1000: Invalid expression type")
-        }
-      }
-    }
-    return text
-  };
-  var CC_SPACE = 32;
-  var CC_BANG = 33;
-  var CC_DOLLAR = 36;
-  var CC_PERCENT = 37;
-  var CC_LEFTPAREN = 40;
-  var CC_MUL = 42;
-  var CC_ADD = 43;
-  var CC_COMMA = 44;
-  var CC_SUB = 45;
-  var CC_RIGHTPAREN = 41;
-  var CC_SLASH = 47;
-  var CC_NUM = 48;
-  var CC_COLON = 58;
-  var CC_SEMICOLON = 59;
-  var CC_EQL = 61;
-  var CC_QMARK = 63;
-  var CC_CONST = 65;
-  var CC_LEFTBRACKET = 91;
-  var CC_RIGHTBRACKET = 93;
-  var CC_CARET = 94;
-  var CC_UNDERSCORE = 95;
-  var CC_VAR = 97;
-  var CC_LEFTBRACE = 123;
-  var CC_VERTICALBAR = 124;
-  var CC_RIGHTBRACE = 125;
-  var CC_SINGLEQUOTE = 39;
-  var TK_NONE = 0;
-  var TK_ADD = CC_ADD;
-  var TK_CARET = CC_CARET;
-  var TK_UNDERSCORE = CC_UNDERSCORE;
-  var TK_SLASH = CC_SLASH;
-  var TK_EQL = CC_EQL;
-  var TK_LEFTBRACE = CC_LEFTBRACE;
-  var TK_VERTICALBAR = CC_VERTICALBAR;
-  var TK_LEFTBRACKET = CC_LEFTBRACKET;
-  var TK_LEFTPAREN = CC_LEFTPAREN;
-  var TK_MUL = CC_MUL;
-  var TK_NUM = CC_NUM;
-  var TK_RIGHTBRACE = CC_RIGHTBRACE;
-  var TK_RIGHTBRACKET = CC_RIGHTBRACKET;
-  var TK_RIGHTPAREN = CC_RIGHTPAREN;
-  var TK_SUB = CC_SUB;
-  var TK_VAR = CC_VAR;
-  var TK_CONST = CC_CONST;
-  var TK_COMMA = CC_COMMA;
-  var TK_PERCENT = CC_PERCENT;
-  var TK_QMARK = CC_QMARK;
-  var TK_BANG = CC_BANG;
-  var TK_COLON = CC_COLON;
-  var TK_FRAC = 256;
-  var TK_SQRT = 257;
-  var TK_PM = 258;
-  var TK_SIN = 259;
-  var TK_TAN = 260;
-  var TK_COS = 261;
-  var TK_SEC = 262;
-  var TK_LN = 263;
-  var TK_COT = 264;
-  var TK_CSC = 265;
-  var TK_NEXT = 266;
-  var TK_LG = 267;
-  var TK_LOG = 268;
-  var TK_TEXT = 269;
-  var TK_LT = 270;
-  var TK_LE = 271;
-  var TK_GT = 272;
-  var TK_GE = 273;
-  var TK_EXISTS = 274;
-  var TK_IN = 275;
-  var TK_FORALL = 276;
-  var TK_LIM = 277;
-  var TK_EXP = 278;
-  var TK_TO = 279;
-  var TK_SUM = 280;
-  var TK_INT = 281;
-  var TK_PROD = 282;
-  var TK_M = 283;
-  var TK_RIGHTARROW = 284;
-  var TK_BINOM = 285;
-  var TK_NEWROW = 286;
-  var TK_NEWCOL = 287;
-  var TK_BEGIN = 288;
-  var TK_END = 289;
-  var TK_VEC = 290;
-  var TK_ARCSIN = 291;
-  var TK_ARCCOS = 292;
-  var TK_ARCTAN = 293;
-  var TK_DIV = 294;
-  var TK_TYPE = 295;
-  var TK_OVERLINE = 296;
-  var TK_OVERSET = 297;
-  var TK_UNDERSET = 298;
-  var TK_BACKSLASH = 299;
-  var TK_MATHBF = 300;
-  var TK_NE = 301;
-  var TK_APPROX = 302;
-  var TK_ABS = 303;
-  var TK_DOT = 304;
-  var TK_NGTR = 305;
-  var TK_NLESS = 306;
-  var TK_SINH = 307;
-  var TK_COSH = 308;
-  var TK_TANH = 309;
-  var TK_SECH = 310;
-  var TK_COTH = 311;
-  var TK_CSCH = 312;
-  var TK_ARCSINH = 313;
-  var TK_ARCCOSH = 314;
-  var TK_ARCTANH = 315;
-  var TK_ARCSEC = 321;
-  var TK_ARCCSC = 322;
-  var TK_ARCCOT = 323;
-  var TK_MATHFIELD = 324;
-  var TK_CUP = 325;
-  var TK_BIGCUP = 326;
-  var TK_CAP = 327;
-  var TK_BIGCAP = 328;
-  var TK_PERP = 329;
-  var TK_PROPTO = 330;
-  var unused = 331;
-  var TK_FORMAT = 332;
-  var TK_NI = 333;
-  var TK_SUBSETEQ = 334;
-  var TK_SUPSETEQ = 335;
-  var TK_SUBSET = 336;
-  var TK_SUPSET = 337;
-  var TK_NOT = 338;
-  var TK_PARALLEL = 339;
-  var TK_NPARALLEL = 340;
-  var TK_SIM = 341;
-  var TK_CONG = 342;
-  var TK_LEFTARROW = 343;
-  var TK_LONGRIGHTARROW = 344;
-  var TK_LONGLEFTARROW = 345;
-  var TK_OVERRIGHTARROW = 346;
-  var TK_OVERLEFTARROW = 347;
-  var TK_LONGLEFTRIGHTARROW = 348;
-  var TK_OVERLEFTRIGHTARROW = 349;
-  var TK_IMPLIES = 350;
-  var T0 = TK_NONE;
-  var T1 = TK_NONE;
-  var tokenToOperator = {};
-  tokenToOperator[TK_SLASH] = OpStr.FRAC;
-  tokenToOperator[TK_FRAC] = OpStr.FRAC;
-  tokenToOperator[TK_SQRT] = OpStr.SQRT;
-  tokenToOperator[TK_VEC] = OpStr.VEC;
-  tokenToOperator[TK_ADD] = OpStr.ADD;
-  tokenToOperator[TK_SUB] = OpStr.SUB;
-  tokenToOperator[TK_PM] = OpStr.PM;
-  tokenToOperator[TK_NOT] = OpStr.NOT;
-  tokenToOperator[TK_CARET] = OpStr.POW;
-  tokenToOperator[TK_UNDERSCORE] = OpStr.SUBSCRIPT;
-  tokenToOperator[TK_MUL] = OpStr.MUL;
-  tokenToOperator[TK_DOT] = OpStr.DOT;
-  tokenToOperator[TK_DIV] = OpStr.DIV;
-  tokenToOperator[TK_SIN] = OpStr.SIN;
-  tokenToOperator[TK_COS] = OpStr.COS;
-  tokenToOperator[TK_TAN] = OpStr.TAN;
-  tokenToOperator[TK_ARCSIN] = OpStr.ARCSIN;
-  tokenToOperator[TK_ARCCOS] = OpStr.ARCCOS;
-  tokenToOperator[TK_ARCTAN] = OpStr.ARCTAN;
-  tokenToOperator[TK_SEC] = OpStr.SEC;
-  tokenToOperator[TK_COT] = OpStr.COT;
-  tokenToOperator[TK_CSC] = OpStr.CSC;
-  tokenToOperator[TK_SINH] = OpStr.SINH;
-  tokenToOperator[TK_COSH] = OpStr.COSH;
-  tokenToOperator[TK_TANH] = OpStr.TANH;
-  tokenToOperator[TK_ARCSINH] = OpStr.ARCSINH;
-  tokenToOperator[TK_ARCCOSH] = OpStr.ARCCOSH;
-  tokenToOperator[TK_ARCTANH] = OpStr.ARCTANH;
-  tokenToOperator[TK_SECH] = OpStr.SECH;
-  tokenToOperator[TK_COTH] = OpStr.COTH;
-  tokenToOperator[TK_CSCH] = OpStr.CSCH;
-  tokenToOperator[TK_LN] = OpStr.LN;
-  tokenToOperator[TK_LG] = OpStr.LG;
-  tokenToOperator[TK_LOG] = OpStr.LOG;
-  tokenToOperator[TK_EQL] = OpStr.EQL;
-  tokenToOperator[TK_COMMA] = OpStr.COMMA;
-  tokenToOperator[TK_TEXT] = OpStr.TEXT;
-  tokenToOperator[TK_LT] = OpStr.LT;
-  tokenToOperator[TK_LE] = OpStr.LE;
-  tokenToOperator[TK_GT] = OpStr.GT;
-  tokenToOperator[TK_GE] = OpStr.GE;
-  tokenToOperator[TK_NE] = OpStr.NE;
-  tokenToOperator[TK_NGTR] = OpStr.NGTR;
-  tokenToOperator[TK_NLESS] = OpStr.NLESS;
-  tokenToOperator[TK_NI] = OpStr.NI;
-  tokenToOperator[TK_SUBSETEQ] = OpStr.SUBSETEQ;
-  tokenToOperator[TK_SUPSETEQ] = OpStr.SUPSETEQ;
-  tokenToOperator[TK_SUBSET] = OpStr.SUBSET;
-  tokenToOperator[TK_SUPSET] = OpStr.SUPSET;
-  tokenToOperator[TK_APPROX] = OpStr.APPROX;
-  tokenToOperator[TK_PERP] = OpStr.PERP;
-  tokenToOperator[TK_PROPTO] = OpStr.PROPTO;
-  tokenToOperator[TK_PARALLEL] = OpStr.PARALLEL;
-  tokenToOperator[TK_NPARALLEL] = OpStr.NPARALLEL;
-  tokenToOperator[TK_SIM] = OpStr.SIM;
-  tokenToOperator[TK_CONG] = OpStr.CONG;
-  tokenToOperator[TK_EXISTS] = OpStr.EXISTS;
-  tokenToOperator[TK_IN] = OpStr.IN;
-  tokenToOperator[TK_FORALL] = OpStr.FORALL;
-  tokenToOperator[TK_LIM] = OpStr.LIM;
-  tokenToOperator[TK_EXP] = OpStr.EXP;
-  tokenToOperator[TK_TO] = OpStr.TO;
-  tokenToOperator[TK_VERTICALBAR] = OpStr.PIPE;
-  tokenToOperator[TK_SUM] = OpStr.SUM;
-  tokenToOperator[TK_INT] = OpStr.INT;
-  tokenToOperator[TK_PROD] = OpStr.PROD;
-  tokenToOperator[TK_CUP] = OpStr.CUP;
-  tokenToOperator[TK_BIGCUP] = OpStr.BIGCUP;
-  tokenToOperator[TK_CAP] = OpStr.CAP;
-  tokenToOperator[TK_BIGCAP] = OpStr.BIGCAP;
-  tokenToOperator[TK_M] = OpStr.M;
-  tokenToOperator[TK_IMPLIES] = OpStr.IMPLIES;
-  tokenToOperator[TK_RIGHTARROW] = OpStr.RIGHTARROW;
-  tokenToOperator[TK_LEFTARROW] = OpStr.LEFTARROW;
-  tokenToOperator[TK_LONGRIGHTARROW] = OpStr.LONGRIGHTARROW;
-  tokenToOperator[TK_LONGLEFTARROW] = OpStr.LONGLEFTARROW;
-  tokenToOperator[TK_OVERRIGHTARROW] = OpStr.OVERRIGHTARROW;
-  tokenToOperator[TK_OVERLEFTARROW] = OpStr.OVERLEFTARROW;
-  tokenToOperator[TK_LONGLEFTRIGHTARROW] = OpStr.LONGLEFTRIGHTARROW;
-  tokenToOperator[TK_OVERLEFTRIGHTARROW] = OpStr.OVERLEFTRIGHTARROW;
-  tokenToOperator[TK_BANG] = OpStr.FACT;
-  tokenToOperator[TK_BINOM] = OpStr.BINOM;
-  tokenToOperator[TK_NEWROW] = OpStr.ROW;
-  tokenToOperator[TK_NEWCOL] = OpStr.COL;
-  tokenToOperator[TK_COLON] = OpStr.COLON;
-  tokenToOperator[TK_TYPE] = OpStr.TYPE;
-  tokenToOperator[TK_OVERLINE] = OpStr.OVERLINE;
-  tokenToOperator[TK_OVERSET] = OpStr.OVERSET;
-  tokenToOperator[TK_UNDERSET] = OpStr.UNDERSET;
-  tokenToOperator[TK_BACKSLASH] = OpStr.BACKSLASH;
-  tokenToOperator[TK_MATHBF] = OpStr.MATHBF;
-  tokenToOperator[TK_DOT] = OpStr.DOT;
-  tokenToOperator[TK_MATHFIELD] = OpStr.MATHFIELD;
-  var parse = function parse(src, env) {
-    src = stripInvisible(src);
-    function newNode(op, args) {
-      return{op:op, args:args}
-    }
-    function matchThousandsSeparator(ch, last) {
-      if(Model.option("allowThousandsSeparator")) {
-        var separators = Model.option("setThousandsSeparator");
-        if(!separators) {
-          return ch === "," ? ch : ""
-        }else {
-          if(ch === last || !last && indexOf(separators, ch) >= 0) {
-            return ch
-          }else {
-            return""
-          }
-        }
-      }
-      return""
-    }
-    function matchDecimalSeparator(ch) {
-      var decimalSeparator = Model.option("setDecimalSeparator");
-      var thousandsSeparators = Model.option("setThousandsSeparator");
-      if(typeof decimalSeparator === "string") {
-        assert(decimalSeparator.length === 1, message(1002));
-        var separator = decimalSeparator;
-        if(thousandsSeparators instanceof Array && indexOf(thousandsSeparators, separator) >= 0) {
-          assert(false, message(1008, [separator]))
-        }
-        return ch === separator
-      }
-      if(decimalSeparator instanceof Array) {
-        forEach(decimalSeparator, function(separator) {
-          if(thousandsSeparators instanceof Array && indexOf(thousandsSeparators, separator) >= 0) {
-            assert(false, message(1008, [separator]))
-          }
-        });
-        return indexOf(decimalSeparator, ch) >= 0
-      }
-      return ch === "."
-    }
-    function numberNode(n0, doScale, roundOnly) {
-      var ignoreTrailingZeros = Model.option("ignoreTrailingZeros");
-      var n1 = n0.toString();
-      var n2 = "";
-      var i, ch;
-      var lastSeparatorIndex, lastSignificantIndex;
-      var separatorCount = 0;
-      var numberFormat = "integer";
-      var hasLeadingZero, hasTrailingZero;
-      if(n0 === ".") {
-        assert(false, message(1004, [n0, n0.charCodeAt(0)]))
-      }
-      for(i = 0;i < n1.length;i++) {
-        if(matchThousandsSeparator(ch = n1.charAt(i))) {
-          if(separatorCount && lastSeparatorIndex !== i - 4 || !separatorCount && i > 4) {
-            assert(false, message(1005))
-          }
-          lastSeparatorIndex = i;
-          separatorCount++
-        }else {
-          if(matchDecimalSeparator(ch)) {
-            if(numberFormat === "decimal") {
-              assert(false, message(1007, [ch, n2 + ch]))
-            }
-            ch = ".";
-            numberFormat = "decimal";
-            if(separatorCount && lastSeparatorIndex !== i - 4) {
-              assert(false, message(1005))
-            }
-            if(n2 === "0") {
-              hasLeadingZero = true
-            }
-            lastSignificantIndex = n2.length;
-            lastSeparatorIndex = i;
-            separatorCount++
-          }else {
-            if(numberFormat === "decimal") {
-              if(ch !== "0") {
-                lastSignificantIndex = n2.length
-              }
-            }
-          }
-          n2 += ch
-        }
-      }
-      if(numberFormat !== "decimal" && (lastSeparatorIndex && lastSeparatorIndex !== i - 4)) {
-        assert(false, message(1005))
-      }
-      if(lastSignificantIndex !== undefined) {
-        if(lastSignificantIndex + 1 < n2.length) {
-          hasTrailingZero = true
-        }
-        if(ignoreTrailingZeros) {
-          n2 = n2.substring(0, lastSignificantIndex + 1);
-          if(n2 === ".") {
-            n2 = "0"
-          }
-        }
-      }
-      n2 = new BigDecimal(n2);
-      if(doScale) {
-        var scale = option("decimalPlaces");
-        if(!roundOnly || n2.scale() > scale) {
-          n2 = n2.setScale(scale, BigDecimal.ROUND_HALF_UP)
-        }
-      }
-      return{op:Model.NUM, args:[String(n2)], hasThousandsSeparator:separatorCount !== 0, numberFormat:numberFormat, hasLeadingZero:hasLeadingZero, hasTrailingZero:hasTrailingZero}
-    }
-    function multiplyNode(args, flatten) {
-      return binaryNode(Model.MUL, args, flatten)
-    }
-    function unaryNode(op, args) {
-      assert(args.length === 1, "1000: Wrong number of arguments for unary node");
-      return newNode(op, args)
-    }
-    function binaryNode(op, args, flatten) {
-      assert(args.length > 1, "1000: Too few argument for binary node");
-      var aa = [];
-      forEach(args, function(n) {
-        if(flatten && n.op === op) {
-          aa = aa.concat(n.args)
-        }else {
-          aa.push(n)
-        }
-      });
-      return newNode(op, aa)
-    }
-    var nodeOne = numberNode("1");
-    var nodeMinusOne = unaryNode(Model.SUB, [numberNode("1")]);
-    var nodeNone = newNode(Model.NONE, [numberNode("0")]);
-    var nodeEmpty = newNode(Model.VAR, ["0"]);
-    var lexemeT0, lexemeT1;
-    var scan = scanner(src);
-    function start(options) {
-      T0 = scan.start(options);
-      lexemeT0 = scan.lexeme()
-    }
-    function hd() {
-      return T0
-    }
-    function lexeme() {
-      assert(lexemeT0 !== undefined, "1000: Lexeme for token is missing");
-      return lexemeT0
-    }
-    function next(options) {
-      if(T1 === TK_NONE) {
-        T0 = scan.start(options);
-        lexemeT0 = scan.lexeme()
-      }else {
-        T0 = T1;
-        lexemeT0 = lexemeT1;
-        T1 = TK_NONE
-      }
-    }
-    function lookahead(options) {
-      if(T1 === TK_NONE) {
-        T1 = scan.start(options);
-        lexemeT1 = scan.lexeme()
-      }
-      return T1
-    }
-    function eat(tc, options) {
-      var tk = hd();
-      if(tk !== tc) {
-        var expected = String.fromCharCode(tc);
-        var found = tk ? String.fromCharCode(tk) : "EOS";
-        assert(false, message(1001, [expected, found]))
-      }
-      next(options)
-    }
-    function isSimpleFraction(node) {
-      if(node.op === Model.FRAC) {
-        var n0 = node.args[0];
-        var n1 = node.args[1];
-        return n0.op === Model.NUM && (n0.numberFormat === "integer" && (n1.op === Model.NUM && n1.numberFormat === "integer"))
-      }
-      return false
-    }
-    function isMinusOne(node) {
-      return node.op === Model.SUB && (node.args.length === 1 && (node.args[0].op === Model.NUM && (node.args[0].args.length === 1 && node.args[0].args[0] === "1")))
-    }
-    function isUnit(node) {
-      var env = Model.env;
-      if(node.op === Model.POW) {
-        return isInteger(node.args[1]) && isUnit(node.args[0])
-      }
-      return node.op === Model.VAR && (node.args.length === 1 && (env[node.args[0]] && env[node.args[0]].type === "unit"))
-    }
-    function foldUnit(n, u) {
-      if(n.op === Model.POW) {
-        var b = n.args[0];
-        var e = n.args[1];
-        return binaryNode(Model.POW, [binaryNode(Model.MUL, [b, u]), e])
-      }else {
-        if(n.op === Model.FRAC && n.isSlash) {
-          var nu = n.args[0];
-          var d = n.args[1];
-          return binaryNode(Model.FRAC, [nu, binaryNode(Model.MUL, [d, u])])
-        }
-      }
-      return binaryNode(Model.MUL, [n, u])
-    }
-    function primaryExpr() {
-      var e;
-      var tk;
-      var op;
-      switch(tk = hd()) {
-        case CC_CONST:
-        ;
-        case TK_VAR:
-          var args = [lexeme()];
-          next();
-          if((t = hd()) === TK_UNDERSCORE) {
-            next({oneCharToken:true});
-            args.push(primaryExpr())
-          }
-          e = newNode(Model.VAR, args);
-          if(isChemCore()) {
-            if(hd() === TK_LEFTBRACE && lookahead() === TK_RIGHTBRACE) {
-              eat(TK_LEFTBRACE);
-              eat(TK_RIGHTBRACE)
-            }
-          }
-          break;
-        case TK_NUM:
-          e = numberNode(lexeme());
-          next();
-          break;
-        case TK_LEFTBRACKET:
-        ;
-        case TK_LEFTPAREN:
-          e = parenExpr(tk);
-          break;
-        case TK_LEFTBRACE:
-          e = braceExpr();
-          break;
-        case TK_BEGIN:
-          next();
-          var figure = braceExpr();
-          var tbl = matrixExpr();
-          eat(TK_END);
-          braceExpr();
-          if(indexOf(figure.args[0], "matrix") >= 0) {
-            e = newNode(Model.MATRIX, [tbl])
-          }else {
-            assert(false, "1000: Unrecognized LaTeX name")
-          }
-          break;
-        case TK_VERTICALBAR:
-          e = absExpr();
-          break;
-        case TK_ABS:
-          next();
-          var e = unaryNode(Model.ABS, [braceExpr()]);
-          break;
-        case TK_FRAC:
-          next();
-          var expr1 = braceExpr();
-          var expr2 = braceExpr();
-          expr1 = expr1.args.length === 0 ? newNode(Model.COMMA, [nodeNone]) : expr1;
-          expr2 = expr1.args.length === 0 ? newNode(Model.COMMA, [nodeNone]) : expr2;
-          e = newNode(Model.FRAC, [expr1, expr2]);
-          e.isFraction = isSimpleFraction(e);
-          break;
-        case TK_BINOM:
-          next();
-          var n = braceExpr();
-          var k = braceExpr();
-          var num = unaryNode(Model.FACT, [n]);
-          var den = binaryNode(Model.POW, [binaryNode(Model.MUL, [unaryNode(Model.FACT, [k]), unaryNode(Model.FACT, [binaryNode(Model.ADD, [n, negate(k)])])]), nodeMinusOne]);
-          e = binaryNode(Model.MUL, [num, den]);
-          e.isBinomial = true;
-          break;
-        case TK_SQRT:
-          next();
-          switch(hd()) {
-            case TK_LEFTBRACKET:
-              var root = bracketExpr();
-              var base = braceExpr();
-              e = newNode(Model.POW, [base, newNode(Model.POW, [root, nodeMinusOne])]);
-              break;
-            case TK_LEFTBRACE:
-              var base = braceExpr();
-              e = newNode(Model.POW, [base, newNode(Model.POW, [newNode(Model.NUM, ["2"]), nodeMinusOne])]);
-              break;
-            default:
-              assert(false, message(1001, ["{ or (", String.fromCharCode(hd())]));
-              break
-          }
-          break;
-        case TK_VEC:
-          next();
-          var name = braceExpr();
-          e = newNode(Model.VEC, [name]);
-          break;
-        case TK_SIN:
-        ;
-        case TK_COS:
-        ;
-        case TK_TAN:
-        ;
-        case TK_SINH:
-        ;
-        case TK_COSH:
-        ;
-        case TK_TANH:
-          next();
-          var t, args = [];
-          while((t = hd()) === TK_CARET) {
-            next({oneCharToken:true});
-            args.push(unaryExpr())
-          }
-          if(args.length === 1 && isMinusOne(args[0])) {
-            op = "arc" + tokenToOperator[tk];
-            args = []
-          }else {
-            op = tokenToOperator[tk]
-          }
-          args.unshift(newNode(op, [postfixExpr()]));
-          if(args.length > 1) {
-            return newNode(Model.POW, args)
-          }else {
-            return args[0]
-          }
-          break;
-        case TK_ARCSIN:
-        ;
-        case TK_ARCCOS:
-        ;
-        case TK_ARCTAN:
-        ;
-        case TK_SEC:
-        ;
-        case TK_COT:
-        ;
-        case TK_CSC:
-        ;
-        case TK_ARCSINH:
-        ;
-        case TK_ARCCOSH:
-        ;
-        case TK_ARCTANH:
-        ;
-        case TK_SECH:
-        ;
-        case TK_COTH:
-        ;
-        case TK_CSCH:
-          next();
-          var t, args = [];
-          while((t = hd()) === TK_CARET) {
-            next({oneCharToken:true});
-            args.push(unaryExpr())
-          }
-          args.unshift(newNode(tokenToOperator[tk], [primaryExpr()]));
-          if(args.length > 1) {
-            return newNode(Model.POW, args)
-          }else {
-            return args[0]
-          }
-          break;
-        case TK_LN:
-          next();
-          return newNode(Model.LOG, [newNode(Model.VAR, ["e"]), primaryExpr()]);
-        case TK_LG:
-          next();
-          return newNode(Model.LOG, [newNode(Model.NUM, ["10"]), primaryExpr()]);
-        case TK_LOG:
-          next();
-          var t, args = [];
-          if((t = hd()) === TK_UNDERSCORE) {
-            next({oneCharToken:true});
-            args.push(primaryExpr())
-          }else {
-            args.push(newNode(Model.NUM, ["10"]))
-          }
-          args.push(primaryExpr());
-          return newNode(Model.LOG, args);
-          break;
-        case TK_LIM:
-          next();
-          var t, args = [];
-          eat(TK_UNDERSCORE);
-          args.push(primaryExpr());
-          args.push(primaryExpr());
-          return newNode(tokenToOperator[tk], args);
-          break;
-        case TK_SUM:
-        ;
-        case TK_INT:
-        ;
-        case TK_PROD:
-          next();
-          var t, args = [];
-          if(hd() === TK_UNDERSCORE) {
-            next({oneCharToken:true});
-            args.push(primaryExpr());
-            eat(TK_CARET, {oneCharToken:true});
-            args.push(primaryExpr())
-          }
-          args.push(commaExpr());
-          return newNode(tokenToOperator[tk], args);
-        case TK_EXISTS:
-          next();
-          return newNode(Model.EXISTS, [equalExpr()]);
-        case TK_FORALL:
-          next();
-          return newNode(Model.FORALL, [commaExpr()]);
-        case TK_EXP:
-          next();
-          return newNode(Model.EXP, [additiveExpr()]);
-        case TK_M:
-          next();
-          return newNode(Model.M, [multiplicativeExpr()]);
-        case TK_FORMAT:
-          next();
-          return newNode(Model.FORMAT, [braceExpr()]);
-        case TK_OVERLINE:
-          next();
-          return newNode(Model.OVERLINE, [braceExpr()]);
-        case TK_DOT:
-          next();
-          return newNode(Model.DOT, [braceExpr()]);
-        case TK_OVERSET:
-        ;
-        case TK_UNDERSET:
-          next();
-          var expr1 = braceExpr();
-          var expr2 = braceExpr();
-          expr2.args.push(newNode(tokenToOperator[tk], [expr1]));
-          return expr2;
-        case TK_MATHBF:
-          next();
-          var expr1 = braceExpr();
-          return expr1;
-        default:
-          assert(!Model.option("strict"), message(1006, [tokenToOperator[tk]]));
-          e = nodeEmpty;
-          break
-      }
-      return e
-    }
-    function matrixExpr() {
-      var args = [];
-      var node, t;
-      args.push(rowExpr());
-      while((t = hd()) === TK_NEWROW) {
-        next();
-        args.push(rowExpr())
-      }
-      return newNode(tokenToOperator[TK_NEWROW], args)
-    }
-    function rowExpr() {
-      var args = [];
-      var t;
-      args.push(equalExpr());
-      while((t = hd()) === TK_NEWCOL) {
-        next();
-        args.push(equalExpr())
-      }
-      return newNode(tokenToOperator[TK_NEWCOL], args)
-    }
-    var pipeTokenCount = 0;
-    function absExpr() {
-      pipeTokenCount++;
-      eat(TK_VERTICALBAR);
-      var e = additiveExpr();
-      eat(TK_VERTICALBAR);
-      pipeTokenCount--;
-      return unaryNode(Model.ABS, [e])
-    }
-    function braceExpr() {
-      var e;
-      eat(TK_LEFTBRACE);
-      if(hd() === TK_RIGHTBRACE) {
-        eat(TK_RIGHTBRACE);
-        e = newNode(Model.COMMA, [])
-      }else {
-        e = commaExpr();
-        eat(TK_RIGHTBRACE)
-      }
-      e.lbrk = TK_LEFTBRACE;
-      e.rbrk = TK_RIGHTBRACE;
-      return e
-    }
-    function bracketExpr() {
-      eat(TK_LEFTBRACKET);
-      var e = commaExpr();
-      eat(TK_RIGHTBRACKET);
-      return e
-    }
-    function parenExpr(tk) {
-      var e;
-      var tk2;
-      eat(tk);
-      if(hd() === TK_RIGHTPAREN || hd() === TK_RIGHTBRACKET) {
-        eat(tk === TK_LEFTPAREN ? TK_RIGHTPAREN : TK_RIGHTBRACKET);
-        e = newNode(Model.COMMA, [])
-      }else {
-        e = commaExpr();
-        if(Model.option("allowInterval")) {
-          eat(tk2 = hd() === TK_RIGHTPAREN ? TK_RIGHTPAREN : TK_RIGHTBRACKET)
-        }else {
-          eat(tk2 = tk === TK_LEFTPAREN ? TK_RIGHTPAREN : TK_RIGHTBRACKET)
-        }
-      }
-      e.lbrk = tk;
-      e.rbrk = tk2;
-      if(Model.option("allowInterval") && (e.args.length === 2 && ((tk === TK_LEFTPAREN || tk === TK_LEFTBRACKET) && (tk2 === TK_RIGHTPAREN || tk2 === TK_RIGHTBRACKET)))) {
-        e.op = Model.INTERVAL;
-        e.args.push(numberNode(tk));
-        e.args.push(numberNode(tk2))
-      }else {
-        if(e.op === Model.COMMA) {
-          e.op = Model.LIST
-        }
-      }
-      return e
-    }
-    function exponentialExpr() {
-      var t, args = [primaryExpr()];
-      while((t = hd()) === TK_CARET) {
-        next({oneCharToken:true});
-        var t;
-        if((isMathSymbol(args[0]) || isChemCore()) && ((t = hd()) === TK_ADD || t === TK_SUB)) {
-          next();
-          args.push(unaryNode(tokenToOperator[t], [nodeOne]))
-        }else {
-          var n = unaryExpr();
-          if(n.op === Model.VAR && n.args[0] === "\\circ") {
-            if(hd() === TK_VAR && lexeme() === "K" || (lexeme() === "C" || lexeme() === "F")) {
-              n = multiplyNode([args.pop(), unaryNode(Model.VAR, ["\\degree " + lexeme()])]);
-              next()
-            }else {
-              n = multiplyNode([args.pop(), unaryNode(Model.VAR, ["\\degree"])])
-            }
-            args.push(n)
-          }else {
-            args.push(n)
-          }
-        }
-      }
-      if(args.length > 1) {
-        var expo = args.pop();
-        forEach(args.reverse(), function(base) {
-          expo = newNode(Model.POW, [base, expo])
-        });
-        return expo
-      }else {
-        return args[0]
-      }
-    }
-    function postfixExpr() {
-      var t;
-      var expr = exponentialExpr();
-      switch(t = hd()) {
-        case TK_PERCENT:
-          next();
-          expr = newNode(Model.PERCENT, [expr]);
-          break;
-        case TK_BANG:
-          next();
-          expr = newNode(Model.FACT, [expr]);
-          break;
-        default:
-          if(t === TK_VAR && lexeme() === "\\degree") {
-            next();
-            if(hd() === TK_VAR && (lexeme() === "K" || (lexeme() === "C" || lexeme() === "F"))) {
-              expr = multiplyNode([expr, unaryNode(Model.VAR, ["\\degree " + lexeme()])]);
-              next()
-            }else {
-              expr = multiplyNode([expr, unaryNode(Model.VAR, ["\\degree"])])
-            }
-          }else {
-            if(isChemCore() && ((t === TK_ADD || t === TK_SUB) && lookahead() === TK_RIGHTBRACE)) {
-              next();
-              expr = unaryNode(tokenToOperator[t], [expr])
-            }
-          }
-          break
-      }
-      return expr
-    }
-    function unaryExpr() {
-      var t;
-      var expr;
-      switch(t = hd()) {
-        case TK_ADD:
-          next();
-          expr = newNode(Model.ADD, [unaryExpr()]);
-          break;
-        case TK_SUB:
-          next();
-          expr = newNode(Model.SUB, [unaryExpr()]);
-          break;
-        case TK_PM:
-          next();
-          expr = unaryExpr();
-          expr = newNode(tokenToOperator[t], [expr]);
-          break;
-        case TK_UNDERSCORE:
-          var op = tokenToOperator[t];
-          next({oneCharToken:true});
-          if((t = hd()) === TK_ADD || t === TK_SUB) {
-            next();
-            expr = nodeOne
-          }else {
-            expr = unaryExpr()
-          }
-          expr = newNode(op, [expr]);
-          if((t = hd()) === TK_CARET) {
-            var args = [expr];
-            var op = tokenToOperator[t];
-            next({oneCharToken:true});
-            if((t = hd()) === TK_ADD || t === TK_SUB) {
-              next();
-              expr = nodeOne
-            }else {
-              expr = unaryExpr()
-            }
-            args.push(expr);
-            expr = newNode(op, args)
-          }
-          break;
-        case TK_CARET:
-          var op = tokenToOperator[t];
-          next({oneCharToken:true});
-          if((t = hd()) === TK_ADD || t === TK_SUB) {
-            next();
-            expr = nodeOne
-          }else {
-            expr = unaryExpr()
-          }
-          expr = newNode(op, [expr]);
-          break;
-        default:
-          if(t === TK_VAR && lexeme() === "$") {
-            next();
-            if((t = hd()) && (t !== TK_RIGHTBRACE && t !== TK_SLASH)) {
-              expr = multiplyNode([newNode(Model.VAR, ["$"]), postfixExpr()])
-            }else {
-              expr = newNode(Model.VAR, ["$"])
-            }
-          }else {
-            expr = postfixExpr()
-          }
-          break
-      }
-      return expr
-    }
-    function subscriptExpr() {
-      var t, args = [unaryExpr()];
-      if((t = hd()) === TK_UNDERSCORE) {
-        next({oneCharToken:true});
-        args.push(exponentialExpr());
-        if(isChemCore()) {
-          if(hd() === TK_LEFTBRACE) {
-            eat(TK_LEFTBRACE);
-            eat(TK_RIGHTBRACE)
-          }
-        }
-      }
-      if(args.length > 1) {
-        return newNode(Model.SUBSCRIPT, args)
-      }else {
-        return args[0]
-      }
-    }
-    function fractionExpr() {
-      var t, node = subscriptExpr();
-      if(isNumber(node) && (hd() === TK_FRAC || hd() === TK_NUM && lookahead() === TK_SLASH)) {
-        var frac = fractionExpr();
-        if(isMixedNumber(node, frac)) {
-          if(isNeg(node)) {
-            frac = binaryNode(Model.MUL, [nodeMinusOne, frac])
-          }
-          node = binaryNode(Model.ADD, [node, frac]);
-          node.isMixedNumber = true
-        }else {
-          node = binaryNode(Model.MUL, [node, frac]);
-          frac.isImplicit = true
-        }
-      }
-      while((t = hd()) === TK_SLASH) {
-        next();
-        node = newNode(Model.FRAC, [node, subscriptExpr()]);
-        node.isFraction = isSimpleFraction(node);
-        node.isSlash = true
-      }
-      return node
-    }
-    function isChemSymbol(n) {
-      var id;
-      if(n.op === Model.VAR) {
-        id = n.args[0]
-      }else {
-        if(n.op === Model.POW) {
-          id = n.args[0].args[0]
-        }else {
-          return false
-        }
-      }
-      var sym = Model.env[id];
-      return sym && sym.mass ? true : false
-    }
-    function isMathSymbol(n) {
-      if(n.op !== Model.VAR) {
-        return false
-      }
-      var sym = Model.env[n.args[0]];
-      return sym && sym.name ? true : false
-    }
-    function isVar(n, id) {
-      assert(typeof id === "undefined" || typeof id === "string", "1000: Invalid id");
-      if(n.op === Model.VAR) {
-        return id === undefined ? true : n.args[0] === id
-      }else {
-        if(n.op === Model.POW && (isVar(n.args[0]) && isInteger(n.args[1]))) {
-          return id === undefined ? true : n.args[0].args[0] === id
-        }
-      }
-      return false
-    }
-    function isOneOrMinusOne(node) {
-      return isOne(node) || isMinusOne(node)
-    }
-    function isOne(node) {
-      return node.op === Model.NUM && node.args[0] === "1"
-    }
-    function isMinusOne(node) {
-      return node.op === Model.SUB && (node.args.length === 1 && isOne(node.args[0]))
-    }
-    function multiplicativeExpr() {
-      var t, expr, explicitOperator = false, prevExplicitOperator, isFraction, args = [];
-      var n0;
-      expr = fractionExpr();
-      if(expr.op === Model.MUL && !expr.isBinomial) {
-        args = expr.args
-      }else {
-        args = [expr]
-      }
-      var loopCount = 0;
-      while((t = hd()) && (!isAdditive(t) && (!isRelational(t) && (t !== TK_COMMA && (!isEquality(t) && (t !== TK_RIGHTBRACE && (t !== TK_RIGHTPAREN && (t !== TK_RIGHTBRACKET && (t !== TK_RIGHTARROW && (t !== TK_LT && (!(t === TK_VERTICALBAR && pipeTokenCount > 0) && (t !== TK_NEWROW && (t !== TK_NEWCOL && t !== TK_END))))))))))))) {
-        prevExplicitOperator = explicitOperator;
-        explicitOperator = false;
-        if(isMultiplicative(t)) {
-          next();
-          explicitOperator = true
-        }
-        expr = fractionExpr();
-        if(t === TK_DIV) {
-          expr = newNode(Model.POW, [expr, nodeMinusOne])
-        }
-        assert(explicitOperator || (args.length === 0 || (expr.lbrk || (args[args.length - 1].op !== Model.NUM || (args[args.length - 1].lbrk || (isRepeatingDecimal([args[args.length - 1], expr]) || expr.op !== Model.NUM))))), message(1010));
-        if(isChemCore() && (t === TK_LEFTPAREN && isVar(args[args.length - 1], "M"))) {
-          args.pop();
-          expr = unaryNode(Model.M, [expr])
-        }else {
-          if(!explicitOperator) {
-            if(args.length > 0 && isMixedNumber(args[args.length - 1], expr)) {
-              t = args.pop();
-              if(isNeg(t)) {
-                expr = binaryNode(Model.MUL, [nodeMinusOne, expr])
-              }
-              expr = binaryNode(Model.ADD, [t, expr]);
-              expr.isMixedNumber = true
-            }else {
-              if(Model.option("ignoreCoefficientOne") && (args.length === 1 && (isOneOrMinusOne(args[0]) && isPolynomialTerm(args[0], expr)))) {
-                if(isOne(args[0])) {
-                  args.pop()
-                }else {
-                  expr = negate(expr)
-                }
-              }else {
-                if(args.length > 0 && (n0 = isRepeatingDecimal([args[args.length - 1], expr]))) {
-                  args.pop();
-                  expr = n0
-                }else {
-                  if(isENotation(args, expr)) {
-                    var tmp = args.pop();
-                    expr = binaryNode(Model.POW, [numberNode("10"), unaryExpr()]);
-                    expr = binaryNode(Model.MUL, [tmp, expr]);
-                    expr.isScientific = true
-                  }else {
-                    if(!isChemCore() && isPolynomialTerm(args[args.length - 1], expr)) {
-                      expr.isPolynomial = true;
-                      var t = args.pop();
-                      if(!t.isPolynomial) {
-                        if(t.op === Model.MUL && t.args[t.args.length - 1].isPolynomial) {
-                          assert(t.args.length === 2);
-                          var prefix = t.args[0];
-                          var suffix = t.args[1];
-                          expr.isPolynomial = suffix.isPolynomial = false;
-                          expr.isImplicit = true;
-                          expr = binaryNode(Model.MUL, [prefix, binaryNode(Model.MUL, [suffix, expr], true)]);
-                          expr.args[1].isPolynomial = true;
-                          expr.args[1].isImplicit = true
-                        }else {
-                          expr = binaryNode(Model.MUL, [t, expr])
-                        }
-                        expr.isImplicit = t.isImplicit;
-                        t.isImplicit = undefined
-                      }
-                    }else {
-                      expr.isImplicit = true
-                    }
-                  }
-                }
-              }
-            }
-          }else {
-            if(t === TK_MUL && (args.length > 0 && isScientific([args[args.length - 1], expr]))) {
-              t = args.pop();
-              expr = binaryNode(Model.MUL, [t, expr]);
-              expr.isScientific = true
-            }
-          }
-        }
-        if(expr.op === Model.MUL && (!expr.isScientific && (!expr.isBinomial && (args.length && (!args[args.length - 1].isImplicit && (!args[args.length - 1].isPolynomial && (expr.isImplicit && expr.isPolynomial))))))) {
-          args = args.concat(expr.args)
-        }else {
-          args.push(expr)
-        }
-        assert(loopCount++ < 1E3, "1000: Stuck in loop in mutliplicativeExpr()")
-      }
-      if(args.length > 1) {
-        return multiplyNode(args)
-      }else {
-        return args[0]
-      }
-      function isMultiplicative(t) {
-        return t === TK_MUL || (t === TK_DIV || t === TK_SLASH)
-      }
-    }
-    function isNumber(n) {
-      if((n.op === Model.SUB || n.op === Model.ADD) && n.args.length === 1) {
-        n = n.args[0]
-      }
-      if(n.op === Model.NUM) {
-        return n
-      }
-      return false
-    }
-    function isMixedNumber(n0, n1) {
-      if(n0.op === Model.SUB && n0.args.length === 1) {
-        n0 = n0.args[0]
-      }
-      if(!n0.lbrk && (!n1.lbrk && (n0.op === Model.NUM && isSimpleFraction(n1)))) {
-        return true
-      }
-      return false
-    }
-    function isPolynomialTerm(n0, n1) {
-      if(n0.op === Model.SUB && n0.args.length === 1) {
-        n0 = n0.args[0]
-      }
-      if(!n0.lbrk && (!n1.lbrk && (n0.op === Model.NUM && isVar(n1) || (isVar(n0) && n1.op === Model.NUM || (n0.op === Model.NUM && n1.op === Model.NUM || n0.op === Model.MUL && (n0.args[n0.args.length - 1].isPolynomial && isVar(n1))))))) {
-        return true
-      }
-      return false
-    }
-    function isInteger(node) {
-      var mv;
-      if(!node) {
-        return false
-      }
-      if(node.op === Model.SUB && node.args.length === 1) {
-        node = node.args[0]
-      }
-      if(node.op === Model.NUM && ((mv = new BigDecimal(node.args[0])) && isInteger(mv))) {
-        return true
-      }else {
-        if(node instanceof BigDecimal) {
-          return node.remainder(bigOne).compareTo(bigZero) === 0
-        }
-      }
-      return false
-    }
-    var bigZero = new BigDecimal("0");
-    var bigOne = new BigDecimal("1");
-    function isRepeatingDecimal(args) {
-      var expr, n0, n1;
-      if(args[0].isRepeating === Model.DOT) {
-        var n = args[0].op === Model.ADD && args[0].args[1].op === Model.NUM ? args[0].args[1] : args[0];
-        assert(n.op === Model.NUM, "1000: Expecting a number");
-        var arg1;
-        if(args[1].op === Model.DOT) {
-          assert(args[1].args[0].op === Model.NUM, "1000: Expecting a number");
-          arg1 = numberNode(n.args[0] + args[1].args[0].args[0])
-        }else {
-          assert(args[1].op === Model.NUM, "1000: Expecting a number");
-          arg1 = numberNode(n.args[0] + args[1].args[0])
-        }
-        arg1.isRepeating = Model.DOT;
-        if(args[0].op === Model.ADD) {
-          args[0].args[1] = arg1;
-          expr = args[0]
-        }else {
-          expr = arg1
-        }
-      }else {
-        if(!args[0].lbrk && (args[0].op === Model.NUM && args[0].numberFormat === "decimal")) {
-          if(args[1].lbrk === 40 && isInteger(args[1])) {
-            n0 = args[0];
-            n1 = args[1]
-          }else {
-            if(!args[1].lbrk && args[1].op === Model.OVERLINE) {
-              n0 = args[0];
-              n1 = args[1].args[0]
-            }else {
-              if(!args[1].lbrk && args[1].op === Model.DOT) {
-                n0 = args[0];
-                n1 = args[1].args[0]
-              }else {
-                return null
-              }
-            }
-          }
-          n1 = numberNode("." + n1.args[0]);
-          n1.isRepeating = args[1].op;
-          if(indexOf(n0.args[0], ".") >= 0) {
-            var decimalPlaces = n0.args[0].length - indexOf(n0.args[0], ".") - 1;
-            n1 = multiplyNode([n1, binaryNode(Model.POW, [numberNode("10"), numberNode("-" + decimalPlaces)])])
-          }
-          if(n0.op === Model.NUM && +n0.args[0] === 0) {
-            expr = n1
-          }else {
-            expr = binaryNode(Model.ADD, [n0, n1])
-          }
-          expr.numberFormat = "decimal";
-          expr.isRepeating = args[1].op
-        }else {
-          expr = null
-        }
-      }
-      return expr
-    }
-    function isENotation(args, expr, t) {
-      var n;
-      var eulers = Model.option("allowEulersNumber");
-      if(args.length > 0 && (isNumber(args[args.length - 1]) && (expr.op === Model.VAR && ((expr.args[0] === "E" || expr.args[0] === "e" && !eulers) && (hd() === TK_NUM || (hd() === 45 || hd() === 43) && lookahead() === TK_NUM))))) {
-        return true
-      }
-      return false
-    }
-    function isScientific(args) {
-      var n;
-      if(args.length === 1) {
-        if((n = isNumber(args[0])) && (n.args[0].length === 1 || indexOf(n.args[0], ".") === 1)) {
-          return true
-        }else {
-          if(args[0].op === Model.POW && ((n = isNumber(args[0].args[0])) && (n.args[0] === "10" && isInteger(args[0].args[1])))) {
-            return true
-          }
-        }
-        return false
-      }else {
-        if(args.length === 2) {
-          var a = args[0];
-          var e = args[1];
-          if((n = isNumber(a)) && ((n.args[0].length === 1 || indexOf(n.args[0], ".") === 1) && (e.op === Model.POW && ((n = isNumber(e.args[0])) && (n.args[0] === "10" && isInteger(e.args[1])))))) {
-            return true
-          }
-          return false
-        }
-      }
-    }
-    function isNeg(n) {
-      if(typeof n === "number") {
-        return n < 0
-      }else {
-        if(n.args.length === 1) {
-          return n.op === OpStr.SUB && n.args[0].args[0] > 0 || n.op === Model.NUM && +n.args[0] < 0
-        }else {
-          if(n.args.length === 2) {
-            return n.op === OpStr.MUL && isNeg(n.args[0])
-          }
-        }
-      }
-    }
-    function negate(n) {
-      if(typeof n === "number") {
-        return-n
-      }else {
-        if(n.op === Model.MUL) {
-          var args = n.args.slice(0);
-          return multiplyNode([negate(args.shift())].concat(args))
-        }else {
-          if(n.op === Model.POW && isMinusOne(n.args[1])) {
-            return binaryNode(Model.POW, [negate(n.args[0]), nodeMinusOne])
-          }
-        }
-      }
-      return unaryNode(Model.SUB, [n])
-    }
-    function isAdditive(t) {
-      return t === TK_ADD || (t === TK_SUB || (t === TK_PM || t === TK_BACKSLASH))
-    }
-    function additiveExpr() {
-      var expr = multiplicativeExpr();
-      var t;
-      while(isAdditive(t = hd())) {
-        next();
-        var expr2 = multiplicativeExpr();
-        switch(t) {
-          case TK_BACKSLASH:
-            expr = binaryNode(Model.BACKSLASH, [expr, expr2]);
-            break;
-          case TK_PM:
-            expr = binaryNode(Model.PM, [expr, expr2]);
-            break;
-          case TK_SUB:
-            expr = binaryNode(Model.SUB, [expr, expr2]);
-            break;
-          default:
-            expr = binaryNode(Model.ADD, [expr, expr2], true);
-            break
-        }
-      }
-      return expr
-    }
-    function isRelational(t) {
-      return t === TK_LT || (t === TK_LE || (t === TK_GT || (t === TK_GE || (t === TK_NGTR || (t === TK_NLESS || (t === TK_IN || (t === TK_TO || (t === TK_COLON || t === TK_VAR && lexeme() === "to"))))))))
-    }
-    function relationalExpr() {
-      var t = hd();
-      var expr = additiveExpr();
-      var args = [];
-      while(isRelational(t = hd())) {
-        if(t === TK_VAR && lexeme() === "to") {
-          t = TK_COLON
-        }
-        next();
-        var expr2 = additiveExpr();
-        expr = newNode(tokenToOperator[t], [expr, expr2]);
-        args.push(expr);
-        expr = Model.create(expr2)
-      }
-      if(args.length === 0) {
-        return expr
-      }else {
-        if(args.length === 1) {
-          return args[0]
-        }else {
-          return newNode(Model.COMMA, args)
-        }
-      }
-    }
-    function isEquality(t) {
-      return t === TK_EQL || (t === TK_NE || t === TK_APPROX)
-    }
-    function equalExpr() {
-      var expr = relationalExpr();
-      var t;
-      var args = [];
-      while(isEquality(t = hd()) || t === TK_RIGHTARROW) {
-        next();
-        var expr2 = additiveExpr();
-        expr = newNode(tokenToOperator[t], [expr, expr2]);
-        args.push(expr);
-        expr = Model.create(expr2)
-      }
-      if(args.length === 0) {
-        return expr
-      }else {
-        if(args.length === 1) {
-          return args[0]
-        }else {
-          return newNode(Model.COMMA, args)
-        }
-      }
-    }
-    function commaExpr() {
-      var expr = equalExpr();
-      var args = [expr];
-      var t;
-      while((t = hd()) === TK_COMMA) {
-        next();
-        args.push(equalExpr())
-      }
-      if(args.length > 1) {
-        return newNode(tokenToOperator[TK_COMMA], args)
-      }else {
-        return expr
-      }
-    }
-    function tokenize() {
-      var args = [];
-      start();
-      while(hd()) {
-        var lex = lexeme();
-        args.push(newNode(hd(), lex ? [lex] : []));
-        next()
-      }
-      var node = newNode(Model.COMMA, args);
-      return node
-    }
-    function expr() {
-      start();
-      if(hd()) {
-        var n = commaExpr();
-        if(n.op !== Model.COMMA && (n.lbrk === TK_LEFTBRACE && n.rbrk === TK_RIGHTBRACE)) {
-          n = newNode(Model.COMMA, [n])
-        }
-        assert(!hd(), message(1003, [scan.pos(), scan.lexeme(), "'" + src.substring(scan.pos() - 1) + "'"]));
-        return n
-      }
-      return nodeNone
-    }
-    return{expr:expr, tokenize:tokenize};
-    function isInvisibleCharCode(c) {
-      return isControlCharCode(c)
-    }
-    function isWhitespaceCharCode(c) {
-      return c === 32 || (c === 9 || (c === 10 || c === 13))
-    }
-    function isNumberCharCode(c) {
-      return c >= 48 && c <= 57
-    }
-    function isControlCharCode(c) {
-      return c >= 1 && c <= 31 || c >= 127 && c <= 159
-    }
-    function stripInvisible(src) {
-      var out = "";
-      var c, lastCharCode;
-      var curIndex = 0;
-      while(curIndex < src.length) {
-        while(curIndex < src.length && isInvisibleCharCode(c = src.charCodeAt(curIndex++))) {
-          if(lastCharCode === 32) {
-            continue
-          }
-          c = 9;
-          lastCharCode = c
-        }
-        if(c === 92) {
-          out += String.fromCharCode(c);
-          if(curIndex < src.length) {
-            c = src.charCodeAt(curIndex++)
-          }
-        }else {
-          if(c === 9) {
-            if(isNumberCharCode(out.charCodeAt(out.length - 1)) && isNumberCharCode(src.charCodeAt(curIndex))) {
-              c = src.charCodeAt(curIndex++)
-            }
-          }
-        }
-        out += String.fromCharCode(c)
-      }
-      return out
-    }
-    function scanner(src) {
-      var curIndex = 0;
-      var lexeme = "";
-      var lexemeToToken = {"\\cdot":TK_MUL, "\\times":TK_MUL, "\\div":TK_DIV, "\\dfrac":TK_FRAC, "\\frac":TK_FRAC, "\\sqrt":TK_SQRT, "\\vec":TK_VEC, "\\pm":TK_PM, "\\sin":TK_SIN, "\\cos":TK_COS, "\\tan":TK_TAN, "\\sec":TK_SEC, "\\cot":TK_COT, "\\csc":TK_CSC, "\\arcsin":TK_ARCSIN, "\\arccos":TK_ARCCOS, "\\arctan":TK_ARCTAN, "\\sinh":TK_SINH, "\\cosh":TK_COSH, "\\tanh":TK_TANH, "\\sech":TK_SECH, "\\coth":TK_COTH, "\\csch":TK_CSCH, "\\arcsinh":TK_ARCSINH, "\\arccosh":TK_ARCCOSH, "\\arctanh":TK_ARCTANH, 
-      "\\ln":TK_LN, "\\lg":TK_LG, "\\log":TK_LOG, "\\left":null, "\\right":null, "\\big":null, "\\Big":null, "\\bigg":null, "\\Bigg":null, "\\ ":null, "\\quad":null, "\\qquad":null, "\\text":TK_TEXT, "\\textrm":TK_TEXT, "\\textit":TK_TEXT, "\\textbf":TK_TEXT, "\\lt":TK_LT, "\\le":TK_LE, "\\gt":TK_GT, "\\ge":TK_GE, "\\ne":TK_NE, "\\ngtr":TK_NGTR, "\\nless":TK_NLESS, "\\approx":TK_APPROX, "\\exists":TK_EXISTS, "\\in":TK_IN, "\\forall":TK_FORALL, "\\lim":TK_LIM, "\\exp":TK_EXP, "\\to":TK_TO, "\\sum":TK_SUM, 
-      "\\int":TK_INT, "\\prod":TK_PROD, "\\%":TK_PERCENT, "\\rightarrow":TK_RIGHTARROW, "\\longrightarrow":TK_RIGHTARROW, "\\binom":TK_BINOM, "\\begin":TK_BEGIN, "\\end":TK_END, "\\colon":TK_COLON, "\\vert":TK_VERTICALBAR, "\\lvert":TK_VERTICALBAR, "\\rvert":TK_VERTICALBAR, "\\mid":TK_VERTICALBAR, "\\format":TK_FORMAT, "\\overline":TK_OVERLINE, "\\overset":TK_OVERSET, "\\underset":TK_UNDERSET, "\\backslash":TK_BACKSLASH, "\\mathbf":TK_MATHBF, "\\abs":TK_ABS, "\\dot":TK_DOT};
-      var unicodeToLaTeX = {8704:"\\forall", 8705:"\\complement", 8706:"\\partial", 8707:"\\exists", 8708:"\\nexists", 8709:"\\varnothing", 8710:"\\triangle", 8711:"\\nabla", 8712:"\\in", 8713:"\\notin", 8714:"\\in", 8715:"\\ni", 8716:"\\notni", 8717:"\\ni", 8718:"\\blacksquare", 8719:"\\sqcap", 8720:"\\amalg", 8721:"\\sigma", 8722:"-", 8723:"\\mp", 8724:"\\dotplus", 8725:"/", 8726:"\\setminus", 8727:"*", 8728:"\\circ", 8729:"\\bullet", 8730:"\\sqrt", 8731:null, 8732:null, 8733:"\\propto", 8734:"\\infty", 
-      8735:"\\llcorner", 8736:"\\angle", 8737:"\\measuredangle", 8738:"\\sphericalangle", 8739:"\\divides", 8740:"\\notdivides", 8741:"\\parallel", 8742:"\\nparallel", 8743:"\\wedge", 8744:"\\vee", 8745:"\\cap", 8746:"\\cup", 8747:"\\int", 8748:"\\iint", 8749:"\\iiint", 8750:"\\oint", 8751:"\\oiint", 8752:"\\oiiint", 8753:null, 8754:null, 8755:null, 8756:"\\therefore", 8757:"\\because", 8758:"\\colon", 8759:null, 8760:null, 8761:null, 8762:null, 8763:null, 8764:"\\sim", 8765:"\\backsim", 8766:null, 
-      8767:null, 8768:"\\wr", 8769:"\\nsim", 8770:"\\eqsim", 8771:"\\simeq", 8772:null, 8773:"\\cong", 8774:null, 8775:"\\ncong", 8776:"\\approx", 8777:null, 8778:"\\approxeq", 8779:null, 8780:null, 8781:"\\asymp", 8782:"\\Bumpeq", 8783:"\\bumpeq", 8784:"\\doteq", 8785:"\\doteqdot", 8786:"\\fallingdotseq", 8787:"\\risingdotseq", 8788:null, 8789:null, 8790:"\\eqcirc", 8791:"\\circeq", 8792:null, 8793:null, 8794:null, 8795:null, 8796:"\\triangleq", 8797:null, 8798:null, 8799:null, 8800:"\\ne", 8801:"\\equiv", 
-      8802:null, 8803:null, 8804:"\\le", 8805:"\\ge", 8806:"\\leqq", 8807:"\\geqq", 8808:"\\lneqq", 8809:"\\gneqq", 8810:"\\ll", 8811:"\\gg", 8812:"\\between", 8813:null, 8814:"\\nless", 8815:"\\ngtr", 8816:"\\nleq", 8817:"\\ngeq", 8818:"\\lessim", 8819:"\\gtrsim", 8820:null, 8821:null, 8822:"\\lessgtr", 8823:"\\gtrless", 8824:null, 8825:null, 8826:"\\prec", 8827:"\\succ", 8828:"\\preccurlyeq", 8829:"\\succcurlyeq", 8830:"\\precsim", 8831:"\\succsim", 8832:"\\nprec", 8833:"\\nsucc", 8834:"\\subset", 
-      8835:"\\supset", 8836:null, 8837:null, 8838:"\\subseteq", 8839:"\\supseteq", 8840:"\\nsubseteq", 8841:"\\nsupseteq", 8842:"\\subsetneq", 8843:"\\supsetneq", 8844:null, 8845:null, 8846:null, 8847:"\\sqsubset", 8848:"\\sqsupset", 8849:null, 8850:null, 8851:"\\sqcap", 8852:"\\sqcup", 8853:"\\oplus", 8854:"\\ominus", 8855:"\\otimes", 8856:"\\oslash", 8857:"\\odot", 8858:"\\circledcirc", 8859:"\\circledast", 8860:null, 8861:"\\circleddash", 8862:"\\boxplus", 8863:"\\boxminus", 8864:"\\boxtimes", 
-      8865:"\\boxdot", 8866:"\\vdash", 8867:"\\dashv", 8868:"\\top", 8869:"\\bot", 8870:null, 8871:"\\models", 8872:"\\vDash", 8873:"\\Vdash", 8874:"\\Vvdash", 8875:"\\VDash*", 8876:"\\nvdash", 8877:"\\nvDash", 8878:"\\nVdash", 8879:"\\nVDash", 8880:null, 8881:null, 8882:"\\vartriangleleft", 8883:"\\vartriangleright", 8884:"\\trianglelefteq", 8885:"\\trianglerighteq", 8886:null, 8887:null, 8888:"\\multimap", 8889:null, 8890:"\\intercal", 8891:"\\veebar", 8892:"\\barwedge", 8893:null, 8894:null, 8895:null, 
-      8896:"\\wedge", 8897:"\\vee", 8898:"\\cap", 8899:"\\cup", 8900:"\\diamond", 8901:"\\cdot", 8902:"\\star", 8903:null, 8904:"\\bowtie", 8905:"\\ltimes", 8906:"\\rtimes", 8907:"\\leftthreetimes", 8908:"\\rightthreetimes", 8909:"\\backsimeq", 8910:"\\curlyvee", 8911:"\\curlywedge", 8912:"\\Subset", 8913:"\\Supset", 8914:"\\Cap", 8915:"\\Cup", 8916:"\\pitchfork", 8917:"\\lessdot", 8918:"\\gtrdot", 8919:null, 8920:"\\lll", 8921:"\\ggg", 8922:"\\lesseqgtr", 8923:"\\gtreqless", 8924:null, 8925:null, 
-      8926:"\\curlyeqprec", 8927:"\\curlyeqsucc", 8928:null, 8929:null, 8930:null, 8931:null, 8932:null, 8933:null, 8934:"\\lnsim", 8935:"\\gnsim", 8936:"\\precnsim", 8937:"\\succnsim", 8938:"\\ntriangleleft", 8939:"\\ntriangleright", 8940:"\\ntrianglelefteq", 8941:"\\ntrianglerighteq", 8942:"\\vdots", 8943:"\\cdots", 8944:null, 8945:"\\ddots", 8946:null, 8947:null, 8948:null, 8949:null, 8950:null, 8951:null, 8952:null, 8953:null, 8954:null, 8955:null, 8956:null, 8957:null, 8958:null, 8959:null};
-      var identifiers = keys(env);
-      identifiers.push("to");
-      function isAlphaCharCode(c) {
-        return c >= 65 && c <= 90 || c >= 97 && c <= 122
-      }
-      function start(options) {
-        if(!options) {
-          options = {}
-        }
-        var c;
-        lexeme = "";
-        var t;
-        while(curIndex < src.length) {
-          switch(c = src.charCodeAt(curIndex++)) {
-            case 32:
-            ;
-            case 9:
-            ;
-            case 10:
-            ;
-            case 13:
-              continue;
-            case 38:
-              if(indexOf(src.substring(curIndex), "nbsp;") === 0) {
-                curIndex += 5;
-                continue
-              }
-              return TK_NEWCOL;
-            case 92:
-              lexeme += String.fromCharCode(c);
-              switch(src.charCodeAt(curIndex)) {
-                case 92:
-                  curIndex++;
-                  return TK_NEWROW;
-                case 123:
-                ;
-                case 124:
-                ;
-                case 125:
-                  return src.charCodeAt(curIndex++)
-              }
-              var tk = latex();
-              if(tk !== null) {
-                return tk
-              }
-              lexeme = "";
-              continue;
-            case 42:
-            ;
-            case 8727:
-              return TK_MUL;
-            case 45:
-            ;
-            case 8722:
-              if(src.charCodeAt(curIndex) === 62) {
-                curIndex++;
-                return TK_RIGHTARROW
-              }
-              return TK_SUB;
-            case 47:
-            ;
-            case 8725:
-              return TK_SLASH;
-            case 33:
-              if(src.charCodeAt(curIndex) === 61) {
-                curIndex++;
-                return TK_NE
-              }
-              return c;
-            case 58:
-            ;
-            case 8758:
-              return TK_COLON;
-            case 37:
-            ;
-            case 40:
-            ;
-            case 41:
-            ;
-            case 43:
-            ;
-            case 44:
-            ;
-            case 61:
-            ;
-            case 91:
-            ;
-            case 93:
-            ;
-            case 94:
-            ;
-            case 95:
-            ;
-            case 123:
-            ;
-            case 124:
-            ;
-            case 125:
-              lexeme += String.fromCharCode(c);
-              return c;
-            case 36:
-              lexeme += String.fromCharCode(c);
-              return TK_VAR;
-            case 60:
-              if(src.charCodeAt(curIndex) === 61) {
-                curIndex++;
-                return TK_LE
-              }
-              return TK_LT;
-            case 62:
-              if(src.charCodeAt(curIndex) === 61) {
-                curIndex++;
-                return TK_GE
-              }
-              return TK_GT;
-            case 116:
-              if(src.charCodeAt(curIndex) === 111) {
-                curIndex++;
-                return TK_COLON
-              }
-            ;
-            default:
-              if(isAlphaCharCode(c) || c === CC_SINGLEQUOTE) {
-                return variable(c)
-              }else {
-                if(t = unicodeToLaTeX[c]) {
-                  lexeme = t;
-                  var tk = lexemeToToken[lexeme];
-                  if(tk === void 0) {
-                    tk = TK_VAR
-                  }
-                  return tk
-                }else {
-                  if(matchDecimalSeparator(String.fromCharCode(c)) || isNumberCharCode(c)) {
-                    if(options.oneCharToken) {
-                      lexeme += String.fromCharCode(c);
-                      return TK_NUM
-                    }
-                    return number(c)
-                  }else {
-                    assert(false, message(1004, [String.fromCharCode(c), c]));
-                    return 0
-                  }
-                }
-              }
-          }
-        }
-        return 0
-      }
-      var lastSeparator;
-      function number(c) {
-        while(isNumberCharCode(c) || (matchDecimalSeparator(String.fromCharCode(c)) || (lastSeparator = matchThousandsSeparator(String.fromCharCode(c), lastSeparator)) && isNumberCharCode(src.charCodeAt(curIndex)))) {
-          lexeme += String.fromCharCode(c);
-          c = src.charCodeAt(curIndex++);
-          if(c === 92 && src.charCodeAt(curIndex) === 32) {
-            c = 32;
-            curIndex++
-          }
-        }
-        if(lexeme === "." && (indexOf(src.substring(curIndex), "overline") === 0 || indexOf(src.substring(curIndex), "dot") === 0)) {
-          lexeme = "0."
-        }
-        curIndex--;
-        return TK_NUM
-      }
-      function variable(c) {
-        var ch = String.fromCharCode(c);
-        lexeme += ch;
-        var identifier = lexeme;
-        var startIndex = curIndex + 1;
-        while(isAlphaCharCode(c) || c === CC_SINGLEQUOTE) {
-          c = src.charCodeAt(curIndex++);
-          if(!isAlphaCharCode(c)) {
-            break
-          }
-          var ch = String.fromCharCode(c);
-          var match = some(identifiers, function(u) {
-            var ident = identifier + ch;
-            return indexOf(u, ident) === 0
-          });
-          if(!match) {
-            break
-          }
-          identifier += ch
-        }
-        if(indexOf(identifiers, identifier) >= 0) {
-          lexeme = identifier
-        }else {
-          curIndex = startIndex
-        }
-        while(c === CC_SINGLEQUOTE) {
-          c = src.charCodeAt(curIndex++);
-          var ch = String.fromCharCode(c);
-          lexeme += ch
-        }
-        curIndex--;
-        return TK_VAR
-      }
-      function latex() {
-        var c = src.charCodeAt(curIndex++);
-        if(c === CC_DOLLAR) {
-          lexeme = String.fromCharCode(c)
-        }else {
-          if(c === CC_PERCENT) {
-            lexeme += String.fromCharCode(c)
-          }else {
-            if(indexOf([CC_SPACE, CC_COLON, CC_SEMICOLON, CC_COMMA, CC_BANG], c) >= 0) {
-              lexeme = "\\ "
-            }else {
-              while(isAlphaCharCode(c)) {
-                lexeme += String.fromCharCode(c);
-                c = src.charCodeAt(curIndex++)
-              }
-              curIndex--
-            }
-          }
-        }
-        var tk = lexemeToToken[lexeme];
-        if(tk === void 0) {
-          tk = TK_VAR
-        }else {
-          if(tk === TK_TEXT) {
-            var c = src.charCodeAt(curIndex++);
-            while(c && c !== CC_LEFTBRACE) {
-              c = src.charCodeAt(curIndex++)
-            }
-            lexeme = "";
-            var c = src.charCodeAt(curIndex++);
-            var keepTextWhitespace = Model.option("keepTextWhitespace");
-            while(c && c !== CC_RIGHTBRACE) {
-              var ch = String.fromCharCode(c);
-              if(!keepTextWhitespace && (ch === "&" && indexOf(src.substring(curIndex), "nbsp;") === 0)) {
-                curIndex += 5
-              }else {
-                if(!keepTextWhitespace && (ch === " " || ch === "\t")) {
-                }else {
-                  lexeme += ch
-                }
-              }
-              c = src.charCodeAt(curIndex++)
-            }
-            if(!lexeme || Model.option("ignoreText")) {
-              tk = null
-            }else {
-              tk = TK_VAR
-            }
-          }
-        }
-        return tk
-      }
-      return{start:start, lexeme:function() {
-        return lexeme
-      }, pos:function() {
-        return curIndex
-      }}
-    }
-  };
-  return Model
-}();
 var MathContext = function() {
   MathContext.prototype.getDigits = getDigits;
   MathContext.prototype.getForm = getForm;
@@ -4553,6 +2587,1978 @@ var BigDecimal = function(MathContext) {
   }
   return BigDecimal
 }(MathContext);
+var Model = function() {
+  function error(str) {
+    trace("error: " + str)
+  }
+  function Model() {
+  }
+  Model.fn = {};
+  Model.env = env = {};
+  var envStack = [];
+  var env = {};
+  Model.pushEnv = function pushEnv(e) {
+    envStack.push(env);
+    Model.env = env = e
+  };
+  Model.popEnv = function popEnv() {
+    assert(envStack.length > 0, "1000: Empty envStack");
+    Model.env = env = envStack.pop()
+  };
+  function isChemCore() {
+    return!!Model.env["Au"]
+  }
+  var Mp = Model.prototype = new Ast;
+  Assert.reserveCodeRange(1E3, 1999, "model");
+  Assert.messages[1E3] = "Internal error. %1.";
+  Assert.messages[1001] = "Invalid syntax. '%1' expected, '%2' found.";
+  Assert.messages[1002] = "Only one decimal separator can be specified.";
+  Assert.messages[1003] = "Extra characters in input at position: %1, lexeme: %2, prefix: %3.";
+  Assert.messages[1004] = "Invalid character '%1' (%2) in input.";
+  Assert.messages[1005] = "Misplaced thousands separator.";
+  Assert.messages[1006] = "Invalid syntax. Expression expected, %1 found.";
+  Assert.messages[1007] = "Unexpected character: '%1' in '%2'.";
+  Assert.messages[1008] = "The same character '%1' is being used as a thousands and decimal separators.";
+  Assert.messages[1009] = "Missing argument for '%1' command.";
+  Assert.messages[1010] = "Expecting an operator between numbers.";
+  var message = Assert.message;
+  Model.create = Mp.create = function create(node, location) {
+    assert(node != undefined, message(1011));
+    if(node instanceof Model) {
+      if(location) {
+        node.location = location
+      }
+      return node
+    }
+    var model;
+    if(node instanceof Array) {
+      model = [];
+      forEach(node, function(n) {
+        model.push(create(n, location))
+      });
+      return model
+    }
+    if(!(this instanceof Model)) {
+      return(new Model).create(node, location)
+    }
+    model = create(this);
+    model.location = location;
+    if(typeof node === "string") {
+      var parser = parse(node, Model.env);
+      node = parser.expr()
+    }else {
+      node = JSON.parse(JSON.stringify(node))
+    }
+    forEach(keys(Model.fn), function(v, i) {
+      if(!Mp.hasOwnProperty(v)) {
+        Mp[v] = function() {
+          var fn = Model.fn[v];
+          if(arguments.length > 1 && arguments[1] instanceof Model) {
+            return fn.apply(this, arguments)
+          }else {
+            var args = [this];
+            for(var i = 0;i < arguments.length;i++) {
+              args.push(arguments[i])
+            }
+            return fn.apply(this, args)
+          }
+        }
+      }
+    });
+    forEach(keys(node), function(v, i) {
+      model[v] = node[v]
+    });
+    return model
+  };
+  Model.fromLaTeX = Mp.fromLaTeX = function fromLaTex(src) {
+    assert(typeof src === "string", "1000: Model.prototype.fromLaTex");
+    if(!this) {
+      return Model.create(src)
+    }
+    return this.create(src)
+  };
+  Mp.toLaTeX = function toLaTeX(node) {
+    return render(node)
+  };
+  var OpStr = {ADD:"+", SUB:"-", MUL:"mul", TIMES:"times", COEFF:"coeff", DIV:"div", FRAC:"frac", EQL:"=", ATAN2:"atan2", SQRT:"sqrt", VEC:"vec", PM:"pm", SIN:"sin", COS:"cos", TAN:"tan", SEC:"sec", COT:"cot", CSC:"csc", ARCSIN:"arcsin", ARCCOS:"arccos", ARCTAN:"arctan", SINH:"sinh", COSH:"cosh", TANH:"tanh", SECH:"sech", COTH:"coth", CSCH:"csch", ARCSINH:"arcsinh", ARCCOSH:"arccosh", ARCTANH:"arctanh", LOG:"log", LN:"ln", LG:"lg", VAR:"var", NUM:"num", CST:"cst", COMMA:",", POW:"^", SUBSCRIPT:"_", 
+  ABS:"abs", PAREN:"()", HIGHLIGHT:"hi", LT:"lt", LE:"le", GT:"gt", GE:"ge", NE:"ne", NGTR:"ngtr", NLESS:"nless", APPROX:"approx", INTERVAL:"interval", LIST:"list", EXISTS:"exists", IN:"in", FORALL:"forall", LIM:"lim", EXP:"exp", TO:"to", SUM:"sum", INT:"int", PROD:"prod", PERCENT:"%", M:"M", RIGHTARROW:"->", FACT:"fact", BINOM:"binom", ROW:"row", COL:"col", COLON:"colon", MATRIX:"matrix", FORMAT:"format", OVERSET:"overset", UNDERSET:"underset", OVERLINE:"overline", DEGREE:"degree", BACKSLASH:"backslash", 
+  MATHBF:"mathbf", DOT:"dot", NONE:"none"};
+  forEach(keys(OpStr), function(v, i) {
+    Model[v] = OpStr[v]
+  });
+  var OpToLaTeX = {};
+  OpToLaTeX[OpStr.ADD] = "+";
+  OpToLaTeX[OpStr.SUB] = "-";
+  OpToLaTeX[OpStr.MUL] = "\\times";
+  OpToLaTeX[OpStr.TIMES] = "\\times";
+  OpToLaTeX[OpStr.DIV] = "\\div";
+  OpToLaTeX[OpStr.FRAC] = "\\frac";
+  OpToLaTeX[OpStr.EQL] = "=";
+  OpToLaTeX[OpStr.ATAN2] = "\\atan2";
+  OpToLaTeX[OpStr.POW] = "^";
+  OpToLaTeX[OpStr.SUBSCRIPT] = "_";
+  OpToLaTeX[OpStr.PM] = "\\pm";
+  OpToLaTeX[OpStr.SIN] = "\\sin";
+  OpToLaTeX[OpStr.COS] = "\\cos";
+  OpToLaTeX[OpStr.TAN] = "\\tan";
+  OpToLaTeX[OpStr.ARCSIN] = "\\arcsin";
+  OpToLaTeX[OpStr.ARCCOS] = "\\arccos";
+  OpToLaTeX[OpStr.ARCTAN] = "\\arctan";
+  OpToLaTeX[OpStr.SEC] = "\\sec";
+  OpToLaTeX[OpStr.COT] = "\\cot";
+  OpToLaTeX[OpStr.CSC] = "\\csc";
+  OpToLaTeX[OpStr.SINH] = "\\sinh";
+  OpToLaTeX[OpStr.COSH] = "\\cosh";
+  OpToLaTeX[OpStr.TANH] = "\\tanh";
+  OpToLaTeX[OpStr.ARCSINH] = "\\arcsinh";
+  OpToLaTeX[OpStr.ARCCOSH] = "\\arccosh";
+  OpToLaTeX[OpStr.ARCTANH] = "\\arctanh";
+  OpToLaTeX[OpStr.SECH] = "\\sech";
+  OpToLaTeX[OpStr.COTH] = "\\coth";
+  OpToLaTeX[OpStr.CSCH] = "\\csch";
+  OpToLaTeX[OpStr.LN] = "\\ln";
+  OpToLaTeX[OpStr.COMMA] = ",";
+  OpToLaTeX[OpStr.M] = "\\M";
+  OpToLaTeX[OpStr.BINOM] = "\\binom";
+  OpToLaTeX[OpStr.COLON] = "\\colon";
+  Model.fold = function fold(node, env) {
+    var args = [], val;
+    forEach(node.args, function(n) {
+      args.push(fold(n, env))
+    });
+    node.args = args;
+    switch(node.op) {
+      case OpStr.VAR:
+        if(val = env[node.args[0]]) {
+          node = val
+        }
+        break;
+      default:
+        break
+    }
+    return node
+  };
+  var render = function render(n) {
+    var text = "";
+    if(typeof n === "string") {
+      text = n
+    }else {
+      if(typeof n === "number") {
+        text = n
+      }else {
+        if(typeof n === "object") {
+          var args = [];
+          for(var i = 0;i < n.args.length;i++) {
+            args[i] = render(n.args[i])
+          }
+          switch(n.op) {
+            case OpStr.VAR:
+            ;
+            case OpStr.CST:
+            ;
+            case OpStr.NUM:
+              text = n.args[0];
+              break;
+            case OpStr.SUB:
+              if(n.args.length === 1) {
+                text = OpToLaTeX[n.op] + " " + args[0]
+              }else {
+                text = args[0] + " " + OpToLaTeX[n.op] + " " + args[1]
+              }
+              break;
+            case OpStr.DIV:
+            ;
+            case OpStr.PM:
+            ;
+            case OpStr.EQL:
+              text = args[0] + " " + OpToLaTeX[n.op] + " " + args[1];
+              break;
+            case OpStr.POW:
+              var lhs = n.args[0];
+              var rhs = n.args[1];
+              if(lhs.args && lhs.args.length === 2 || rhs.args && rhs.args.length === 2) {
+                if(lhs.op === OpStr.ADD || (lhs.op === OpStr.SUB || (lhs.op === OpStr.MUL || (lhs.op === OpStr.DIV || lhs.op === OpStr.SQRT)))) {
+                  args[0] = " (" + args[0] + ") "
+                }
+              }
+              text = args[0] + "^{" + args[1] + "}";
+              break;
+            case OpStr.SIN:
+            ;
+            case OpStr.COS:
+            ;
+            case OpStr.TAN:
+            ;
+            case OpStr.ARCSIN:
+            ;
+            case OpStr.ARCCOS:
+            ;
+            case OpStr.ARCTAN:
+            ;
+            case OpStr.SEC:
+            ;
+            case OpStr.COT:
+            ;
+            case OpStr.CSC:
+            ;
+            case OpStr.SINH:
+            ;
+            case OpStr.COSH:
+            ;
+            case OpStr.TANH:
+            ;
+            case OpStr.ARCSINH:
+            ;
+            case OpStr.ARCCOSH:
+            ;
+            case OpStr.ARCTANH:
+            ;
+            case OpStr.SECH:
+            ;
+            case OpStr.COTH:
+            ;
+            case OpStr.CSCH:
+            ;
+            case OpStr.LN:
+            ;
+            case OpStr.M:
+              text = OpToLaTeX[n.op] + "{" + args[0] + "}";
+              break;
+            case OpStr.FRAC:
+              text = "\\frac{" + args[0] + "}{" + args[1] + "}";
+              break;
+            case OpStr.BINOM:
+              text = "\\binom{" + args[0] + "}{" + args[1] + "}";
+              break;
+            case OpStr.SQRT:
+              switch(args.length) {
+                case 1:
+                  text = "\\sqrt{" + args[0] + "}";
+                  break;
+                case 2:
+                  text = "\\sqrt[" + args[0] + "]{" + args[1] + "}";
+                  break
+              }
+              break;
+            case OpStr.VEC:
+              text = "\\vec{" + args[0] + "}";
+              break;
+            case OpStr.MUL:
+              var prevTerm;
+              text = "";
+              forEach(n.args, function(term, index) {
+                if(term.args && term.args.length >= 2) {
+                  if(term.op === OpStr.ADD || term.op === OpStr.SUB) {
+                    args[index] = "(" + args[index] + ")"
+                  }
+                  if(index !== 0) {
+                    if(typeof term === "number") {
+                      text += OpToLaTeX[n.op] + " "
+                    }else {
+                      if(isScientific([prevTerm, term])) {
+                        text += "\\times"
+                      }
+                    }
+                  }
+                  text += args[index]
+                }else {
+                  if(term.op === OpStr.PAREN || (term.op === OpStr.VAR || (term.op === OpStr.CST || (typeof prevTerm === "number" && typeof term !== "number" || n.isMixedNumber)))) {
+                    text += args[index]
+                  }else {
+                    if(term.op === Model.POW && term.args[1].args[0] === "-1") {
+                      text += "/" + args[index]
+                    }else {
+                      if(index !== 0) {
+                        text += " " + OpToLaTeX[n.op] + " "
+                      }
+                      text += args[index]
+                    }
+                  }
+                }
+                prevTerm = term
+              });
+              break;
+            case OpStr.ADD:
+            ;
+            case OpStr.COMMA:
+              forEach(args, function(value, index) {
+                if(index === 0) {
+                  text = value
+                }else {
+                  text = text + " " + OpToLaTeX[n.op] + " " + value
+                }
+              });
+              break;
+            default:
+              assert(false, "1000: Unimplemented eval operator");
+              break
+          }
+        }else {
+          assert(false, "1000: Invalid expression type")
+        }
+      }
+    }
+    return text
+  };
+  var CC_SPACE = 32;
+  var CC_BANG = 33;
+  var CC_DOLLAR = 36;
+  var CC_PERCENT = 37;
+  var CC_LEFTPAREN = 40;
+  var CC_MUL = 42;
+  var CC_ADD = 43;
+  var CC_COMMA = 44;
+  var CC_SUB = 45;
+  var CC_RIGHTPAREN = 41;
+  var CC_SLASH = 47;
+  var CC_NUM = 48;
+  var CC_COLON = 58;
+  var CC_SEMICOLON = 59;
+  var CC_EQL = 61;
+  var CC_QMARK = 63;
+  var CC_CONST = 65;
+  var CC_LEFTBRACKET = 91;
+  var CC_RIGHTBRACKET = 93;
+  var CC_CARET = 94;
+  var CC_UNDERSCORE = 95;
+  var CC_VAR = 97;
+  var CC_LEFTBRACE = 123;
+  var CC_VERTICALBAR = 124;
+  var CC_RIGHTBRACE = 125;
+  var CC_SINGLEQUOTE = 39;
+  var TK_NONE = 0;
+  var TK_ADD = CC_ADD;
+  var TK_CARET = CC_CARET;
+  var TK_UNDERSCORE = CC_UNDERSCORE;
+  var TK_SLASH = CC_SLASH;
+  var TK_EQL = CC_EQL;
+  var TK_LEFTBRACE = CC_LEFTBRACE;
+  var TK_VERTICALBAR = CC_VERTICALBAR;
+  var TK_LEFTBRACKET = CC_LEFTBRACKET;
+  var TK_LEFTPAREN = CC_LEFTPAREN;
+  var TK_MUL = CC_MUL;
+  var TK_NUM = CC_NUM;
+  var TK_RIGHTBRACE = CC_RIGHTBRACE;
+  var TK_RIGHTBRACKET = CC_RIGHTBRACKET;
+  var TK_RIGHTPAREN = CC_RIGHTPAREN;
+  var TK_SUB = CC_SUB;
+  var TK_VAR = CC_VAR;
+  var TK_CONST = CC_CONST;
+  var TK_COMMA = CC_COMMA;
+  var TK_PERCENT = CC_PERCENT;
+  var TK_QMARK = CC_QMARK;
+  var TK_BANG = CC_BANG;
+  var TK_COLON = CC_COLON;
+  var TK_FRAC = 256;
+  var TK_SQRT = 257;
+  var TK_PM = 258;
+  var TK_SIN = 259;
+  var TK_TAN = 260;
+  var TK_COS = 261;
+  var TK_SEC = 262;
+  var TK_LN = 263;
+  var TK_COT = 264;
+  var TK_CSC = 265;
+  var TK_NEXT = 266;
+  var TK_LG = 267;
+  var TK_LOG = 268;
+  var TK_TEXT = 269;
+  var TK_LT = 270;
+  var TK_LE = 271;
+  var TK_GT = 272;
+  var TK_GE = 273;
+  var TK_EXISTS = 274;
+  var TK_IN = 275;
+  var TK_FORALL = 276;
+  var TK_LIM = 277;
+  var TK_EXP = 278;
+  var TK_TO = 279;
+  var TK_SUM = 280;
+  var TK_INT = 281;
+  var TK_PROD = 282;
+  var TK_M = 283;
+  var TK_RIGHTARROW = 284;
+  var TK_BINOM = 285;
+  var TK_NEWROW = 286;
+  var TK_NEWCOL = 287;
+  var TK_BEGIN = 288;
+  var TK_END = 289;
+  var TK_VEC = 290;
+  var TK_ARCSIN = 291;
+  var TK_ARCCOS = 292;
+  var TK_ARCTAN = 293;
+  var TK_DIV = 294;
+  var TK_TYPE = 295;
+  var TK_OVERLINE = 296;
+  var TK_OVERSET = 297;
+  var TK_UNDERSET = 298;
+  var TK_BACKSLASH = 299;
+  var TK_MATHBF = 300;
+  var TK_NE = 301;
+  var TK_APPROX = 302;
+  var TK_ABS = 303;
+  var TK_DOT = 304;
+  var TK_NGTR = 305;
+  var TK_NLESS = 306;
+  var TK_SINH = 307;
+  var TK_COSH = 308;
+  var TK_TANH = 309;
+  var TK_SECH = 310;
+  var TK_COTH = 311;
+  var TK_CSCH = 312;
+  var TK_ARCSINH = 313;
+  var TK_ARCCOSH = 314;
+  var TK_ARCTANH = 315;
+  var TK_ARCSEC = 321;
+  var TK_ARCCSC = 322;
+  var TK_ARCCOT = 323;
+  var TK_MATHFIELD = 324;
+  var TK_CUP = 325;
+  var TK_BIGCUP = 326;
+  var TK_CAP = 327;
+  var TK_BIGCAP = 328;
+  var TK_PERP = 329;
+  var TK_PROPTO = 330;
+  var unused = 331;
+  var TK_FORMAT = 332;
+  var TK_NI = 333;
+  var TK_SUBSETEQ = 334;
+  var TK_SUPSETEQ = 335;
+  var TK_SUBSET = 336;
+  var TK_SUPSET = 337;
+  var TK_NOT = 338;
+  var TK_PARALLEL = 339;
+  var TK_NPARALLEL = 340;
+  var TK_SIM = 341;
+  var TK_CONG = 342;
+  var TK_LEFTARROW = 343;
+  var TK_LONGRIGHTARROW = 344;
+  var TK_LONGLEFTARROW = 345;
+  var TK_OVERRIGHTARROW = 346;
+  var TK_OVERLEFTARROW = 347;
+  var TK_LONGLEFTRIGHTARROW = 348;
+  var TK_OVERLEFTRIGHTARROW = 349;
+  var TK_IMPLIES = 350;
+  var T0 = TK_NONE;
+  var T1 = TK_NONE;
+  var tokenToOperator = {};
+  tokenToOperator[TK_SLASH] = OpStr.FRAC;
+  tokenToOperator[TK_FRAC] = OpStr.FRAC;
+  tokenToOperator[TK_SQRT] = OpStr.SQRT;
+  tokenToOperator[TK_VEC] = OpStr.VEC;
+  tokenToOperator[TK_ADD] = OpStr.ADD;
+  tokenToOperator[TK_SUB] = OpStr.SUB;
+  tokenToOperator[TK_PM] = OpStr.PM;
+  tokenToOperator[TK_NOT] = OpStr.NOT;
+  tokenToOperator[TK_CARET] = OpStr.POW;
+  tokenToOperator[TK_UNDERSCORE] = OpStr.SUBSCRIPT;
+  tokenToOperator[TK_MUL] = OpStr.MUL;
+  tokenToOperator[TK_DOT] = OpStr.DOT;
+  tokenToOperator[TK_DIV] = OpStr.DIV;
+  tokenToOperator[TK_SIN] = OpStr.SIN;
+  tokenToOperator[TK_COS] = OpStr.COS;
+  tokenToOperator[TK_TAN] = OpStr.TAN;
+  tokenToOperator[TK_ARCSIN] = OpStr.ARCSIN;
+  tokenToOperator[TK_ARCCOS] = OpStr.ARCCOS;
+  tokenToOperator[TK_ARCTAN] = OpStr.ARCTAN;
+  tokenToOperator[TK_SEC] = OpStr.SEC;
+  tokenToOperator[TK_COT] = OpStr.COT;
+  tokenToOperator[TK_CSC] = OpStr.CSC;
+  tokenToOperator[TK_SINH] = OpStr.SINH;
+  tokenToOperator[TK_COSH] = OpStr.COSH;
+  tokenToOperator[TK_TANH] = OpStr.TANH;
+  tokenToOperator[TK_ARCSINH] = OpStr.ARCSINH;
+  tokenToOperator[TK_ARCCOSH] = OpStr.ARCCOSH;
+  tokenToOperator[TK_ARCTANH] = OpStr.ARCTANH;
+  tokenToOperator[TK_SECH] = OpStr.SECH;
+  tokenToOperator[TK_COTH] = OpStr.COTH;
+  tokenToOperator[TK_CSCH] = OpStr.CSCH;
+  tokenToOperator[TK_LN] = OpStr.LN;
+  tokenToOperator[TK_LG] = OpStr.LG;
+  tokenToOperator[TK_LOG] = OpStr.LOG;
+  tokenToOperator[TK_EQL] = OpStr.EQL;
+  tokenToOperator[TK_COMMA] = OpStr.COMMA;
+  tokenToOperator[TK_TEXT] = OpStr.TEXT;
+  tokenToOperator[TK_LT] = OpStr.LT;
+  tokenToOperator[TK_LE] = OpStr.LE;
+  tokenToOperator[TK_GT] = OpStr.GT;
+  tokenToOperator[TK_GE] = OpStr.GE;
+  tokenToOperator[TK_NE] = OpStr.NE;
+  tokenToOperator[TK_NGTR] = OpStr.NGTR;
+  tokenToOperator[TK_NLESS] = OpStr.NLESS;
+  tokenToOperator[TK_NI] = OpStr.NI;
+  tokenToOperator[TK_SUBSETEQ] = OpStr.SUBSETEQ;
+  tokenToOperator[TK_SUPSETEQ] = OpStr.SUPSETEQ;
+  tokenToOperator[TK_SUBSET] = OpStr.SUBSET;
+  tokenToOperator[TK_SUPSET] = OpStr.SUPSET;
+  tokenToOperator[TK_APPROX] = OpStr.APPROX;
+  tokenToOperator[TK_PERP] = OpStr.PERP;
+  tokenToOperator[TK_PROPTO] = OpStr.PROPTO;
+  tokenToOperator[TK_PARALLEL] = OpStr.PARALLEL;
+  tokenToOperator[TK_NPARALLEL] = OpStr.NPARALLEL;
+  tokenToOperator[TK_SIM] = OpStr.SIM;
+  tokenToOperator[TK_CONG] = OpStr.CONG;
+  tokenToOperator[TK_EXISTS] = OpStr.EXISTS;
+  tokenToOperator[TK_IN] = OpStr.IN;
+  tokenToOperator[TK_FORALL] = OpStr.FORALL;
+  tokenToOperator[TK_LIM] = OpStr.LIM;
+  tokenToOperator[TK_EXP] = OpStr.EXP;
+  tokenToOperator[TK_TO] = OpStr.TO;
+  tokenToOperator[TK_VERTICALBAR] = OpStr.PIPE;
+  tokenToOperator[TK_SUM] = OpStr.SUM;
+  tokenToOperator[TK_INT] = OpStr.INT;
+  tokenToOperator[TK_PROD] = OpStr.PROD;
+  tokenToOperator[TK_CUP] = OpStr.CUP;
+  tokenToOperator[TK_BIGCUP] = OpStr.BIGCUP;
+  tokenToOperator[TK_CAP] = OpStr.CAP;
+  tokenToOperator[TK_BIGCAP] = OpStr.BIGCAP;
+  tokenToOperator[TK_M] = OpStr.M;
+  tokenToOperator[TK_IMPLIES] = OpStr.IMPLIES;
+  tokenToOperator[TK_RIGHTARROW] = OpStr.RIGHTARROW;
+  tokenToOperator[TK_LEFTARROW] = OpStr.LEFTARROW;
+  tokenToOperator[TK_LONGRIGHTARROW] = OpStr.LONGRIGHTARROW;
+  tokenToOperator[TK_LONGLEFTARROW] = OpStr.LONGLEFTARROW;
+  tokenToOperator[TK_OVERRIGHTARROW] = OpStr.OVERRIGHTARROW;
+  tokenToOperator[TK_OVERLEFTARROW] = OpStr.OVERLEFTARROW;
+  tokenToOperator[TK_LONGLEFTRIGHTARROW] = OpStr.LONGLEFTRIGHTARROW;
+  tokenToOperator[TK_OVERLEFTRIGHTARROW] = OpStr.OVERLEFTRIGHTARROW;
+  tokenToOperator[TK_BANG] = OpStr.FACT;
+  tokenToOperator[TK_BINOM] = OpStr.BINOM;
+  tokenToOperator[TK_NEWROW] = OpStr.ROW;
+  tokenToOperator[TK_NEWCOL] = OpStr.COL;
+  tokenToOperator[TK_COLON] = OpStr.COLON;
+  tokenToOperator[TK_TYPE] = OpStr.TYPE;
+  tokenToOperator[TK_OVERLINE] = OpStr.OVERLINE;
+  tokenToOperator[TK_OVERSET] = OpStr.OVERSET;
+  tokenToOperator[TK_UNDERSET] = OpStr.UNDERSET;
+  tokenToOperator[TK_BACKSLASH] = OpStr.BACKSLASH;
+  tokenToOperator[TK_MATHBF] = OpStr.MATHBF;
+  tokenToOperator[TK_DOT] = OpStr.DOT;
+  tokenToOperator[TK_MATHFIELD] = OpStr.MATHFIELD;
+  var bigZero = new BigDecimal("0");
+  var bigOne = new BigDecimal("1");
+  function isNumber(n) {
+    if((n.op === Model.SUB || n.op === Model.ADD) && n.args.length === 1) {
+      n = n.args[0]
+    }
+    if(n.op === Model.NUM) {
+      return n
+    }
+    return false
+  }
+  function isInteger(node) {
+    var mv;
+    if(!node) {
+      return false
+    }
+    if(node.op === Model.SUB && node.args.length === 1) {
+      node = node.args[0]
+    }
+    if(node.op === Model.NUM && ((mv = new BigDecimal(node.args[0])) && isInteger(mv))) {
+      return true
+    }else {
+      if(node instanceof BigDecimal) {
+        return node.remainder(bigOne).compareTo(bigZero) === 0
+      }
+    }
+    return false
+  }
+  function isScientific(args) {
+    var n;
+    if(args.length === 1) {
+      if((n = isNumber(args[0])) && (n.args[0].length === 1 || indexOf(n.args[0], ".") === 1)) {
+        return true
+      }else {
+        if(args[0].op === Model.POW && ((n = isNumber(args[0].args[0])) && (n.args[0] === "10" && isInteger(args[0].args[1])))) {
+          return true
+        }
+      }
+      return false
+    }else {
+      if(args.length === 2) {
+        var a = args[0];
+        var e = args[1];
+        if((n = isNumber(a)) && ((n.args[0].length === 1 || indexOf(n.args[0], ".") === 1) && (e.op === Model.POW && ((n = isNumber(e.args[0])) && (n.args[0] === "10" && isInteger(e.args[1])))))) {
+          return true
+        }
+        return false
+      }
+    }
+  }
+  var parse = function parse(src, env) {
+    src = stripInvisible(src);
+    function newNode(op, args) {
+      return{op:op, args:args}
+    }
+    function matchThousandsSeparator(ch, last) {
+      if(Model.option("allowThousandsSeparator")) {
+        var separators = Model.option("setThousandsSeparator");
+        if(!separators) {
+          return ch === "," ? ch : ""
+        }else {
+          if(ch === last || !last && indexOf(separators, ch) >= 0) {
+            return ch
+          }else {
+            return""
+          }
+        }
+      }
+      return""
+    }
+    function matchDecimalSeparator(ch) {
+      var decimalSeparator = Model.option("setDecimalSeparator");
+      var thousandsSeparators = Model.option("setThousandsSeparator");
+      if(typeof decimalSeparator === "string") {
+        assert(decimalSeparator.length === 1, message(1002));
+        var separator = decimalSeparator;
+        if(thousandsSeparators instanceof Array && indexOf(thousandsSeparators, separator) >= 0) {
+          assert(false, message(1008, [separator]))
+        }
+        return ch === separator
+      }
+      if(decimalSeparator instanceof Array) {
+        forEach(decimalSeparator, function(separator) {
+          if(thousandsSeparators instanceof Array && indexOf(thousandsSeparators, separator) >= 0) {
+            assert(false, message(1008, [separator]))
+          }
+        });
+        return indexOf(decimalSeparator, ch) >= 0
+      }
+      return ch === "."
+    }
+    function numberNode(n0, doScale, roundOnly) {
+      var ignoreTrailingZeros = Model.option("ignoreTrailingZeros");
+      var n1 = n0.toString();
+      var n2 = "";
+      var i, ch;
+      var lastSeparatorIndex, lastSignificantIndex;
+      var separatorCount = 0;
+      var numberFormat = "integer";
+      var hasLeadingZero, hasTrailingZero;
+      if(n0 === ".") {
+        assert(false, message(1004, [n0, n0.charCodeAt(0)]))
+      }
+      for(i = 0;i < n1.length;i++) {
+        if(matchThousandsSeparator(ch = n1.charAt(i))) {
+          if(separatorCount && lastSeparatorIndex !== i - 4 || !separatorCount && i > 4) {
+            assert(false, message(1005))
+          }
+          lastSeparatorIndex = i;
+          separatorCount++
+        }else {
+          if(matchDecimalSeparator(ch)) {
+            if(numberFormat === "decimal") {
+              assert(false, message(1007, [ch, n2 + ch]))
+            }
+            ch = ".";
+            numberFormat = "decimal";
+            if(separatorCount && lastSeparatorIndex !== i - 4) {
+              assert(false, message(1005))
+            }
+            if(n2 === "0") {
+              hasLeadingZero = true
+            }
+            lastSignificantIndex = n2.length;
+            lastSeparatorIndex = i;
+            separatorCount++
+          }else {
+            if(numberFormat === "decimal") {
+              if(ch !== "0") {
+                lastSignificantIndex = n2.length
+              }
+            }
+          }
+          n2 += ch
+        }
+      }
+      if(numberFormat !== "decimal" && (lastSeparatorIndex && lastSeparatorIndex !== i - 4)) {
+        assert(false, message(1005))
+      }
+      if(lastSignificantIndex !== undefined) {
+        if(lastSignificantIndex + 1 < n2.length) {
+          hasTrailingZero = true
+        }
+        if(ignoreTrailingZeros) {
+          n2 = n2.substring(0, lastSignificantIndex + 1);
+          if(n2 === ".") {
+            n2 = "0"
+          }
+        }
+      }
+      n2 = new BigDecimal(n2);
+      if(doScale) {
+        var scale = option("decimalPlaces");
+        if(!roundOnly || n2.scale() > scale) {
+          n2 = n2.setScale(scale, BigDecimal.ROUND_HALF_UP)
+        }
+      }
+      return{op:Model.NUM, args:[String(n2)], hasThousandsSeparator:separatorCount !== 0, numberFormat:numberFormat, hasLeadingZero:hasLeadingZero, hasTrailingZero:hasTrailingZero}
+    }
+    function multiplyNode(args, flatten) {
+      return binaryNode(Model.MUL, args, flatten)
+    }
+    function unaryNode(op, args) {
+      assert(args.length === 1, "1000: Wrong number of arguments for unary node");
+      return newNode(op, args)
+    }
+    function binaryNode(op, args, flatten) {
+      assert(args.length > 1, "1000: Too few argument for binary node");
+      var aa = [];
+      forEach(args, function(n) {
+        if(flatten && n.op === op) {
+          aa = aa.concat(n.args)
+        }else {
+          aa.push(n)
+        }
+      });
+      return newNode(op, aa)
+    }
+    var nodeOne = numberNode("1");
+    var nodeMinusOne = unaryNode(Model.SUB, [numberNode("1")]);
+    var nodeNone = newNode(Model.NONE, [numberNode("0")]);
+    var nodeEmpty = newNode(Model.VAR, ["0"]);
+    var lexemeT0, lexemeT1;
+    var scan = scanner(src);
+    function start(options) {
+      T0 = scan.start(options);
+      lexemeT0 = scan.lexeme()
+    }
+    function hd() {
+      return T0
+    }
+    function lexeme() {
+      assert(lexemeT0 !== undefined, "1000: Lexeme for token is missing");
+      return lexemeT0
+    }
+    function next(options) {
+      if(T1 === TK_NONE) {
+        T0 = scan.start(options);
+        lexemeT0 = scan.lexeme()
+      }else {
+        T0 = T1;
+        lexemeT0 = lexemeT1;
+        T1 = TK_NONE
+      }
+    }
+    function lookahead(options) {
+      if(T1 === TK_NONE) {
+        T1 = scan.start(options);
+        lexemeT1 = scan.lexeme()
+      }
+      return T1
+    }
+    function eat(tc, options) {
+      var tk = hd();
+      if(tk !== tc) {
+        var expected = String.fromCharCode(tc);
+        var found = tk ? String.fromCharCode(tk) : "EOS";
+        assert(false, message(1001, [expected, found]))
+      }
+      next(options)
+    }
+    function isSimpleFraction(node) {
+      if(node.op === Model.FRAC) {
+        var n0 = node.args[0];
+        var n1 = node.args[1];
+        return n0.op === Model.NUM && (n0.numberFormat === "integer" && (n1.op === Model.NUM && n1.numberFormat === "integer"))
+      }
+      return false
+    }
+    function isMinusOne(node) {
+      return node.op === Model.SUB && (node.args.length === 1 && (node.args[0].op === Model.NUM && (node.args[0].args.length === 1 && node.args[0].args[0] === "1")))
+    }
+    function isUnit(node) {
+      var env = Model.env;
+      if(node.op === Model.POW) {
+        return isInteger(node.args[1]) && isUnit(node.args[0])
+      }
+      return node.op === Model.VAR && (node.args.length === 1 && (env[node.args[0]] && env[node.args[0]].type === "unit"))
+    }
+    function foldUnit(n, u) {
+      if(n.op === Model.POW) {
+        var b = n.args[0];
+        var e = n.args[1];
+        return binaryNode(Model.POW, [binaryNode(Model.MUL, [b, u]), e])
+      }else {
+        if(n.op === Model.FRAC && n.isSlash) {
+          var nu = n.args[0];
+          var d = n.args[1];
+          return binaryNode(Model.FRAC, [nu, binaryNode(Model.MUL, [d, u])])
+        }
+      }
+      return binaryNode(Model.MUL, [n, u])
+    }
+    function primaryExpr() {
+      var e;
+      var tk;
+      var op;
+      switch(tk = hd()) {
+        case CC_CONST:
+        ;
+        case TK_VAR:
+          var args = [lexeme()];
+          next();
+          if((t = hd()) === TK_UNDERSCORE) {
+            next({oneCharToken:true});
+            args.push(primaryExpr())
+          }
+          e = newNode(Model.VAR, args);
+          if(isChemCore()) {
+            if(hd() === TK_LEFTBRACE && lookahead() === TK_RIGHTBRACE) {
+              eat(TK_LEFTBRACE);
+              eat(TK_RIGHTBRACE)
+            }
+          }
+          break;
+        case TK_NUM:
+          e = numberNode(lexeme());
+          next();
+          break;
+        case TK_LEFTBRACKET:
+        ;
+        case TK_LEFTPAREN:
+          e = parenExpr(tk);
+          break;
+        case TK_LEFTBRACE:
+          e = braceExpr();
+          break;
+        case TK_BEGIN:
+          next();
+          var figure = braceExpr();
+          var tbl = matrixExpr();
+          eat(TK_END);
+          braceExpr();
+          if(indexOf(figure.args[0], "matrix") >= 0) {
+            e = newNode(Model.MATRIX, [tbl])
+          }else {
+            assert(false, "1000: Unrecognized LaTeX name")
+          }
+          break;
+        case TK_VERTICALBAR:
+          e = absExpr();
+          break;
+        case TK_ABS:
+          next();
+          var e = unaryNode(Model.ABS, [braceExpr()]);
+          break;
+        case TK_FRAC:
+          next();
+          var expr1 = braceExpr();
+          var expr2 = braceExpr();
+          expr1 = expr1.args.length === 0 ? newNode(Model.COMMA, [nodeNone]) : expr1;
+          expr2 = expr1.args.length === 0 ? newNode(Model.COMMA, [nodeNone]) : expr2;
+          e = newNode(Model.FRAC, [expr1, expr2]);
+          e.isFraction = isSimpleFraction(e);
+          break;
+        case TK_BINOM:
+          next();
+          var n = braceExpr();
+          var k = braceExpr();
+          var num = unaryNode(Model.FACT, [n]);
+          var den = binaryNode(Model.POW, [binaryNode(Model.MUL, [unaryNode(Model.FACT, [k]), unaryNode(Model.FACT, [binaryNode(Model.ADD, [n, negate(k)])])]), nodeMinusOne]);
+          e = binaryNode(Model.MUL, [num, den]);
+          e.isBinomial = true;
+          break;
+        case TK_SQRT:
+          next();
+          switch(hd()) {
+            case TK_LEFTBRACKET:
+              var root = bracketExpr();
+              var base = braceExpr();
+              e = newNode(Model.POW, [base, newNode(Model.POW, [root, nodeMinusOne])]);
+              break;
+            case TK_LEFTBRACE:
+              var base = braceExpr();
+              e = newNode(Model.POW, [base, newNode(Model.POW, [newNode(Model.NUM, ["2"]), nodeMinusOne])]);
+              break;
+            default:
+              assert(false, message(1001, ["{ or (", String.fromCharCode(hd())]));
+              break
+          }
+          break;
+        case TK_VEC:
+          next();
+          var name = braceExpr();
+          e = newNode(Model.VEC, [name]);
+          break;
+        case TK_SIN:
+        ;
+        case TK_COS:
+        ;
+        case TK_TAN:
+        ;
+        case TK_SINH:
+        ;
+        case TK_COSH:
+        ;
+        case TK_TANH:
+          next();
+          var t, args = [];
+          while((t = hd()) === TK_CARET) {
+            next({oneCharToken:true});
+            args.push(unaryExpr())
+          }
+          if(args.length === 1 && isMinusOne(args[0])) {
+            op = "arc" + tokenToOperator[tk];
+            args = []
+          }else {
+            op = tokenToOperator[tk]
+          }
+          args.unshift(newNode(op, [postfixExpr()]));
+          if(args.length > 1) {
+            return newNode(Model.POW, args)
+          }else {
+            return args[0]
+          }
+          break;
+        case TK_ARCSIN:
+        ;
+        case TK_ARCCOS:
+        ;
+        case TK_ARCTAN:
+        ;
+        case TK_SEC:
+        ;
+        case TK_COT:
+        ;
+        case TK_CSC:
+        ;
+        case TK_ARCSINH:
+        ;
+        case TK_ARCCOSH:
+        ;
+        case TK_ARCTANH:
+        ;
+        case TK_SECH:
+        ;
+        case TK_COTH:
+        ;
+        case TK_CSCH:
+          next();
+          var t, args = [];
+          while((t = hd()) === TK_CARET) {
+            next({oneCharToken:true});
+            args.push(unaryExpr())
+          }
+          args.unshift(newNode(tokenToOperator[tk], [primaryExpr()]));
+          if(args.length > 1) {
+            return newNode(Model.POW, args)
+          }else {
+            return args[0]
+          }
+          break;
+        case TK_LN:
+          next();
+          return newNode(Model.LOG, [newNode(Model.VAR, ["e"]), primaryExpr()]);
+        case TK_LG:
+          next();
+          return newNode(Model.LOG, [newNode(Model.NUM, ["10"]), primaryExpr()]);
+        case TK_LOG:
+          next();
+          var t, args = [];
+          if((t = hd()) === TK_UNDERSCORE) {
+            next({oneCharToken:true});
+            args.push(primaryExpr())
+          }else {
+            args.push(newNode(Model.NUM, ["10"]))
+          }
+          args.push(primaryExpr());
+          return newNode(Model.LOG, args);
+          break;
+        case TK_LIM:
+          next();
+          var t, args = [];
+          eat(TK_UNDERSCORE);
+          args.push(primaryExpr());
+          args.push(primaryExpr());
+          return newNode(tokenToOperator[tk], args);
+          break;
+        case TK_SUM:
+        ;
+        case TK_INT:
+        ;
+        case TK_PROD:
+          next();
+          var t, args = [];
+          if(hd() === TK_UNDERSCORE) {
+            next({oneCharToken:true});
+            args.push(primaryExpr());
+            eat(TK_CARET, {oneCharToken:true});
+            args.push(primaryExpr())
+          }
+          args.push(commaExpr());
+          return newNode(tokenToOperator[tk], args);
+        case TK_EXISTS:
+          next();
+          return newNode(Model.EXISTS, [equalExpr()]);
+        case TK_FORALL:
+          next();
+          return newNode(Model.FORALL, [commaExpr()]);
+        case TK_EXP:
+          next();
+          return newNode(Model.EXP, [additiveExpr()]);
+        case TK_M:
+          next();
+          return newNode(Model.M, [multiplicativeExpr()]);
+        case TK_FORMAT:
+          next();
+          return newNode(Model.FORMAT, [braceExpr()]);
+        case TK_OVERLINE:
+          next();
+          return newNode(Model.OVERLINE, [braceExpr()]);
+        case TK_DOT:
+          next();
+          return newNode(Model.DOT, [braceExpr()]);
+        case TK_OVERSET:
+        ;
+        case TK_UNDERSET:
+          next();
+          var expr1 = braceExpr();
+          var expr2 = braceExpr();
+          expr2.args.push(newNode(tokenToOperator[tk], [expr1]));
+          return expr2;
+        case TK_MATHBF:
+          next();
+          var expr1 = braceExpr();
+          return expr1;
+        default:
+          assert(!Model.option("strict"), message(1006, [tokenToOperator[tk]]));
+          e = nodeEmpty;
+          break
+      }
+      return e
+    }
+    function matrixExpr() {
+      var args = [];
+      var node, t;
+      args.push(rowExpr());
+      while((t = hd()) === TK_NEWROW) {
+        next();
+        args.push(rowExpr())
+      }
+      return newNode(tokenToOperator[TK_NEWROW], args)
+    }
+    function rowExpr() {
+      var args = [];
+      var t;
+      args.push(equalExpr());
+      while((t = hd()) === TK_NEWCOL) {
+        next();
+        args.push(equalExpr())
+      }
+      return newNode(tokenToOperator[TK_NEWCOL], args)
+    }
+    var pipeTokenCount = 0;
+    function absExpr() {
+      pipeTokenCount++;
+      eat(TK_VERTICALBAR);
+      var e = additiveExpr();
+      eat(TK_VERTICALBAR);
+      pipeTokenCount--;
+      return unaryNode(Model.ABS, [e])
+    }
+    function braceExpr() {
+      var e;
+      eat(TK_LEFTBRACE);
+      if(hd() === TK_RIGHTBRACE) {
+        eat(TK_RIGHTBRACE);
+        e = newNode(Model.COMMA, [])
+      }else {
+        e = commaExpr();
+        eat(TK_RIGHTBRACE)
+      }
+      e.lbrk = TK_LEFTBRACE;
+      e.rbrk = TK_RIGHTBRACE;
+      return e
+    }
+    function bracketExpr() {
+      eat(TK_LEFTBRACKET);
+      var e = commaExpr();
+      eat(TK_RIGHTBRACKET);
+      return e
+    }
+    function parenExpr(tk) {
+      var e;
+      var tk2;
+      eat(tk);
+      if(hd() === TK_RIGHTPAREN || hd() === TK_RIGHTBRACKET) {
+        eat(tk === TK_LEFTPAREN ? TK_RIGHTPAREN : TK_RIGHTBRACKET);
+        e = newNode(Model.COMMA, [])
+      }else {
+        e = commaExpr();
+        if(Model.option("allowInterval")) {
+          eat(tk2 = hd() === TK_RIGHTPAREN ? TK_RIGHTPAREN : TK_RIGHTBRACKET)
+        }else {
+          eat(tk2 = tk === TK_LEFTPAREN ? TK_RIGHTPAREN : TK_RIGHTBRACKET)
+        }
+      }
+      e.lbrk = tk;
+      e.rbrk = tk2;
+      if(Model.option("allowInterval") && (e.args.length === 2 && ((tk === TK_LEFTPAREN || tk === TK_LEFTBRACKET) && (tk2 === TK_RIGHTPAREN || tk2 === TK_RIGHTBRACKET)))) {
+        e.op = Model.INTERVAL;
+        e.args.push(numberNode(tk));
+        e.args.push(numberNode(tk2))
+      }else {
+        if(e.op === Model.COMMA) {
+          e.op = Model.LIST
+        }
+      }
+      return e
+    }
+    function exponentialExpr() {
+      var t, args = [primaryExpr()];
+      while((t = hd()) === TK_CARET) {
+        next({oneCharToken:true});
+        var t;
+        if((isMathSymbol(args[0]) || isChemCore()) && ((t = hd()) === TK_ADD || t === TK_SUB)) {
+          next();
+          args.push(unaryNode(tokenToOperator[t], [nodeOne]))
+        }else {
+          var n = unaryExpr();
+          if(n.op === Model.VAR && n.args[0] === "\\circ") {
+            if(hd() === TK_VAR && lexeme() === "K" || (lexeme() === "C" || lexeme() === "F")) {
+              n = multiplyNode([args.pop(), unaryNode(Model.VAR, ["\\degree " + lexeme()])]);
+              next()
+            }else {
+              n = multiplyNode([args.pop(), unaryNode(Model.VAR, ["\\degree"])])
+            }
+            args.push(n)
+          }else {
+            args.push(n)
+          }
+        }
+      }
+      if(args.length > 1) {
+        var expo = args.pop();
+        forEach(args.reverse(), function(base) {
+          expo = newNode(Model.POW, [base, expo])
+        });
+        return expo
+      }else {
+        return args[0]
+      }
+    }
+    function postfixExpr() {
+      var t;
+      var expr = exponentialExpr();
+      switch(t = hd()) {
+        case TK_PERCENT:
+          next();
+          expr = newNode(Model.PERCENT, [expr]);
+          break;
+        case TK_BANG:
+          next();
+          expr = newNode(Model.FACT, [expr]);
+          break;
+        default:
+          if(t === TK_VAR && lexeme() === "\\degree") {
+            next();
+            if(hd() === TK_VAR && (lexeme() === "K" || (lexeme() === "C" || lexeme() === "F"))) {
+              expr = multiplyNode([expr, unaryNode(Model.VAR, ["\\degree " + lexeme()])]);
+              next()
+            }else {
+              expr = multiplyNode([expr, unaryNode(Model.VAR, ["\\degree"])])
+            }
+          }else {
+            if(isChemCore() && ((t === TK_ADD || t === TK_SUB) && lookahead() === TK_RIGHTBRACE)) {
+              next();
+              expr = unaryNode(tokenToOperator[t], [expr])
+            }
+          }
+          break
+      }
+      return expr
+    }
+    function unaryExpr() {
+      var t;
+      var expr;
+      switch(t = hd()) {
+        case TK_ADD:
+          next();
+          expr = newNode(Model.ADD, [unaryExpr()]);
+          break;
+        case TK_SUB:
+          next();
+          expr = newNode(Model.SUB, [unaryExpr()]);
+          break;
+        case TK_PM:
+          next();
+          expr = unaryExpr();
+          expr = newNode(tokenToOperator[t], [expr]);
+          break;
+        case TK_UNDERSCORE:
+          var op = tokenToOperator[t];
+          next({oneCharToken:true});
+          if((t = hd()) === TK_ADD || t === TK_SUB) {
+            next();
+            expr = nodeOne
+          }else {
+            expr = unaryExpr()
+          }
+          expr = newNode(op, [expr]);
+          if((t = hd()) === TK_CARET) {
+            var args = [expr];
+            var op = tokenToOperator[t];
+            next({oneCharToken:true});
+            if((t = hd()) === TK_ADD || t === TK_SUB) {
+              next();
+              expr = nodeOne
+            }else {
+              expr = unaryExpr()
+            }
+            args.push(expr);
+            expr = newNode(op, args)
+          }
+          break;
+        case TK_CARET:
+          var op = tokenToOperator[t];
+          next({oneCharToken:true});
+          if((t = hd()) === TK_ADD || t === TK_SUB) {
+            next();
+            expr = nodeOne
+          }else {
+            expr = unaryExpr()
+          }
+          expr = newNode(op, [expr]);
+          break;
+        default:
+          if(t === TK_VAR && lexeme() === "$") {
+            next();
+            if((t = hd()) && (t !== TK_RIGHTBRACE && t !== TK_SLASH)) {
+              expr = multiplyNode([newNode(Model.VAR, ["$"]), postfixExpr()])
+            }else {
+              expr = newNode(Model.VAR, ["$"])
+            }
+          }else {
+            expr = postfixExpr()
+          }
+          break
+      }
+      return expr
+    }
+    function subscriptExpr() {
+      var t, args = [unaryExpr()];
+      if((t = hd()) === TK_UNDERSCORE) {
+        next({oneCharToken:true});
+        args.push(exponentialExpr());
+        if(isChemCore()) {
+          if(hd() === TK_LEFTBRACE) {
+            eat(TK_LEFTBRACE);
+            eat(TK_RIGHTBRACE)
+          }
+        }
+      }
+      if(args.length > 1) {
+        return newNode(Model.SUBSCRIPT, args)
+      }else {
+        return args[0]
+      }
+    }
+    function fractionExpr() {
+      var t, node = subscriptExpr();
+      if(isNumber(node) && (hd() === TK_FRAC || hd() === TK_NUM && lookahead() === TK_SLASH)) {
+        var frac = fractionExpr();
+        if(isMixedNumber(node, frac)) {
+          if(isNeg(node)) {
+            frac = binaryNode(Model.MUL, [nodeMinusOne, frac])
+          }
+          node = binaryNode(Model.ADD, [node, frac]);
+          node.isMixedNumber = true
+        }else {
+          node = binaryNode(Model.MUL, [node, frac]);
+          frac.isImplicit = true
+        }
+      }
+      while((t = hd()) === TK_SLASH) {
+        next();
+        node = newNode(Model.FRAC, [node, subscriptExpr()]);
+        node.isFraction = isSimpleFraction(node);
+        node.isSlash = true
+      }
+      return node
+    }
+    function isChemSymbol(n) {
+      var id;
+      if(n.op === Model.VAR) {
+        id = n.args[0]
+      }else {
+        if(n.op === Model.POW) {
+          id = n.args[0].args[0]
+        }else {
+          return false
+        }
+      }
+      var sym = Model.env[id];
+      return sym && sym.mass ? true : false
+    }
+    function isMathSymbol(n) {
+      if(n.op !== Model.VAR) {
+        return false
+      }
+      var sym = Model.env[n.args[0]];
+      return sym && sym.name ? true : false
+    }
+    function isOneOrMinusOne(node) {
+      return isOne(node) || isMinusOne(node)
+    }
+    function isOne(node) {
+      return node.op === Model.NUM && node.args[0] === "1"
+    }
+    function isMinusOne(node) {
+      return node.op === Model.SUB && (node.args.length === 1 && isOne(node.args[0]))
+    }
+    function multiplicativeExpr() {
+      var t, expr, explicitOperator = false, prevExplicitOperator, isFraction, args = [];
+      var n0;
+      expr = fractionExpr();
+      if(expr.op === Model.MUL && !expr.isBinomial) {
+        args = expr.args
+      }else {
+        args = [expr]
+      }
+      var loopCount = 0;
+      while((t = hd()) && (!isAdditive(t) && (!isRelational(t) && (t !== TK_COMMA && (!isEquality(t) && (t !== TK_RIGHTBRACE && (t !== TK_RIGHTPAREN && (t !== TK_RIGHTBRACKET && (t !== TK_RIGHTARROW && (t !== TK_LT && (!(t === TK_VERTICALBAR && pipeTokenCount > 0) && (t !== TK_NEWROW && (t !== TK_NEWCOL && t !== TK_END))))))))))))) {
+        prevExplicitOperator = explicitOperator;
+        explicitOperator = false;
+        if(isMultiplicative(t)) {
+          next();
+          explicitOperator = true
+        }
+        expr = fractionExpr();
+        if(t === TK_DIV) {
+          expr = newNode(Model.POW, [expr, nodeMinusOne])
+        }
+        assert(explicitOperator || (args.length === 0 || (expr.lbrk || (args[args.length - 1].op !== Model.NUM || (args[args.length - 1].lbrk || (isRepeatingDecimal([args[args.length - 1], expr]) || expr.op !== Model.NUM))))), message(1010));
+        if(isChemCore() && (t === TK_LEFTPAREN && isVar(args[args.length - 1], "M"))) {
+          args.pop();
+          expr = unaryNode(Model.M, [expr])
+        }else {
+          if(!explicitOperator) {
+            if(args.length > 0 && isMixedNumber(args[args.length - 1], expr)) {
+              t = args.pop();
+              if(isNeg(t)) {
+                expr = binaryNode(Model.MUL, [nodeMinusOne, expr])
+              }
+              expr = binaryNode(Model.ADD, [t, expr]);
+              expr.isMixedNumber = true
+            }else {
+              if(Model.option("ignoreCoefficientOne") && (args.length === 1 && (isOneOrMinusOne(args[0]) && isPolynomialTerm(args[0], expr)))) {
+                if(isOne(args[0])) {
+                  args.pop()
+                }else {
+                  expr = negate(expr)
+                }
+              }else {
+                if(args.length > 0 && (n0 = isRepeatingDecimal([args[args.length - 1], expr]))) {
+                  args.pop();
+                  expr = n0
+                }else {
+                  if(isENotation(args, expr)) {
+                    var tmp = args.pop();
+                    expr = binaryNode(Model.POW, [numberNode("10"), unaryExpr()]);
+                    expr = binaryNode(Model.MUL, [tmp, expr]);
+                    expr.isScientific = true
+                  }else {
+                    if(!isChemCore() && isPolynomialTerm(args[args.length - 1], expr)) {
+                      expr.isPolynomial = true;
+                      var t = args.pop();
+                      if(!t.isPolynomial) {
+                        if(t.op === Model.MUL && t.args[t.args.length - 1].isPolynomial) {
+                          assert(t.args.length === 2);
+                          var prefix = t.args[0];
+                          var suffix = t.args[1];
+                          expr.isPolynomial = suffix.isPolynomial = false;
+                          expr.isImplicit = true;
+                          expr = binaryNode(Model.MUL, [prefix, binaryNode(Model.MUL, [suffix, expr], true)]);
+                          expr.args[1].isPolynomial = true;
+                          expr.args[1].isImplicit = true
+                        }else {
+                          expr = binaryNode(Model.MUL, [t, expr])
+                        }
+                        expr.isImplicit = t.isImplicit;
+                        t.isImplicit = undefined
+                      }
+                    }else {
+                      expr.isImplicit = true
+                    }
+                  }
+                }
+              }
+            }
+          }else {
+            if(t === TK_MUL && (args.length > 0 && isScientific([args[args.length - 1], expr]))) {
+              t = args.pop();
+              expr = binaryNode(Model.MUL, [t, expr]);
+              expr.isScientific = true
+            }
+          }
+        }
+        if(expr.op === Model.MUL && (!expr.isScientific && (!expr.isBinomial && (args.length && (!args[args.length - 1].isImplicit && (!args[args.length - 1].isPolynomial && (expr.isImplicit && expr.isPolynomial))))))) {
+          args = args.concat(expr.args)
+        }else {
+          args.push(expr)
+        }
+        assert(loopCount++ < 1E3, "1000: Stuck in loop in mutliplicativeExpr()")
+      }
+      if(args.length > 1) {
+        return multiplyNode(args)
+      }else {
+        return args[0]
+      }
+      function isMultiplicative(t) {
+        return t === TK_MUL || (t === TK_DIV || t === TK_SLASH)
+      }
+    }
+    function isMixedNumber(n0, n1) {
+      if(n0.op === Model.SUB && n0.args.length === 1) {
+        n0 = n0.args[0]
+      }
+      if(!n0.lbrk && (!n1.lbrk && (n0.op === Model.NUM && isSimpleFraction(n1)))) {
+        return true
+      }
+      return false
+    }
+    function isPolynomialTerm(n0, n1) {
+      if(n0.op === Model.SUB && n0.args.length === 1) {
+        n0 = n0.args[0]
+      }
+      if(!n0.lbrk && (!n1.lbrk && (n0.op === Model.NUM && isVar(n1) || (isVar(n0) && n1.op === Model.NUM || (n0.op === Model.NUM && n1.op === Model.NUM || n0.op === Model.MUL && (n0.args[n0.args.length - 1].isPolynomial && isVar(n1))))))) {
+        return true
+      }
+      return false
+    }
+    function isRepeatingDecimal(args) {
+      var expr, n0, n1;
+      if(args[0].isRepeating === Model.DOT) {
+        var n = args[0].op === Model.ADD && args[0].args[1].op === Model.NUM ? args[0].args[1] : args[0];
+        assert(n.op === Model.NUM, "1000: Expecting a number");
+        var arg1;
+        if(args[1].op === Model.DOT) {
+          assert(args[1].args[0].op === Model.NUM, "1000: Expecting a number");
+          arg1 = numberNode(n.args[0] + args[1].args[0].args[0])
+        }else {
+          assert(args[1].op === Model.NUM, "1000: Expecting a number");
+          arg1 = numberNode(n.args[0] + args[1].args[0])
+        }
+        arg1.isRepeating = Model.DOT;
+        if(args[0].op === Model.ADD) {
+          args[0].args[1] = arg1;
+          expr = args[0]
+        }else {
+          expr = arg1
+        }
+      }else {
+        if(!args[0].lbrk && (args[0].op === Model.NUM && args[0].numberFormat === "decimal")) {
+          if(args[1].lbrk === 40 && isInteger(args[1])) {
+            n0 = args[0];
+            n1 = args[1]
+          }else {
+            if(!args[1].lbrk && args[1].op === Model.OVERLINE) {
+              n0 = args[0];
+              n1 = args[1].args[0]
+            }else {
+              if(!args[1].lbrk && args[1].op === Model.DOT) {
+                n0 = args[0];
+                n1 = args[1].args[0]
+              }else {
+                return null
+              }
+            }
+          }
+          n1 = numberNode("." + n1.args[0]);
+          n1.isRepeating = args[1].op;
+          if(indexOf(n0.args[0], ".") >= 0) {
+            var decimalPlaces = n0.args[0].length - indexOf(n0.args[0], ".") - 1;
+            n1 = multiplyNode([n1, binaryNode(Model.POW, [numberNode("10"), numberNode("-" + decimalPlaces)])])
+          }
+          if(n0.op === Model.NUM && +n0.args[0] === 0) {
+            expr = n1
+          }else {
+            expr = binaryNode(Model.ADD, [n0, n1])
+          }
+          expr.numberFormat = "decimal";
+          expr.isRepeating = args[1].op
+        }else {
+          expr = null
+        }
+      }
+      return expr
+    }
+    function isENotation(args, expr, t) {
+      var n;
+      var eulers = Model.option("allowEulersNumber");
+      if(args.length > 0 && (isNumber(args[args.length - 1]) && (expr.op === Model.VAR && ((expr.args[0] === "E" || expr.args[0] === "e" && !eulers) && (hd() === TK_NUM || (hd() === 45 || hd() === 43) && lookahead() === TK_NUM))))) {
+        return true
+      }
+      return false
+    }
+    function isNeg(n) {
+      if(typeof n === "number") {
+        return n < 0
+      }else {
+        if(n.args.length === 1) {
+          return n.op === OpStr.SUB && n.args[0].args[0] > 0 || n.op === Model.NUM && +n.args[0] < 0
+        }else {
+          if(n.args.length === 2) {
+            return n.op === OpStr.MUL && isNeg(n.args[0])
+          }
+        }
+      }
+    }
+    function isVar(n, id) {
+      assert(typeof id === "undefined" || typeof id === "string", "1000: Invalid id");
+      if(n.op === Model.VAR) {
+        return id === undefined ? true : n.args[0] === id
+      }else {
+        if(n.op === Model.POW && (isVar(n.args[0]) && isInteger(n.args[1]))) {
+          return id === undefined ? true : n.args[0].args[0] === id
+        }
+      }
+      return false
+    }
+    function negate(n) {
+      if(typeof n === "number") {
+        return-n
+      }else {
+        if(n.op === Model.MUL) {
+          var args = n.args.slice(0);
+          return multiplyNode([negate(args.shift())].concat(args))
+        }else {
+          if(n.op === Model.POW && isMinusOne(n.args[1])) {
+            return binaryNode(Model.POW, [negate(n.args[0]), nodeMinusOne])
+          }
+        }
+      }
+      return unaryNode(Model.SUB, [n])
+    }
+    function isAdditive(t) {
+      return t === TK_ADD || (t === TK_SUB || (t === TK_PM || t === TK_BACKSLASH))
+    }
+    function additiveExpr() {
+      var expr = multiplicativeExpr();
+      var t;
+      while(isAdditive(t = hd())) {
+        next();
+        var expr2 = multiplicativeExpr();
+        switch(t) {
+          case TK_BACKSLASH:
+            expr = binaryNode(Model.BACKSLASH, [expr, expr2]);
+            break;
+          case TK_PM:
+            expr = binaryNode(Model.PM, [expr, expr2]);
+            break;
+          case TK_SUB:
+            expr = binaryNode(Model.SUB, [expr, expr2]);
+            break;
+          default:
+            expr = binaryNode(Model.ADD, [expr, expr2], true);
+            break
+        }
+      }
+      return expr
+    }
+    function isRelational(t) {
+      return t === TK_LT || (t === TK_LE || (t === TK_GT || (t === TK_GE || (t === TK_NGTR || (t === TK_NLESS || (t === TK_IN || (t === TK_TO || (t === TK_COLON || t === TK_VAR && lexeme() === "to"))))))))
+    }
+    function relationalExpr() {
+      var t = hd();
+      var expr = additiveExpr();
+      var args = [];
+      while(isRelational(t = hd())) {
+        if(t === TK_VAR && lexeme() === "to") {
+          t = TK_COLON
+        }
+        next();
+        var expr2 = additiveExpr();
+        expr = newNode(tokenToOperator[t], [expr, expr2]);
+        args.push(expr);
+        expr = Model.create(expr2)
+      }
+      if(args.length === 0) {
+        return expr
+      }else {
+        if(args.length === 1) {
+          return args[0]
+        }else {
+          return newNode(Model.COMMA, args)
+        }
+      }
+    }
+    function isEquality(t) {
+      return t === TK_EQL || (t === TK_NE || t === TK_APPROX)
+    }
+    function equalExpr() {
+      var expr = relationalExpr();
+      var t;
+      var args = [];
+      while(isEquality(t = hd()) || t === TK_RIGHTARROW) {
+        next();
+        var expr2 = additiveExpr();
+        expr = newNode(tokenToOperator[t], [expr, expr2]);
+        args.push(expr);
+        expr = Model.create(expr2)
+      }
+      if(args.length === 0) {
+        return expr
+      }else {
+        if(args.length === 1) {
+          return args[0]
+        }else {
+          return newNode(Model.COMMA, args)
+        }
+      }
+    }
+    function commaExpr() {
+      var expr = equalExpr();
+      var args = [expr];
+      var t;
+      while((t = hd()) === TK_COMMA) {
+        next();
+        args.push(equalExpr())
+      }
+      if(args.length > 1) {
+        return newNode(tokenToOperator[TK_COMMA], args)
+      }else {
+        return expr
+      }
+    }
+    function tokenize() {
+      var args = [];
+      start();
+      while(hd()) {
+        var lex = lexeme();
+        args.push(newNode(hd(), lex ? [lex] : []));
+        next()
+      }
+      var node = newNode(Model.COMMA, args);
+      return node
+    }
+    function expr() {
+      start();
+      if(hd()) {
+        var n = commaExpr();
+        if(n.op !== Model.COMMA && (n.lbrk === TK_LEFTBRACE && n.rbrk === TK_RIGHTBRACE)) {
+          n = newNode(Model.COMMA, [n])
+        }
+        assert(!hd(), message(1003, [scan.pos(), scan.lexeme(), "'" + src.substring(scan.pos() - 1) + "'"]));
+        return n
+      }
+      return nodeNone
+    }
+    return{expr:expr, tokenize:tokenize};
+    function isInvisibleCharCode(c) {
+      return isControlCharCode(c)
+    }
+    function isWhitespaceCharCode(c) {
+      return c === 32 || (c === 9 || (c === 10 || c === 13))
+    }
+    function isNumberCharCode(c) {
+      return c >= 48 && c <= 57
+    }
+    function isControlCharCode(c) {
+      return c >= 1 && c <= 31 || c >= 127 && c <= 159
+    }
+    function stripInvisible(src) {
+      var out = "";
+      var c, lastCharCode;
+      var curIndex = 0;
+      while(curIndex < src.length) {
+        while(curIndex < src.length && isInvisibleCharCode(c = src.charCodeAt(curIndex++))) {
+          if(lastCharCode === 32) {
+            continue
+          }
+          c = 9;
+          lastCharCode = c
+        }
+        if(c === 92) {
+          out += String.fromCharCode(c);
+          if(curIndex < src.length) {
+            c = src.charCodeAt(curIndex++)
+          }
+        }else {
+          if(c === 9) {
+            if(isNumberCharCode(out.charCodeAt(out.length - 1)) && isNumberCharCode(src.charCodeAt(curIndex))) {
+              c = src.charCodeAt(curIndex++)
+            }
+          }
+        }
+        out += String.fromCharCode(c)
+      }
+      return out
+    }
+    function scanner(src) {
+      var curIndex = 0;
+      var lexeme = "";
+      var lexemeToToken = {"\\cdot":TK_MUL, "\\times":TK_MUL, "\\div":TK_DIV, "\\dfrac":TK_FRAC, "\\frac":TK_FRAC, "\\sqrt":TK_SQRT, "\\vec":TK_VEC, "\\pm":TK_PM, "\\sin":TK_SIN, "\\cos":TK_COS, "\\tan":TK_TAN, "\\sec":TK_SEC, "\\cot":TK_COT, "\\csc":TK_CSC, "\\arcsin":TK_ARCSIN, "\\arccos":TK_ARCCOS, "\\arctan":TK_ARCTAN, "\\sinh":TK_SINH, "\\cosh":TK_COSH, "\\tanh":TK_TANH, "\\sech":TK_SECH, "\\coth":TK_COTH, "\\csch":TK_CSCH, "\\arcsinh":TK_ARCSINH, "\\arccosh":TK_ARCCOSH, "\\arctanh":TK_ARCTANH, 
+      "\\ln":TK_LN, "\\lg":TK_LG, "\\log":TK_LOG, "\\left":null, "\\right":null, "\\big":null, "\\Big":null, "\\bigg":null, "\\Bigg":null, "\\ ":null, "\\quad":null, "\\qquad":null, "\\text":TK_TEXT, "\\textrm":TK_TEXT, "\\textit":TK_TEXT, "\\textbf":TK_TEXT, "\\lt":TK_LT, "\\le":TK_LE, "\\gt":TK_GT, "\\ge":TK_GE, "\\ne":TK_NE, "\\ngtr":TK_NGTR, "\\nless":TK_NLESS, "\\approx":TK_APPROX, "\\exists":TK_EXISTS, "\\in":TK_IN, "\\forall":TK_FORALL, "\\lim":TK_LIM, "\\exp":TK_EXP, "\\to":TK_TO, "\\sum":TK_SUM, 
+      "\\int":TK_INT, "\\prod":TK_PROD, "\\%":TK_PERCENT, "\\rightarrow":TK_RIGHTARROW, "\\longrightarrow":TK_RIGHTARROW, "\\binom":TK_BINOM, "\\begin":TK_BEGIN, "\\end":TK_END, "\\colon":TK_COLON, "\\vert":TK_VERTICALBAR, "\\lvert":TK_VERTICALBAR, "\\rvert":TK_VERTICALBAR, "\\mid":TK_VERTICALBAR, "\\format":TK_FORMAT, "\\overline":TK_OVERLINE, "\\overset":TK_OVERSET, "\\underset":TK_UNDERSET, "\\backslash":TK_BACKSLASH, "\\mathbf":TK_MATHBF, "\\abs":TK_ABS, "\\dot":TK_DOT};
+      var unicodeToLaTeX = {8704:"\\forall", 8705:"\\complement", 8706:"\\partial", 8707:"\\exists", 8708:"\\nexists", 8709:"\\varnothing", 8710:"\\triangle", 8711:"\\nabla", 8712:"\\in", 8713:"\\notin", 8714:"\\in", 8715:"\\ni", 8716:"\\notni", 8717:"\\ni", 8718:"\\blacksquare", 8719:"\\sqcap", 8720:"\\amalg", 8721:"\\sigma", 8722:"-", 8723:"\\mp", 8724:"\\dotplus", 8725:"/", 8726:"\\setminus", 8727:"*", 8728:"\\circ", 8729:"\\bullet", 8730:"\\sqrt", 8731:null, 8732:null, 8733:"\\propto", 8734:"\\infty", 
+      8735:"\\llcorner", 8736:"\\angle", 8737:"\\measuredangle", 8738:"\\sphericalangle", 8739:"\\divides", 8740:"\\notdivides", 8741:"\\parallel", 8742:"\\nparallel", 8743:"\\wedge", 8744:"\\vee", 8745:"\\cap", 8746:"\\cup", 8747:"\\int", 8748:"\\iint", 8749:"\\iiint", 8750:"\\oint", 8751:"\\oiint", 8752:"\\oiiint", 8753:null, 8754:null, 8755:null, 8756:"\\therefore", 8757:"\\because", 8758:"\\colon", 8759:null, 8760:null, 8761:null, 8762:null, 8763:null, 8764:"\\sim", 8765:"\\backsim", 8766:null, 
+      8767:null, 8768:"\\wr", 8769:"\\nsim", 8770:"\\eqsim", 8771:"\\simeq", 8772:null, 8773:"\\cong", 8774:null, 8775:"\\ncong", 8776:"\\approx", 8777:null, 8778:"\\approxeq", 8779:null, 8780:null, 8781:"\\asymp", 8782:"\\Bumpeq", 8783:"\\bumpeq", 8784:"\\doteq", 8785:"\\doteqdot", 8786:"\\fallingdotseq", 8787:"\\risingdotseq", 8788:null, 8789:null, 8790:"\\eqcirc", 8791:"\\circeq", 8792:null, 8793:null, 8794:null, 8795:null, 8796:"\\triangleq", 8797:null, 8798:null, 8799:null, 8800:"\\ne", 8801:"\\equiv", 
+      8802:null, 8803:null, 8804:"\\le", 8805:"\\ge", 8806:"\\leqq", 8807:"\\geqq", 8808:"\\lneqq", 8809:"\\gneqq", 8810:"\\ll", 8811:"\\gg", 8812:"\\between", 8813:null, 8814:"\\nless", 8815:"\\ngtr", 8816:"\\nleq", 8817:"\\ngeq", 8818:"\\lessim", 8819:"\\gtrsim", 8820:null, 8821:null, 8822:"\\lessgtr", 8823:"\\gtrless", 8824:null, 8825:null, 8826:"\\prec", 8827:"\\succ", 8828:"\\preccurlyeq", 8829:"\\succcurlyeq", 8830:"\\precsim", 8831:"\\succsim", 8832:"\\nprec", 8833:"\\nsucc", 8834:"\\subset", 
+      8835:"\\supset", 8836:null, 8837:null, 8838:"\\subseteq", 8839:"\\supseteq", 8840:"\\nsubseteq", 8841:"\\nsupseteq", 8842:"\\subsetneq", 8843:"\\supsetneq", 8844:null, 8845:null, 8846:null, 8847:"\\sqsubset", 8848:"\\sqsupset", 8849:null, 8850:null, 8851:"\\sqcap", 8852:"\\sqcup", 8853:"\\oplus", 8854:"\\ominus", 8855:"\\otimes", 8856:"\\oslash", 8857:"\\odot", 8858:"\\circledcirc", 8859:"\\circledast", 8860:null, 8861:"\\circleddash", 8862:"\\boxplus", 8863:"\\boxminus", 8864:"\\boxtimes", 
+      8865:"\\boxdot", 8866:"\\vdash", 8867:"\\dashv", 8868:"\\top", 8869:"\\bot", 8870:null, 8871:"\\models", 8872:"\\vDash", 8873:"\\Vdash", 8874:"\\Vvdash", 8875:"\\VDash*", 8876:"\\nvdash", 8877:"\\nvDash", 8878:"\\nVdash", 8879:"\\nVDash", 8880:null, 8881:null, 8882:"\\vartriangleleft", 8883:"\\vartriangleright", 8884:"\\trianglelefteq", 8885:"\\trianglerighteq", 8886:null, 8887:null, 8888:"\\multimap", 8889:null, 8890:"\\intercal", 8891:"\\veebar", 8892:"\\barwedge", 8893:null, 8894:null, 8895:null, 
+      8896:"\\wedge", 8897:"\\vee", 8898:"\\cap", 8899:"\\cup", 8900:"\\diamond", 8901:"\\cdot", 8902:"\\star", 8903:null, 8904:"\\bowtie", 8905:"\\ltimes", 8906:"\\rtimes", 8907:"\\leftthreetimes", 8908:"\\rightthreetimes", 8909:"\\backsimeq", 8910:"\\curlyvee", 8911:"\\curlywedge", 8912:"\\Subset", 8913:"\\Supset", 8914:"\\Cap", 8915:"\\Cup", 8916:"\\pitchfork", 8917:"\\lessdot", 8918:"\\gtrdot", 8919:null, 8920:"\\lll", 8921:"\\ggg", 8922:"\\lesseqgtr", 8923:"\\gtreqless", 8924:null, 8925:null, 
+      8926:"\\curlyeqprec", 8927:"\\curlyeqsucc", 8928:null, 8929:null, 8930:null, 8931:null, 8932:null, 8933:null, 8934:"\\lnsim", 8935:"\\gnsim", 8936:"\\precnsim", 8937:"\\succnsim", 8938:"\\ntriangleleft", 8939:"\\ntriangleright", 8940:"\\ntrianglelefteq", 8941:"\\ntrianglerighteq", 8942:"\\vdots", 8943:"\\cdots", 8944:null, 8945:"\\ddots", 8946:null, 8947:null, 8948:null, 8949:null, 8950:null, 8951:null, 8952:null, 8953:null, 8954:null, 8955:null, 8956:null, 8957:null, 8958:null, 8959:null};
+      var identifiers = keys(env);
+      identifiers.push("to");
+      function isAlphaCharCode(c) {
+        return c >= 65 && c <= 90 || c >= 97 && c <= 122
+      }
+      function start(options) {
+        if(!options) {
+          options = {}
+        }
+        var c;
+        lexeme = "";
+        var t;
+        while(curIndex < src.length) {
+          switch(c = src.charCodeAt(curIndex++)) {
+            case 32:
+            ;
+            case 9:
+            ;
+            case 10:
+            ;
+            case 13:
+              continue;
+            case 38:
+              if(indexOf(src.substring(curIndex), "nbsp;") === 0) {
+                curIndex += 5;
+                continue
+              }
+              return TK_NEWCOL;
+            case 92:
+              lexeme += String.fromCharCode(c);
+              switch(src.charCodeAt(curIndex)) {
+                case 92:
+                  curIndex++;
+                  return TK_NEWROW;
+                case 123:
+                ;
+                case 124:
+                ;
+                case 125:
+                  return src.charCodeAt(curIndex++)
+              }
+              var tk = latex();
+              if(tk !== null) {
+                return tk
+              }
+              lexeme = "";
+              continue;
+            case 42:
+            ;
+            case 8727:
+              return TK_MUL;
+            case 45:
+            ;
+            case 8722:
+              if(src.charCodeAt(curIndex) === 62) {
+                curIndex++;
+                return TK_RIGHTARROW
+              }
+              return TK_SUB;
+            case 47:
+            ;
+            case 8725:
+              return TK_SLASH;
+            case 33:
+              if(src.charCodeAt(curIndex) === 61) {
+                curIndex++;
+                return TK_NE
+              }
+              return c;
+            case 58:
+            ;
+            case 8758:
+              return TK_COLON;
+            case 37:
+            ;
+            case 40:
+            ;
+            case 41:
+            ;
+            case 43:
+            ;
+            case 44:
+            ;
+            case 61:
+            ;
+            case 91:
+            ;
+            case 93:
+            ;
+            case 94:
+            ;
+            case 95:
+            ;
+            case 123:
+            ;
+            case 124:
+            ;
+            case 125:
+              lexeme += String.fromCharCode(c);
+              return c;
+            case 36:
+              lexeme += String.fromCharCode(c);
+              return TK_VAR;
+            case 60:
+              if(src.charCodeAt(curIndex) === 61) {
+                curIndex++;
+                return TK_LE
+              }
+              return TK_LT;
+            case 62:
+              if(src.charCodeAt(curIndex) === 61) {
+                curIndex++;
+                return TK_GE
+              }
+              return TK_GT;
+            case 116:
+              if(src.charCodeAt(curIndex) === 111) {
+                curIndex++;
+                return TK_COLON
+              }
+            ;
+            default:
+              if(isAlphaCharCode(c) || c === CC_SINGLEQUOTE) {
+                return variable(c)
+              }else {
+                if(t = unicodeToLaTeX[c]) {
+                  lexeme = t;
+                  var tk = lexemeToToken[lexeme];
+                  if(tk === void 0) {
+                    tk = TK_VAR
+                  }
+                  return tk
+                }else {
+                  if(matchDecimalSeparator(String.fromCharCode(c)) || isNumberCharCode(c)) {
+                    if(options.oneCharToken) {
+                      lexeme += String.fromCharCode(c);
+                      return TK_NUM
+                    }
+                    return number(c)
+                  }else {
+                    assert(false, message(1004, [String.fromCharCode(c), c]));
+                    return 0
+                  }
+                }
+              }
+          }
+        }
+        return 0
+      }
+      var lastSeparator;
+      function number(c) {
+        while(isNumberCharCode(c) || (matchDecimalSeparator(String.fromCharCode(c)) || (lastSeparator = matchThousandsSeparator(String.fromCharCode(c), lastSeparator)) && isNumberCharCode(src.charCodeAt(curIndex)))) {
+          lexeme += String.fromCharCode(c);
+          c = src.charCodeAt(curIndex++);
+          if(c === 92 && src.charCodeAt(curIndex) === 32) {
+            c = 32;
+            curIndex++
+          }
+        }
+        if(lexeme === "." && (indexOf(src.substring(curIndex), "overline") === 0 || indexOf(src.substring(curIndex), "dot") === 0)) {
+          lexeme = "0."
+        }
+        curIndex--;
+        return TK_NUM
+      }
+      function variable(c) {
+        var ch = String.fromCharCode(c);
+        lexeme += ch;
+        var identifier = lexeme;
+        var startIndex = curIndex + 1;
+        while(isAlphaCharCode(c) || c === CC_SINGLEQUOTE) {
+          c = src.charCodeAt(curIndex++);
+          if(!isAlphaCharCode(c)) {
+            break
+          }
+          var ch = String.fromCharCode(c);
+          var match = some(identifiers, function(u) {
+            var ident = identifier + ch;
+            return indexOf(u, ident) === 0
+          });
+          if(!match) {
+            break
+          }
+          identifier += ch
+        }
+        if(indexOf(identifiers, identifier) >= 0) {
+          lexeme = identifier
+        }else {
+          curIndex = startIndex
+        }
+        while(c === CC_SINGLEQUOTE) {
+          c = src.charCodeAt(curIndex++);
+          var ch = String.fromCharCode(c);
+          lexeme += ch
+        }
+        curIndex--;
+        return TK_VAR
+      }
+      function latex() {
+        var c = src.charCodeAt(curIndex++);
+        if(c === CC_DOLLAR) {
+          lexeme = String.fromCharCode(c)
+        }else {
+          if(c === CC_PERCENT) {
+            lexeme += String.fromCharCode(c)
+          }else {
+            if(indexOf([CC_SPACE, CC_COLON, CC_SEMICOLON, CC_COMMA, CC_BANG], c) >= 0) {
+              lexeme = "\\ "
+            }else {
+              while(isAlphaCharCode(c)) {
+                lexeme += String.fromCharCode(c);
+                c = src.charCodeAt(curIndex++)
+              }
+              curIndex--
+            }
+          }
+        }
+        var tk = lexemeToToken[lexeme];
+        if(tk === void 0) {
+          tk = TK_VAR
+        }else {
+          if(tk === TK_TEXT) {
+            var c = src.charCodeAt(curIndex++);
+            while(c && c !== CC_LEFTBRACE) {
+              c = src.charCodeAt(curIndex++)
+            }
+            lexeme = "";
+            var c = src.charCodeAt(curIndex++);
+            var keepTextWhitespace = Model.option("keepTextWhitespace");
+            while(c && c !== CC_RIGHTBRACE) {
+              var ch = String.fromCharCode(c);
+              if(!keepTextWhitespace && (ch === "&" && indexOf(src.substring(curIndex), "nbsp;") === 0)) {
+                curIndex += 5
+              }else {
+                if(!keepTextWhitespace && (ch === " " || ch === "\t")) {
+                }else {
+                  lexeme += ch
+                }
+              }
+              c = src.charCodeAt(curIndex++)
+            }
+            if(!lexeme || Model.option("ignoreText")) {
+              tk = null
+            }else {
+              tk = TK_VAR
+            }
+          }
+        }
+        return tk
+      }
+      return{start:start, lexeme:function() {
+        return lexeme
+      }, pos:function() {
+        return curIndex
+      }}
+    }
+  };
+  return Model
+}();
 (function(ast) {
   var messages = Assert.messages;
   Assert.reserveCodeRange(2E3, 2999, "mathmodel");
@@ -5833,7 +5839,7 @@ var BigDecimal = function(MathContext) {
             }
             break;
           case "\\fraction":
-            if(node.isFraction || node.isMixedFraction) {
+            if(node.isFraction || node.isMixedNumber) {
               return true
             }
             break;
@@ -5845,12 +5851,14 @@ var BigDecimal = function(MathContext) {
             }
             break;
           case "\\mixedFraction":
-            if(node.isMixedFraction) {
+          ;
+          case "\\mixedNumber":
+            if(node.isMixedNumber) {
               return true
             }
             break;
           case "\\fractionOrDecimal":
-            if(node.isFraction || (node.isMixedFraction || node.numberFormat === "decimal")) {
+            if(node.isFraction || (node.isMixedNumber || node.numberFormat === "decimal")) {
               return true
             }
             break;
@@ -5934,7 +5942,7 @@ var BigDecimal = function(MathContext) {
           }
           return formatNumber(fmt, node);
         case "\\fraction":
-          if(node.isFraction || node.isMixedFraction) {
+          if(node.isFraction || node.isMixedNumber) {
             return node
           }
           assert(false, "FIXME missing conversion to fraction");
@@ -5948,12 +5956,14 @@ var BigDecimal = function(MathContext) {
           assert(false, "FIXME missing conversion to fraction");
           break;
         case "\\mixedFraction":
-          if(node.isMixedFraction) {
+        ;
+        case "\\mixedNumber":
+          if(node.isMixedNumber) {
             return node
           }
           return toMixedNumber(node);
         case "\\fractionOrDecimal":
-          if(node.isFraction || (node.isMixedFraction || node.numberFormat === "decimal")) {
+          if(node.isFraction || (node.isMixedNumber || node.numberFormat === "decimal")) {
             return node
           }
           assert(false, "FIXME missing conversion to fraction or decimal");
@@ -6097,6 +6107,8 @@ var BigDecimal = function(MathContext) {
         case "\\fraction":
         ;
         case "\\mixedFraction":
+        ;
+        case "\\mixedNumber":
         ;
         case "\\nonMixedFraction":
         ;
