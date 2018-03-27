@@ -626,6 +626,11 @@ let transform = (function() {
               "area": v.A || v.area,
               "perimeter": v.P || v.perimeter,
             });
+          } else if (val1 === "desmos_volume_question") {
+            values.push({
+              "surface_area": v.A || v.surface_area,
+              "volume": v.V || v.volume,
+            });
           } else {
             assert(false, val1);
           }
