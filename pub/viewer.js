@@ -128,9 +128,7 @@ exports.reserveCodeRange = reserveCodeRange;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }(); /* Copyright (c) 2017, Art Compiler LLC */
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; /* Copyright (c) 2017, Art Compiler LLC */
 
 
 var _assert = require("./assert");
@@ -139,9 +137,9 @@ var _react = require("react");
 
 var React = _interopRequireWildcard(_react);
 
-var _d2 = require("d3");
+var _d = require("d3");
 
-var d3 = _interopRequireWildcard(_d2);
+var d3 = _interopRequireWildcard(_d);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -338,6 +336,7 @@ window.gcexports.viewer = function () {
 
   function getParams(table) {
     var keys = [];
+    var vals = [];
     var paramsList = [];
     table.select("thead").selectAll("tr").each(function (d, j, tr) {
       d3.select(tr[j]).selectAll("th").each(function (d, i, th) {
@@ -346,14 +345,16 @@ window.gcexports.viewer = function () {
         });
       });
     });
+    paramsList.push(keys);
     table.select("tbody").selectAll("tr").each(function (d, j, tr) {
-      paramsList[j] = {};
+      vals[j] = [];
       d3.select(tr[j]).selectAll("td").each(function (d, i, td) {
         d3.select(td[i]).selectAll("textarea").each(function (d, k, ta) {
-          paramsList[j][keys[i]] = this.value;
+          vals[j][i] = this.value;
         });
       });
     });
+    paramsList = paramsList.concat(vals);
     return paramsList;
   }
 
@@ -376,81 +377,16 @@ window.gcexports.viewer = function () {
     });
     return template;
   }
-
-  function getTable(params) {
-    var table = [];
-    Object.keys(params).forEach(function (key) {
-      var val = params[key];
-      var exprs = val.split(",");
-      var vals = [];
-      exprs.forEach(function (expr) {
-        var _expr$split = expr.split(":"),
-            _expr$split2 = _slicedToArray(_expr$split, 2),
-            r = _expr$split2[0],
-            _expr$split2$ = _expr$split2[1],
-            incr = _expr$split2$ === undefined ? 1 : _expr$split2$;
-
-        var _r$split = r.split(".."),
-            _r$split2 = _slicedToArray(_r$split, 2),
-            start = _r$split2[0],
-            stop = _r$split2[1];
-
-        if (start >= stop) {
-          // Guard against nonsense.
-          stop = undefined;
-        }
-        if (stop === undefined) {
-          vals.push(start);
-        } else {
-          var e = void 0,
-              n = void 0,
-              t = void 0;
-          if (n = parseInt(start)) {
-            t = "I";
-            e = parseInt(stop);
-          } else if (n = parseFloat(start)) {
-            t = "F";
-            e = parseFloat(stop);
-          } else {
-            t = "V";
-            n = start.charCodeAt(0);
-            e = stop.charCodeAt(0);
-          }
-          incr = isNaN(+incr) ? 1 : +incr;
-          for (var i = 0; i <= e - n; i += incr) {
-            switch (t) {
-              case "I":
-              case "F":
-                vals.push(String(n + i));
-                break;
-              case "V":
-                vals.push(String.fromCharCode(n + i) + start.substring(1));
-                break;
-            }
-          }
-        }
-      });
-      table.push(vals);
-    });
-    return table;
-  }
   // State Machine
   // start
   //   |--[text]---> dirty
   //   |--[check]--> dirty
   var isDirty = false;
   var isSaved = false;
-  // function onChange(e) {
-  //   // Once anything has changed, we use the in memory state,
-  //   // not the compiled state. These should be in sync until
-  //   // the next refesh.
-  //   isDirty = true;
-  // }
   function onUpdate(e) {
     // Update the state of the view. If the update target is a checkbox, then
     // we don't get the checks from the code.
-    var params = getParams(d3.select("table"))[0]; // Only one params in paramsList for now.
-    var table = getTable(params);
+    var params = getParams(d3.select("table"));
     checks = [];
     var recompileCode = void 0;
     if (e && e.target && e.target.className.indexOf("check") >= 0) {
@@ -860,8 +796,10 @@ window.gcexports.viewer = function () {
     var thead = table.args[0];
     var tbody = table.args[1];
     thead.args[0].args = [];
-    tbody.args[0].args = [];
-    Object.keys(params).forEach(function (n, i) {
+    tbody.args = [];
+    var keys = params[0];
+    var valsList = params.slice(1);
+    keys.forEach(function (n, i) {
       thead.args[0].args.push({
         type: "th",
         args: [{
@@ -869,18 +807,25 @@ window.gcexports.viewer = function () {
           value: n
         }]
       });
-      // Use the parameter name if no value.
-      var val = params && params[n] !== undefined && params[n].length > 0 ? params[n] : n;
-      tbody.args[0].args.push({
-        type: "td",
-        args: {
-          type: "textarea",
-          attrs: {},
-          style: {
-            width: "100"
-          },
-          args: [val]
-        }
+    });
+    valsList.forEach(function (vals, i) {
+      var row = {
+        type: "tr",
+        args: []
+      };
+      tbody.args.push(row);
+      vals.forEach(function (val, j) {
+        row.args.push({
+          type: "td",
+          args: {
+            type: "textarea",
+            attrs: {},
+            style: {
+              width: "100"
+            },
+            args: [val]
+          }
+        });
       });
     });
   }
@@ -933,10 +878,12 @@ window.gcexports.viewer = function () {
               }]
             }, {
               "type": "tbody",
-              "args": [{
-                "type": "tr",
-                "args": []
-              }]
+              "args": [
+                // {
+                //   "type": "tr",
+                //   "args": [],
+                // }
+              ]
             }]
           }]
         }]

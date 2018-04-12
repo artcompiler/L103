@@ -770,30 +770,49 @@ let transform = (function() {
     let data = options.data && options.data.params ? options.data.params : [[]];
     resume([], data);
   }
+  function isArray(val) {
+    return val instanceof Array;
+  }
   function params(node, options, resume) {
+    // params {
+    //   "+": "+",
+    //   "a": " ",
+    //   "b": "1",
+    //   "c": "2",
+    //   "d": " ",
+    //   "e": "3",
+    //   "f": "5",
+    // }
+    // params [
+    //   ["+", "a", "b", "c", "d", "e", "f"],
+    //   ["+", " ", "1", "2", " ", "3", "4"],
+    // ]
     visit(node.elts[0], options, function (err1, val1) {
       let values = [];
       let params = options.data && options.data.params
-                   ? options.data.params
-                   : val1; // Use defaults.
+                   ? options.data.params  // Use form data.
+                   : val1;                // Use defaults.
       if (params) {
-        let keys = Object.keys(params);
-        let vals = Object.values(params);
+        let keys, vals;
+        if (isArray(params)) {
+          keys = params[0];
+          vals = params.slice(1);
+        } else {
+          keys = Object.keys(params);
+          vals = [Object.values(params)];
+        }
         // Create first row using param names.
-        vals.forEach((d, i) => {
-          // Replace default values with actual values.
-          let k = keys[i];
-          params[k] = d;
-        });
         values.push(keys);
-        values = values.concat(generateDataFromArgs(params, vals));
+        vals.forEach(v => {
+          values = values.concat(generateDataFromArgs(keys, v));
+        });
       }
       resume([], {
         params: params,
         values: values,
       });
     });
-    function expandArgs(params, args) {
+    function expandArgs(args) {
       let table = [];
       args = args ? args : []; // NOTE this only supports one row of args.
       args.forEach(s => {
@@ -840,9 +859,9 @@ let transform = (function() {
       })
       return table;
     }
-    function buildEnv(params, vals) {
-      let keys = Object.keys(params);
-      let env = Object.assign({}, params);
+    function buildEnv(keys, vals) {
+//      let keys = Object.keys(params);
+      let env = {}; //Object.assign({}, params);
       keys.forEach((k, i) => {
         if (vals[i] !== undefined) {
           env[k] = {
@@ -868,8 +887,8 @@ let transform = (function() {
         return resume([], expr);
       }
     }
-    function generateDataFromArgs(params, args) {
-      let table = expandArgs(params, args);
+    function generateDataFromArgs(keys, args) {
+      let table = expandArgs(args);
       let data = [];
       for (let i = 0; i < table.length; i++) {
         // For each parameter.
@@ -882,7 +901,7 @@ let transform = (function() {
           if (len > 0) {
             for (let k = 0; k < len; k++) {
               // Add a new row extended by the current column value.
-              let env = buildEnv(params, data[k]);
+              let env = buildEnv(keys, data[k]);
               evalExpr(env, col, (err, val) => {
                 row = [].concat(data[k]).concat(val);
                 newData.push(row);

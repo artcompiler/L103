@@ -169,6 +169,7 @@ window.gcexports.viewer = (function () {
 
   function getParams(table) {
     let keys = [];
+    let vals = [];
     let paramsList = [];
     table.select("thead").selectAll("tr").each((d, j, tr) => {
       d3.select(tr[j])
@@ -181,18 +182,20 @@ window.gcexports.viewer = (function () {
             });
         });
     });
+    paramsList.push(keys);
     table.select("tbody").selectAll("tr").each((d, j, tr) => {
-      paramsList[j] = {};
+      vals[j] = [];
       d3.select(tr[j])
         .selectAll("td")
         .each((d, i, td) => {
           d3.select(td[i])
             .selectAll("textarea")
             .each(function(d, k, ta) {
-              paramsList[j][keys[i]] = this.value;
+              vals[j][i] = this.value;
             });
         });
     });
+    paramsList = paramsList.concat(vals);
     return paramsList;
   }
 
@@ -217,70 +220,16 @@ window.gcexports.viewer = (function () {
       });
     return template;
   }
-
-  function getTable(params) {
-    let table = [];
-    Object.keys(params).forEach(key => {
-      let val = params[key];
-      let exprs = val.split(",");
-      let vals = [];
-      exprs.forEach(expr => {
-        let [r, incr=1] = expr.split(":");
-        let [start, stop] = r.split("..");
-        if (start >= stop) {
-          // Guard against nonsense.
-          stop = undefined;
-        }
-        if (stop === undefined) {
-          vals.push(start);
-        } else {
-          let e, n, t;
-          if (n = parseInt(start)) {
-            t = "I";
-            e = parseInt(stop);
-          } else if (n = parseFloat(start)) {
-            t = "F";
-            e = parseFloat(stop);
-          } else {
-            t = "V";
-            n = start.charCodeAt(0);
-            e = stop.charCodeAt(0);
-          }
-          incr = isNaN(+incr) ? 1 : +incr;
-          for (let i = 0; i <= (e - n); i += incr) {
-            switch (t) {
-            case "I":
-            case "F":
-              vals.push(String(n + i));
-              break;
-            case "V":
-              vals.push(String.fromCharCode(n+i) + start.substring(1));
-              break;
-            }
-          }
-        }
-      });
-      table.push(vals);
-    })
-    return table;
-  }
   // State Machine
   // start
   //   |--[text]---> dirty
   //   |--[check]--> dirty
   let isDirty = false;
   let isSaved = false;
-  // function onChange(e) {
-  //   // Once anything has changed, we use the in memory state,
-  //   // not the compiled state. These should be in sync until
-  //   // the next refesh.
-  //   isDirty = true;
-  // }
   function onUpdate(e) {
     // Update the state of the view. If the update target is a checkbox, then
     // we don't get the checks from the code.
-    let params = getParams(d3.select("table"))[0]; // Only one params in paramsList for now.
-    let table = getTable(params);
+    let params = getParams(d3.select("table"));
     checks = [];
     let recompileCode;
     if (e && e.target && e.target.className.indexOf("check") >= 0) {
@@ -688,8 +637,10 @@ window.gcexports.viewer = (function () {
     let thead = table.args[0];
     let tbody = table.args[1];
     thead.args[0].args = [];
-    tbody.args[0].args = [];
-    Object.keys(params).forEach((n, i) => {
+    tbody.args = [];
+    let keys = params[0];
+    let valsList = params.slice(1);
+    keys.forEach((n, i) => {
       thead.args[0].args.push({
         type: "th",
         args: [{
@@ -697,18 +648,25 @@ window.gcexports.viewer = (function () {
           value: n,
         }]
       });
-      // Use the parameter name if no value.
-      let val = params && (params[n] !== undefined && params[n].length > 0) ? params[n] : n;
-      tbody.args[0].args.push({
-        type: "td",
-        args: {
-          type: "textarea",
-          attrs: {},
-          style: {
-            width: "100"
+    });
+    valsList.forEach((vals, i) => {
+      let row = {
+        type: "tr",
+        args: [],
+      };
+      tbody.args.push(row);
+      vals.forEach((val, j) => {
+        row.args.push({
+          type: "td",
+          args: {
+            type: "textarea",
+            attrs: {},
+            style: {
+              width: "100"
+            },
+            args: [val],
           },
-          args: [val],
-        },
+        });
       });
     });
   }
@@ -772,10 +730,10 @@ window.gcexports.viewer = (function () {
                       {
                         "type": "tbody",
                         "args": [
-                          {
-                            "type": "tr",
-                            "args": [],
-                          }
+                          // {
+                          //   "type": "tr",
+                          //   "args": [],
+                          // }
                         ],
                       }
                     ],
