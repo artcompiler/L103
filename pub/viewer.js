@@ -402,7 +402,12 @@ window.gcexports.viewer = function () {
       });
       isDirty = true;
     } else {
-      // Otherwise, clear the dirty flag and the checks.
+      if (e && e.target && e.target.id === "plus") {
+        params = params.concat([params[params.length - 1]]);
+      } else if (e && e.target && e.target.id === "minus") {
+        params = params.slice(0, params.length - 1);
+      }
+      // Clear the dirty flag and the checks and recompile with new params.
       isDirty = false;
       checks = [];
       recompileCode = true;
@@ -745,9 +750,15 @@ window.gcexports.viewer = function () {
           elts.push(React.createElement("img", _extends({ key: i, style: n.style }, n.attrs)));
           break;
         case "a":
+          var clickHandler = void 0;
+          if (n.attrs.id === "plus" || n.attrs.id === "minus") {
+            clickHandler = function clickHandler(e) {
+              onUpdate(e);
+            };
+          }
           elts.push(React.createElement(
             "a",
-            _extends({ key: i, style: n.style }, n.attrs),
+            _extends({ key: i, style: n.style }, n.attrs, { onClick: clickHandler }),
             args
           ));
           break;
@@ -878,12 +889,45 @@ window.gcexports.viewer = function () {
               }]
             }, {
               "type": "tbody",
-              "args": [
-                // {
-                //   "type": "tr",
-                //   "args": [],
-                // }
-              ]
+              "args": []
+            }]
+          }, {
+            "type": "a",
+            "attrs": {
+              "id": "plus"
+            },
+            "args": [{
+              "type": "img",
+              "attrs": {
+                "id": "plus",
+                "width": "15",
+                "src": "plus-256.png",
+                "title": "Add row"
+              },
+              "style": {
+                "background": "#aaa",
+                "margin": "5 5 20 0",
+                "borderRadius": "4"
+              }
+            }]
+          }, {
+            "type": "a",
+            "attrs": {
+              "id": "minus"
+            },
+            "args": [{
+              "type": "img",
+              "attrs": {
+                "id": "minus",
+                "width": "15",
+                "src": "minus-256.png",
+                "title": "Remove row"
+              },
+              "style": {
+                "background": "#aaa",
+                "margin": "5 5 20 0",
+                "borderRadius": "4"
+              }
             }]
           }]
         }]
