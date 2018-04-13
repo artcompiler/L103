@@ -951,9 +951,11 @@ window.gcexports.viewer = (function () {
 //      var data = props.obj ? [].concat(props.obj) : [];
       var elts = render.call(this, this.ui, props, this.dirty);
       return (
-        <div className="section">
+        <div className="L122">
+          <div className="section">
           <div className="container">
             {elts}
+          </div>
           </div>
         </div>
       );

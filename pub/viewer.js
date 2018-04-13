@@ -1070,11 +1070,15 @@ window.gcexports.viewer = function () {
       var elts = _render.call(this, this.ui, props, this.dirty);
       return React.createElement(
         "div",
-        { className: "section" },
+        { className: "L122" },
         React.createElement(
           "div",
-          { className: "container" },
-          elts
+          { className: "section" },
+          React.createElement(
+            "div",
+            { className: "container" },
+            elts
+          )
         )
       );
     }
