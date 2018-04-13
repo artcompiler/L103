@@ -800,6 +800,7 @@ let transform = (function() {
         } else {
           keys = Object.keys(params);
           vals = [Object.values(params)];
+          params = [keys].concat(vals);  // Make new form for params.
         }
         // Create first row using param names.
         values.push(keys);
