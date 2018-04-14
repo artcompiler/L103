@@ -247,7 +247,7 @@ window.gcexports.viewer = (function () {
     } else {
       if (e && e.target && e.target.id === "plus") {
         params = params.concat([params[params.length - 1]]);
-      } else if (e && e.target && e.target.id === "minus") {
+      } else if (e && e.target && e.target.id === "minus" && params.length > 2) {
         params = params.slice(0, params.length - 1);
       }
       // Clear the dirty flag and the checks and recompile with new params.
