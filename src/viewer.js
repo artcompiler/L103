@@ -248,7 +248,9 @@ window.gcexports.viewer = (function () {
       if (e && e.target && e.target.id === "plus") {
         params = params.concat([params[params.length - 1]]);
       } else if (e && e.target && e.target.id === "minus" && params.length > 2) {
-        params = params.slice(0, params.length - 1);
+        let index = +e.target.attributes["data-index"].value + 1; // +1 to skip header.
+        // [1,2,3,4], index=3 => [1,2,3]
+        params = params.slice(0, index).concat(params.slice(index + 1));
       }
       // Clear the dirty flag and the checks and recompile with new params.
       isDirty = false;
@@ -689,7 +691,7 @@ window.gcexports.viewer = (function () {
           }] : [{
             "type": "a",
             "attrs": {
-              "id": "plus",
+              "id": "minus",
             },
             "args": [{
               "type": "img",
@@ -698,6 +700,7 @@ window.gcexports.viewer = (function () {
                 "width": "15",
                 "src": "minus-256.png",
                 "title": "Delete row",
+                "data-index": i,
               },
               "style": {
                 "background": "#aaa",
