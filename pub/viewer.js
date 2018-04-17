@@ -338,19 +338,19 @@ window.gcexports.viewer = function () {
     var keys = [];
     var vals = [];
     var paramsList = [];
-    table.select("thead").selectAll("tr").each(function (d, j, tr) {
-      d3.select(tr[j]).selectAll("th").each(function (d, i, th) {
-        d3.select(th[i]).selectAll("span").each(function (d, k, ta) {
-          keys[i] = this.textContent;
+    table.select("thead").selectAll("tr").each(function (d, i, tr) {
+      d3.select(tr[i]).selectAll("th").each(function (d, j, th) {
+        d3.select(th[j]).selectAll("span").each(function (d, k, ta) {
+          keys[j - 1] = this.textContent;
         });
       });
     });
     paramsList.push(keys);
-    table.select("tbody").selectAll("tr").each(function (d, j, tr) {
-      vals[j] = [];
-      d3.select(tr[j]).selectAll("td").each(function (d, i, td) {
-        d3.select(td[i]).selectAll("textarea").each(function (d, k, ta) {
-          vals[j][i] = this.value;
+    table.select("tbody").selectAll("tr").each(function (d, i, tr) {
+      vals[i] = [];
+      d3.select(tr[i]).selectAll("td").each(function (d, j, td) {
+        d3.select(td[j]).selectAll("textarea").each(function (d, k, ta) {
+          vals[i][j - 1] = this.value;
         });
       });
     });
@@ -800,7 +800,6 @@ window.gcexports.viewer = function () {
     });
     return elts;
   }
-
   function injectParamsIntoUI(ui, params) {
     var grid = ui[0];
     var table = grid.args[0].args[0].args[4]; // This is extremely brittle!
@@ -810,6 +809,10 @@ window.gcexports.viewer = function () {
     tbody.args = [];
     var keys = params[0];
     var valsList = params.slice(1);
+    thead.args[0].args.push({
+      type: "th",
+      args: []
+    });
     keys.forEach(function (n, i) {
       thead.args[0].args.push({
         type: "th",
@@ -822,7 +825,41 @@ window.gcexports.viewer = function () {
     valsList.forEach(function (vals, i) {
       var row = {
         type: "tr",
-        args: []
+        args: [{
+          type: "td",
+          args: valsList.length === 1 ? [{
+            // If only one row, then don't allow delete.
+            "type": "img",
+            "attrs": {
+              "id": "blank",
+              "width": "15",
+              "src": "blank.png"
+            },
+            "style": {
+              "margin": "5 5 5 0",
+              "borderRadius": "4"
+            }
+          }] : [{
+            "type": "a",
+            "attrs": {
+              "id": "plus"
+            },
+            "args": [{
+              "type": "img",
+              "attrs": {
+                "id": "minus",
+                "width": "15",
+                "src": "minus-256.png",
+                "title": "Delete row"
+              },
+              "style": {
+                "background": "#aaa",
+                "margin": "5 5 5 0",
+                "borderRadius": "4"
+              }
+            }]
+          }]
+        }]
       };
       tbody.args.push(row);
       vals.forEach(function (val, j) {
@@ -903,25 +940,6 @@ window.gcexports.viewer = function () {
                 "width": "15",
                 "src": "plus-256.png",
                 "title": "Add row"
-              },
-              "style": {
-                "background": "#aaa",
-                "margin": "5 5 20 0",
-                "borderRadius": "4"
-              }
-            }]
-          }, {
-            "type": "a",
-            "attrs": {
-              "id": "minus"
-            },
-            "args": [{
-              "type": "img",
-              "attrs": {
-                "id": "minus",
-                "width": "15",
-                "src": "minus-256.png",
-                "title": "Remove row"
               },
               "style": {
                 "background": "#aaa",

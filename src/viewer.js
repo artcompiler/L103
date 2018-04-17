@@ -171,27 +171,27 @@ window.gcexports.viewer = (function () {
     let keys = [];
     let vals = [];
     let paramsList = [];
-    table.select("thead").selectAll("tr").each((d, j, tr) => {
-      d3.select(tr[j])
+    table.select("thead").selectAll("tr").each((d, i, tr) => {
+      d3.select(tr[i])
         .selectAll("th")
-        .each((d, i, th) => {
-          d3.select(th[i])
+        .each((d, j, th) => {
+          d3.select(th[j])
             .selectAll("span")
             .each(function(d, k, ta) {
-              keys[i] = this.textContent;
+              keys[j - 1] = this.textContent;
             });
         });
     });
     paramsList.push(keys);
-    table.select("tbody").selectAll("tr").each((d, j, tr) => {
-      vals[j] = [];
-      d3.select(tr[j])
+    table.select("tbody").selectAll("tr").each((d, i, tr) => {
+      vals[i] = [];
+      d3.select(tr[i])
         .selectAll("td")
-        .each((d, i, td) => {
-          d3.select(td[i])
+        .each((d, j, td) => {
+          d3.select(td[j])
             .selectAll("textarea")
             .each(function(d, k, ta) {
-              vals[j][i] = this.value;
+              vals[i][j - 1] = this.value;
             });
         });
     });
@@ -639,7 +639,6 @@ window.gcexports.viewer = (function () {
     });
     return elts;
   }
-
   function injectParamsIntoUI(ui, params) {
     let grid = ui[0];
     let table = grid.args[0].args[0].args[4];  // This is extremely brittle!
@@ -649,6 +648,10 @@ window.gcexports.viewer = (function () {
     tbody.args = [];
     let keys = params[0];
     let valsList = params.slice(1);
+    thead.args[0].args.push({
+      type: "th",
+      args: [],
+    });
     keys.forEach((n, i) => {
       thead.args[0].args.push({
         type: "th",
@@ -661,7 +664,41 @@ window.gcexports.viewer = (function () {
     valsList.forEach((vals, i) => {
       let row = {
         type: "tr",
-        args: [],
+        args: [{
+          type: "td",
+          args: valsList.length === 1 ? [{
+            // If only one row, then don't allow delete.
+            "type": "img",
+            "attrs": {
+              "id": "blank",
+              "width": "15",
+              "src": "blank.png",
+            },
+            "style": {
+              "margin": "5 5 5 0",
+              "borderRadius": "4",
+            },
+          }] : [{
+            "type": "a",
+            "attrs": {
+              "id": "plus",
+            },
+            "args": [{
+              "type": "img",
+              "attrs": {
+                "id": "minus",
+                "width": "15",
+                "src": "minus-256.png",
+                "title": "Delete row",
+              },
+              "style": {
+                "background": "#aaa",
+                "margin": "5 5 5 0",
+                "borderRadius": "4",
+              },
+            }],
+          }],
+        }],
       };
       tbody.args.push(row);
       vals.forEach((val, j) => {
@@ -754,25 +791,6 @@ window.gcexports.viewer = (function () {
                         "width": "15",
                         "src": "plus-256.png",
                         "title": "Add row",
-                      },
-                      "style": {
-                        "background": "#aaa",
-                        "margin": "5 5 20 0",
-                        "borderRadius": "4",
-                      },
-                    }],
-                  }, {
-                    "type": "a",
-                    "attrs": {
-                      "id": "minus",
-                    },
-                    "args": [{
-                      "type": "img",
-                      "attrs": {
-                        "id": "minus",
-                        "width": "15",
-                        "src": "minus-256.png",
-                        "title": "Remove row",
                       },
                       "style": {
                         "background": "#aaa",
