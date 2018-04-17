@@ -807,8 +807,8 @@ window.gcexports.viewer = function () {
     var tbody = table.args[1];
     thead.args[0].args = [];
     tbody.args = [];
-    var keys = params[0];
-    var valsList = params.slice(1);
+    var keys = void 0,
+        valsList = void 0;
     if (params instanceof Array) {
       keys = params[0];
       valsList = params.slice(1);

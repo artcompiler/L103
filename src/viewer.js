@@ -646,8 +646,7 @@ window.gcexports.viewer = (function () {
     let tbody = table.args[1];
     thead.args[0].args = [];
     tbody.args = [];
-    let keys = params[0];
-    let valsList = params.slice(1);
+    let keys, valsList;
     if (params instanceof Array) {
       keys = params[0];
       valsList = params.slice(1);
