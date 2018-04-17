@@ -816,7 +816,7 @@ window.gcexports.viewer = function () {
       // Record form of params (deprecated).
       keys = Object.keys(params);
       valsList = [Object.values(params)];
-      params = [keys].concat(vals); // Make new form for params.
+      params = [keys].concat(valsList); // Make new form for params.
     }
     thead.args[0].args.push({
       type: "th",
