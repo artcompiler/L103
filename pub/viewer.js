@@ -809,6 +809,15 @@ window.gcexports.viewer = function () {
     tbody.args = [];
     var keys = params[0];
     var valsList = params.slice(1);
+    if (params instanceof Array) {
+      keys = params[0];
+      valsList = params.slice(1);
+    } else {
+      // Record form of params (deprecated).
+      keys = Object.keys(params);
+      valsList = [Object.values(params)];
+      params = [keys].concat(vals); // Make new form for params.
+    }
     thead.args[0].args.push({
       type: "th",
       args: []
