@@ -399,17 +399,17 @@ let transform = (function() {
       });
     });
   }
-  function literal(node, options, resume) {
+  function seed(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      let obj = {
-        value: val,
-        seed: val,
-        // steps: [{
-        //   name: "seed",
-        //   val: val,
-        // }],
-      };
-      resume([], obj);
+      if (typeof val === "string") {
+        val = {
+          value: val,
+          seed: val,
+        }
+      } else {
+        val.seed = val.value;
+      }
+      resume([], val);
     });
   }
   function stimulus(node, options, resume) {
@@ -418,9 +418,11 @@ let transform = (function() {
         val = {
           value: val,
           stimulus: val,
+          seed: val,
         }
       } else {
         val.stimulus = val.value;
+        val.seed = val.value;
       }
       resume([], val);
     });
@@ -1028,7 +1030,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
       val.checks = options.data && options.data.checks || undefined;
-      val.context = options.data && options.data.context || options.context || "{stimulus}";
+      val.context = options.data && options.data.context || options.context || "{seed}";
       val.template = options.data && options.data.template || options.template || "{response}";
       resume(err, val);
     });
@@ -1060,7 +1062,8 @@ let transform = (function() {
     "APART": apart,
     "MATCH": match,
     "CONCAT" : concat,
-    "LITERAL": literal,
+    "LITERAL": seed,
+    "SEED": seed,
     "STIMULUS": stimulus,
     "SOLUTION": solution,
     "FORMAT": format,
@@ -1290,7 +1293,7 @@ let render = (function() {
     let isFirst = true;
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
-      let context = v.context || "{stimulus}";
+      let context = v.context || "{seed}";
       let template = v.template || "{response}";
       // For each set of arguments...
       let lst = [];
@@ -1441,7 +1444,7 @@ let render = (function() {
         cntx = outStr;
         // Get the right order.
         lst.unshift({
-          name: "stimulus",
+          name: "context",
           val: getLaTeX(cntx, true),
         });
         isFirst = false;

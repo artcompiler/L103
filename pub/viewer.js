@@ -314,26 +314,26 @@ window.gcexports.viewer = function () {
         null,
         elts
       ) : React.createElement("div", null);
-      function unescapeXML(str) {
-        return String(str).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "'");
-      }
-      function getSize(svg) {
-        svg = svg.slice(svg.indexOf("width=") + 7 + 5);
-        var width = svg.slice(0, svg.indexOf("ex")) * 8; // ex=8px
-        svg = svg.slice(svg.indexOf("height=") + 8 + 5);
-        var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
-        if (isNaN(width) || isNaN(height)) {
-          width = 640;
-          height = 30;
-        }
-        return {
-          width: width,
-          height: height
-        };
-      }
     }
   });
 
+  function unescapeXML(str) {
+    return String(str).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "'");
+  }
+  function getSize(svg) {
+    svg = svg.slice(svg.indexOf("width=") + 7 + 5);
+    var width = svg.slice(0, svg.indexOf("ex")) * 8; // ex=8px
+    svg = svg.slice(svg.indexOf("height=") + 8 + 5);
+    var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
+    if (isNaN(width) || isNaN(height)) {
+      width = 640;
+      height = 30;
+    }
+    return {
+      width: width,
+      height: height
+    };
+  }
   function getParams(table) {
     var keys = [];
     var vals = [];
@@ -749,7 +749,26 @@ window.gcexports.viewer = function () {
           ));
           break;
         case "img":
-          elts.push(React.createElement("img", _extends({ key: i, style: n.style }, n.attrs)));
+          if (n.attrs.id === "seed") {
+            var val = props.obj.data[0].val;
+            var svg = val[val.length - 1].svg;
+            var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
+
+            var _getSize2 = getSize(svg),
+                width = _getSize2.width,
+                height = _getSize2.height;
+
+            elts.push(React.createElement(
+              "div",
+              { style: {
+                  //              background:"#f3f3f3",
+                  margin: "20 0 10 0"
+                } },
+              React.createElement("img", _extends({ key: i, style: n.style }, n.attrs, { width: width, height: height, src: src }))
+            ));
+          } else {
+            elts.push(React.createElement("img", _extends({ key: i, style: n.style }, n.attrs)));
+          }
           break;
         case "a":
           var clickHandler = void 0;
@@ -804,7 +823,7 @@ window.gcexports.viewer = function () {
   }
   function injectParamsIntoUI(ui, params) {
     var grid = ui[0];
-    var table = grid.args[0].args[0].args[4]; // This is extremely brittle!
+    var table = grid.args[1].args[0].args[1]; // This is extremely brittle!
     var thead = table.args[0];
     var tbody = table.args[1];
     thead.args[0].args = [];
@@ -899,6 +918,9 @@ window.gcexports.viewer = function () {
       "type": "grid",
       "args": [{
         "type": "row",
+        "style": {
+          "borderBottom": "1px solid #ddd"
+        },
         "args": [{
           "type": "twelveColumns",
           "args": [{
@@ -925,9 +947,28 @@ window.gcexports.viewer = function () {
               id: "template"
             },
             "style": {
-              "margin": "10 0 0 0"
+              "margin": "10 0 20 0"
             },
             args: []
+          }]
+        }]
+      }, {
+        "type": "row",
+        "style": {
+          "borderBottom": "1px solid #ddd"
+        },
+        "args": [{
+          "type": "twelveColumns",
+          "args": [{
+            "type": "img",
+            "attrs": {
+              id: "seed"
+            },
+            "style": {
+              "display": "block",
+              "margin": "10 auto 5 auto"
+            },
+            "args": []
           }, {
             "type": "table",
             "args": [{
@@ -977,7 +1018,7 @@ window.gcexports.viewer = function () {
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
               "borderRadius": "4",
               "borderWidth": "1",
-              "margin": "0 0 10 0"
+              "margin": "20 0 10 0"
             }
           }]
         }, {
@@ -994,7 +1035,7 @@ window.gcexports.viewer = function () {
               "background": "rgba(8, 149, 194, 0.10)", // #0895c2
               "borderRadius": "4",
               "borderWidth": "1",
-              "margin": "0 0 10 0"
+              "margin": "20 0 10 0"
             }
           }]
         }]

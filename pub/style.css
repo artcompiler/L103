@@ -352,7 +352,7 @@ td:last-child {
 .L122 .button {
   margin-bottom: 1rem; }
 .L122 input,
-.L122 textarea,
+//.L122 textarea,
 .L122 select,
 .L122 fieldset {
   margin-bottom: 1.5rem;}

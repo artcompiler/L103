@@ -24,7 +24,7 @@ window.gcexports.globalLexicon = {
   "diff" : { "tk": 1, "name": "DIFF", "cls": "function", "length": 1 , "arity": 1 },
   "decimal" : { "tk": 1, "name": "DECIMAL", "cls": "function", "length": 1 , "arity": 1 },
   "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
-  "seed" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1 , "arity": 1 },
+  "seed" : { "tk": 1, "name": "SEED", "cls": "function", "length": 1 , "arity": 1 },
   "stimulus" : { "tk": 1, "name": "STIMULUS", "cls": "function", "length": 1 , "arity": 1 },
   "solution" : { "tk": 1, "name": "SOLUTION", "cls": "function", "length": 1 , "arity": 1 },
   "format" : { "tk": 1, "name": "FORMAT", "cls": "function", "length": 2 , "arity": 2 },

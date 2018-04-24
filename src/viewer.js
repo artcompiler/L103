@@ -143,30 +143,30 @@ window.gcexports.viewer = (function () {
       return (
         elts.length > 0 ? <div>{elts}</div> : <div/>
       );
-      function unescapeXML(str) {
-        return String(str)
-          .replace(/&amp;/g, "&")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/&quot;/g, "'");
-      }
-      function getSize(svg) {
-        svg = svg.slice(svg.indexOf("width=") + 7 + 5);
-        var width = svg.slice(0, svg.indexOf("ex")) * 8;  // ex=8px
-        svg = svg.slice(svg.indexOf("height=") + 8 + 5);
-        var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
-        if (isNaN(width) || isNaN(height)) {
-          width = 640;
-          height = 30;
-        }
-        return {
-          width: width,
-          height: height
-        }
-      }
     },
   });
 
+  function unescapeXML(str) {
+    return String(str)
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, "'");
+  }
+  function getSize(svg) {
+    svg = svg.slice(svg.indexOf("width=") + 7 + 5);
+    var width = svg.slice(0, svg.indexOf("ex")) * 8;  // ex=8px
+    svg = svg.slice(svg.indexOf("height=") + 8 + 5);
+    var height = svg.slice(0, svg.indexOf("ex")) * 8 + 5;
+    if (isNaN(width) || isNaN(height)) {
+      width = 640;
+      height = 30;
+    }
+    return {
+      width: width,
+      height: height
+    }
+  }
   function getParams(table) {
     let keys = [];
     let vals = [];
@@ -592,9 +592,24 @@ window.gcexports.viewer = (function () {
         );
         break;
       case "img":
-        elts.push(
-          <img key={i} style={n.style} {...n.attrs}/>
-        );
+        if (n.attrs.id === "seed") {
+          let val = props.obj.data[0].val;
+          let svg = val[val.length - 1].svg;
+          let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
+          let {width, height} = getSize(svg);
+          elts.push(
+            <div style={{
+//              background:"#f3f3f3",
+              margin:"20 0 10 0",
+            }}>
+            <img key={i} style={n.style} {...n.attrs} width={width} height={height} src={src}/>
+            </div>
+          );
+        } else {
+          elts.push(
+            <img key={i} style={n.style} {...n.attrs}/>
+          );
+        }
         break;
       case "a":
         let clickHandler;
@@ -643,7 +658,7 @@ window.gcexports.viewer = (function () {
   }
   function injectParamsIntoUI(ui, params) {
     let grid = ui[0];
-    let table = grid.args[0].args[0].args[4];  // This is extremely brittle!
+    let table = grid.args[1].args[0].args[1];  // This is extremely brittle!
     let thead = table.args[0];
     let tbody = table.args[1];
     thead.args[0].args = [];
@@ -734,161 +749,159 @@ window.gcexports.viewer = (function () {
     ui: [
       {
         "type": "grid",
-        "args": [
-          {
-            "type": "row",
-            "args": [
-              {
-                "type": "twelveColumns",
-                "args": [
-                  {
-                    "type": "h4",
-                    "attrs": {
-                      id: "title",
-                    },
-                    args: [],
+        "args": [{
+          "type": "row",
+          "style": {
+            "borderBottom": "1px solid #ddd",
+          },
+          "args": [
+            {
+              "type": "twelveColumns",
+              "args": [
+                {
+                  "type": "h4",
+                  "attrs": {
+                    id: "title",
                   },
-                  {
-                    "type": "h6",
-                    "attrs": {
-                      id: "notes",
-                    },
-                    args: [],
+                  args: [],
+                },
+                {
+                  "type": "h6",
+                  "attrs": {
+                    id: "notes",
                   },
-                  {
-                    "type": "textarea",
-                    "attrs": {
-                      id: "context",
-                    },
-                    args: [],
+                  args: [],
+                },
+                {
+                  "type": "textarea",
+                  "attrs": {
+                    id: "context",
                   },
-                  {
-                    "type": "textarea",
-                    "attrs": {
-                      id: "template",
-                    },
-                    "style": {
-                      "margin": "10 0 0 0",
-                    },
-                    args: [],
+                  args: [],
+                },
+                {
+                  "type": "textarea",
+                  "attrs": {
+                    id: "template",
                   },
-                  {
-                    "type": "table",
-                    "args": [
-                      {
-                        "type": "thead",
-                        "args": [
-                          {
-                            "type": "tr",
-                            "args": [],
-                          }
-                        ],
-                      },
-                      {
-                        "type": "tbody",
-                        "args": [
-                        ],
-                      }
-                    ],
-                  }, {
-                    "type": "a",
-                    "attrs": {
-                      "id": "plus",
-                    },
-                    "args": [{
-                      "type": "img",
-                      "attrs": {
-                        "id": "plus",
-                        "width": "15",
-                        "src": "plus-256.png",
-                        "title": "Add row",
-                      },
-                      "style": {
-                        "background": "#aaa",
-                        "margin": "5 5 20 0",
-                        "borderRadius": "4",
-                      },
-                    }],
+                  "style": {
+                    "margin": "10 0 20 0",
                   },
-                ],
+                  args: [],
+                },
+              ],
+            },
+          ],
+        }, {
+          "type": "row",
+          "style": {
+            "borderBottom": "1px solid #ddd",
+          },
+          "args": [{
+            "type": "twelveColumns",
+            "args": [{
+              "type": "img",
+              "attrs": {
+                id: "seed",
               },
-            ],
-          }, {
-            "type": "row",
-            "args": [
-              {
-                "id": "previewButton",
-                "type": "sixColumns",
-                "args": [
-                  {
-                    "type": "button",
-                    "attrs": {
-                      "id": "preview",
-                    },
-                    "value": "PREVIEW",
-                    "style": {
-                      "width": "100%",
-                      "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
-                      "borderRadius": "4",
-                      "borderWidth": "1",
-                      "margin": "0 0 10 0",
-                    },
-                  },
-                ],
+              "style": {
+                "display": "block",
+                "margin": "10 auto 5 auto",
               },
-              {
-                "id": "saveButton",
-                "type": "sixColumns",
-                "args": [
-                  {
-                    "type": "button",
-                    "attrs": {
-                      "id": "save",
-                    },
-                    "value": "SAVE ITEMS",
-                    "style": {
-                      "width": "100%",
-                      "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
-                      "borderRadius": "4",
-                      "borderWidth": "1",
-                      "margin": "0 0 10 0",
-                    },
-                  },
-                ],
+              "args": [],
+            }, {
+              "type": "table",
+              "args": [
+                {
+                  "type": "thead",
+                  "args": [
+                    {
+                      "type": "tr",
+                      "args": [],
+                    }
+                  ],
+                }, {
+                  "type": "tbody",
+                  "args": [
+                  ],
+                }
+              ],
+            }, {
+              "type": "a",
+              "attrs": {
+                "id": "plus",
               },
-              // {
-              //   "id": "sourceButton",
-              //   "type": "fourColumns",
-              //   "args": [
-              //     {
-              //       "type": "button",
-              //       "attrs": {
-              //         "id": "source",
-              //       },
-              //       "value": "VIEW SOURCE",
-              //       "style": {
-              //         "width": "100%",
-              //         "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
-              //         "borderRadius": "4",
-              //         "borderWidth": "1",
-              //         "margin": "0 0 10 0",
-              //       },
-              //     },
-              //   ],
-              // },
-            ],
-          }, {
-            "type": "row",
-            "args": [
-              {
-                "id": "math",
-                "type": "twelveColumns",
-                "args": [
-                ],
-              }
-            ],
-          }
-        ]
+              "args": [{
+                "type": "img",
+                "attrs": {
+                  "id": "plus",
+                  "width": "15",
+                  "src": "plus-256.png",
+                  "title": "Add row",
+                },
+                "style": {
+                  "background": "#aaa",
+                  "margin": "5 5 20 0",
+                  "borderRadius": "4",
+                },
+              }],
+            }], 
+          }]
+        }, {
+          "type": "row",
+          "args": [
+            {
+              "id": "previewButton",
+              "type": "sixColumns",
+              "args": [
+                {
+                  "type": "button",
+                  "attrs": {
+                    "id": "preview",
+                  },
+                  "value": "PREVIEW",
+                  "style": {
+                    "width": "100%",
+                    "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
+                    "borderRadius": "4",
+                    "borderWidth": "1",
+                    "margin": "20 0 10 0",
+                  },
+                },
+              ],
+            },
+            {
+              "id": "saveButton",
+              "type": "sixColumns",
+              "args": [
+                {
+                  "type": "button",
+                  "attrs": {
+                    "id": "save",
+                  },
+                  "value": "SAVE ITEMS",
+                  "style": {
+                    "width": "100%",
+                    "background": "rgba(8, 149, 194, 0.10)",  // #0895c2
+                    "borderRadius": "4",
+                    "borderWidth": "1",
+                    "margin": "20 0 10 0",
+                  },
+                },
+              ],
+            },
+          ],
+        }, {
+          "type": "row",
+          "args": [
+            {
+              "id": "math",
+              "type": "twelveColumns",
+              "args": [
+              ],
+            }
+          ],
+        }]
       }
     ],
     postData(data, resume) {
