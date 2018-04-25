@@ -279,7 +279,7 @@ window.gcexports.viewer = function () {
               "td",
               { key: "0", width: "20", style: style },
               React.createElement("input", { type: "checkbox",
-                checked: checked,
+                checked: checked, id: "selectAll",
                 className: "check" + (isTemplate ? " selectAll" : ""),
                 onChange: onUpdate,
                 style: { borderBottom: 0 } })
@@ -294,10 +294,14 @@ window.gcexports.viewer = function () {
               leftCol,
               React.createElement(
                 "td",
-                { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
+                { key: "1", x: x, y: y, style: { padding: "12.5 0 11.5 10" } },
                 React.createElement(
                   "span",
-                  { style: { fontSize: "85%", fontWeight: "600" } },
+                  { style: { fontSize: "11px",
+                      fontWeight: "600",
+                      color: "#555",
+                      letterSpacing: ".1rem"
+                    } },
                   "SELECT ALL"
                 )
               )
@@ -410,6 +414,9 @@ window.gcexports.viewer = function () {
       if (e.target.className.indexOf("selectAll") >= 0) {
         var state = e.target.checked;
         d3.selectAll(".check").property("checked", state);
+      } else {
+        // If not select all, then turn it off.
+        d3.select("#selectAll").property("checked", false);
       }
       // If target is a checkbox, then save the state of the checks.
       d3.selectAll(".check").nodes().forEach(function (d, i) {
