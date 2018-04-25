@@ -249,7 +249,7 @@ window.gcexports.viewer = function () {
         var x = 0;
         var bodyElts = [];
         data.val.forEach(function (d, j) {
-          if (isTemplate && j > 0) {
+          if (isTemplate && j > 0 || d.name === "seed") {
             // Only display the template stimulus
             return;
           }
@@ -966,7 +966,7 @@ window.gcexports.viewer = function () {
             },
             "style": {
               "display": "block",
-              "margin": "10 auto 5 auto"
+              "margin": "10 auto 5 30"
             },
             "args": []
           }, {

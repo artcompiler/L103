@@ -99,7 +99,7 @@ window.gcexports.viewer = (function () {
         let bodyElts = [
         ];
         data.val.forEach((d, j) => {
-          if (isTemplate && j > 0) {
+          if (isTemplate && j > 0 || d.name === "seed") {
             // Only display the template stimulus
             return;
           }
@@ -806,7 +806,7 @@ window.gcexports.viewer = (function () {
               },
               "style": {
                 "display": "block",
-                "margin": "10 auto 5 auto",
+                "margin": "10 auto 5 30",
               },
               "args": [],
             }, {
