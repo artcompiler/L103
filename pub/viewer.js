@@ -249,7 +249,7 @@ window.gcexports.viewer = function () {
         var x = 0;
         var bodyElts = [];
         data.val.forEach(function (d, j) {
-          if (isTemplate || d.name === "seed") {
+          if (isTemplate && j > 0 || d.name === "seed") {
             // Skip some stuff.
             return;
           }
@@ -287,16 +287,33 @@ window.gcexports.viewer = function () {
           } else {
             leftCol = React.createElement("td", { key: "0", width: "20", style: style });
           }
-          bodyElts.push(React.createElement(
-            "tr",
-            { key: j },
-            leftCol,
-            React.createElement(
-              "td",
-              { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
-              React.createElement("img", { width: width, height: height, src: src })
-            )
-          ));
+          if (isTemplate) {
+            bodyElts.push(React.createElement(
+              "tr",
+              { key: j },
+              leftCol,
+              React.createElement(
+                "td",
+                { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
+                React.createElement(
+                  "span",
+                  { style: { fontSize: "85%", fontWeight: "600" } },
+                  "SELECT ALL"
+                )
+              )
+            ));
+          } else {
+            bodyElts.push(React.createElement(
+              "tr",
+              { key: j },
+              leftCol,
+              React.createElement(
+                "td",
+                { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
+                React.createElement("img", { width: width, height: height, src: src })
+              )
+            ));
+          }
         });
         key++;
         elts.push(React.createElement(

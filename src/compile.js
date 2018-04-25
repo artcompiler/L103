@@ -1030,7 +1030,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       // Copy checks into object code.
       val.checks = options.data && options.data.checks || undefined;
-      val.context = options.data && options.data.context || options.context || "{seed}";
+      val.context = options.data && options.data.context || options.context || "{stimulus}";
       val.template = options.data && options.data.template || options.template || "{response}";
       resume(err, val);
     });
@@ -1293,7 +1293,7 @@ let render = (function() {
     let isFirst = true;
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
-      let context = v.context || "{seed}";
+      let context = v.context || "{stimulus}";
       let template = v.template || "{response}";
       // For each set of arguments...
       let lst = [];
@@ -1444,7 +1444,7 @@ let render = (function() {
         cntx = outStr;
         // Get the right order.
         lst.unshift({
-          name: "context",
+          name: "stimulus",
           val: getLaTeX(cntx, true),
         });
         isFirst = false;

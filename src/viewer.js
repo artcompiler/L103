@@ -99,7 +99,7 @@ window.gcexports.viewer = (function () {
         let bodyElts = [
         ];
         data.val.forEach((d, j) => {
-          if (isTemplate || d.name === "seed") {
+          if (isTemplate && j > 0 || d.name === "seed") {
             // Skip some stuff.
             return;
           }
@@ -129,11 +129,20 @@ window.gcexports.viewer = (function () {
           } else {
             leftCol = <td key="0" width="20" style={style}/>;
           }
-          bodyElts.push(
-              <tr key={j}>
+          if (isTemplate) {
+            bodyElts.push(
+                <tr key={j}>
+                {leftCol}
+                <td key="1" x={x} y={y} style={j === 0 ? style : bottomStyle}>
+                <span style={{fontSize: "85%", fontWeight: "600"}}>SELECT ALL</span></td>
+                </tr>);
+          } else {
+            bodyElts.push(
+                <tr key={j}>
                 {leftCol}
                 <td key="1" x={x} y={y} style={j === 0 ? style : bottomStyle}><img width={width} height={height} src={src}/></td>
-              </tr>);
+                </tr>);
+          }
         });
         key++;
         elts.push(<table key={key} style={{marginBottom: "0", marginTop: "20", background: "#f3f3f3"}} width="100%">
