@@ -99,8 +99,8 @@ window.gcexports.viewer = (function () {
         let bodyElts = [
         ];
         data.val.forEach((d, j) => {
-          if (isTemplate && j > 0 || d.name === "seed") {
-            // Only display the template stimulus
+          if (isTemplate || d.name === "seed") {
+            // Skip some stuff.
             return;
           }
           var style = {};
@@ -840,7 +840,7 @@ window.gcexports.viewer = (function () {
                 },
                 "style": {
                   "background": "#aaa",
-                  "margin": "5 5 20 0",
+                  "margin": "5 5 20 30",
                   "borderRadius": "4",
                 },
               }],
