@@ -598,11 +598,10 @@ window.gcexports.viewer = (function () {
           let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
           let {width, height} = getSize(svg);
           elts.push(
-            <div style={{
-//              background:"#f3f3f3",
+            <div key={i} style={{
               margin:"20 0 10 0",
             }}>
-            <img key={i} style={n.style} {...n.attrs} width={width} height={height} src={src}/>
+            <img key="0" style={n.style} {...n.attrs} width={width} height={height} src={src}/>
             </div>
           );
         } else {

@@ -760,11 +760,10 @@ window.gcexports.viewer = function () {
 
             elts.push(React.createElement(
               "div",
-              { style: {
-                  //              background:"#f3f3f3",
+              { key: i, style: {
                   margin: "20 0 10 0"
                 } },
-              React.createElement("img", _extends({ key: i, style: n.style }, n.attrs, { width: width, height: height, src: src }))
+              React.createElement("img", _extends({ key: "0", style: n.style }, n.attrs, { width: width, height: height, src: src }))
             ));
           } else {
             elts.push(React.createElement("img", _extends({ key: i, style: n.style }, n.attrs)));
