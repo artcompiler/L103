@@ -1,5 +1,5 @@
 /* @flow */
-window.gcexports.helpID = "3LXuMed7S0";
+window.gcexports.helpID = "xVQCd9j7Ho";
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
   "precision" : { "tk": 1, "name": "PRECISION", "cls": "function", "length": 2 , "arity": 2 },
