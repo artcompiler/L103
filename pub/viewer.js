@@ -1164,10 +1164,11 @@ window.gcexports.viewer = function () {
       var elts = _render.call(this, this.ui, props, this.dirty);
       return React.createElement(
         "div",
-        { className: "L122" },
+        null,
+        React.createElement("link", { rel: "stylesheet", href: "https://l122.artcompiler.com/style.css" }),
         React.createElement(
           "div",
-          { className: "section" },
+          { className: "L122 section" },
           React.createElement(
             "div",
             { className: "container" },

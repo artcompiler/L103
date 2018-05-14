@@ -1008,8 +1008,9 @@ window.gcexports.viewer = (function () {
 //      var data = props.obj ? [].concat(props.obj) : [];
       var elts = render.call(this, this.ui, props, this.dirty);
       return (
-        <div className="L122">
-          <div className="section">
+        <div>
+          <link rel="stylesheet" href="https://l122.artcompiler.com/style.css" />
+          <div className="L122 section">
           <div className="container">
             {elts}
           </div>
