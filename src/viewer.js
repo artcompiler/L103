@@ -3,6 +3,7 @@
 import {assert, message, messages, reserveCodeRange} from "./assert";
 import * as React from "react";
 import * as d3 from "d3";
+const MATHJAX = false;
 window.gcexports.viewer = (function () {
   function capture(el) {
     var mySVG = $(el).html();
@@ -112,13 +113,21 @@ window.gcexports.viewer = (function () {
           }
           style.padding = "10 0 10 10";
           let bottomStyle = Object.assign({}, style, {borderTop: "0.5px solid #ddd"});
-          let val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
-          if (val instanceof Array) {
-            val = val.join(" ");
+          let val, src, width, height, n;
+          if (MATHJAX) {
+            val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
+            if (val instanceof Array) {
+              val = val.join(" ");
+            }
+            src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+            ({width, height} = getSize(val));
+          } else {
+            val = d.val;
+            if (val instanceof Array) {
+              val = val.join(" ");
+            }
           }
-          let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
-          let {width, height} = getSize(val);
-          let n = 2*i;
+          n = 2 * i;
           let leftCol;
           if (j === 0) {
             leftCol = <td key="0" width="20" style={style}><input type="checkbox"
@@ -141,11 +150,23 @@ window.gcexports.viewer = (function () {
                              }}>SELECT ALL</span></td>
                 </tr>);
           } else {
-            bodyElts.push(
-                <tr key={j}>
-                {leftCol}
-                <td key="1" x={x} y={y} style={j === 0 ? style : bottomStyle}><img width={width} height={height} src={src}/></td>
-                </tr>);
+            if (MATHJAX) {
+              bodyElts.push(
+                  <tr key={j}>
+                  {leftCol}
+                  <td key="1" x={x} y={y} style={j === 0 ? style : bottomStyle}>
+                     <img width={width} height={height} src={src}/>
+                  </td>
+                  </tr>);
+            } else {
+              bodyElts.push(
+                  <tr key={j}>
+                  {leftCol}
+                    <td key="1" x={x} y={y} style={j === 0 ? style : bottomStyle}>
+                      {splitValue(val, name === "solution")}
+                    </td>
+                  </tr>);
+            }
           }
         });
         key++;
@@ -166,6 +187,7 @@ window.gcexports.viewer = (function () {
       .replace(/&gt;/g, ">")
       .replace(/&quot;/g, "'");
   }
+
   function getSize(svg) {
     svg = svg.slice(svg.indexOf("width=") + 7 + 5);
     var width = svg.slice(0, svg.indexOf("ex")) * 8;  // ex=8px
@@ -229,7 +251,7 @@ window.gcexports.viewer = (function () {
     let template = "";
     d3.select("#template")
       .each(function(d, k, ta) {
-         template += this.value || "";
+        template += this.value || "";
       });
     return template;
   }
@@ -557,12 +579,12 @@ window.gcexports.viewer = (function () {
         break;
       case "textarea":
         if (n.attrs.id === "context") {
-          let context = props.data.context !== undefined ? props.data.context : props.obj.context;
+          let context = props.data.context || props.obj.context;
           let e = <TextArea key={i} name="context" style={n.style} {...this.props}
                           initValue={context} rows="2"/>
           elts.push(e);
         } else if (n.attrs.id === "template") {
-          let template = props.data.template !== undefined ? props.data.template : props.obj.template;
+          let template = props.data.template || props.obj.template;
           elts.push(
               <TextArea key={i} name="template" style={n.style} {...this.props}
                       initValue={template} rows="2"/>
@@ -610,16 +632,28 @@ window.gcexports.viewer = (function () {
       case "img":
         if (n.attrs.id === "seed") {
           let val = props.obj.data[0].val;
-          let svg = val[val.length - 1].svg;
-          let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
-          let {width, height} = getSize(svg);
-          elts.push(
-            <div key={i} style={{
-              margin:"20 0 10 0",
-            }}>
-            <img key="0" style={n.style} {...n.attrs} width={width} height={height} src={src}/>
-            </div>
-          );
+          if (MATHJAX) {
+            let svg = val[val.length - 1].svg;
+            let src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
+            let {width, height} = getSize(svg);
+            elts.push(
+              <div key={i} style={{
+                margin:"20 0 10 0",
+              }}>
+              <img key="0" style={n.style} {...n.attrs} width={width} height={height} src={src}/>
+              </div>
+            );
+          } else {
+            elts.push(
+              <div key={i} style={{
+                fontSize: "20",
+                margin: "20 auto 10 auto",
+                textAlign: "center",
+              }}>
+              {splitValue(val[val.length - 1].val, true)}
+              </div>
+            );
+          }
         } else {
           elts.push(
             <img key={i} style={n.style} {...n.attrs}/>
@@ -984,9 +1018,30 @@ window.gcexports.viewer = (function () {
         }
       }
     },
+    renderMath () {
+      if (window.MathQuill) {
+        d3.selectAll(".mq").each((v, i, e) => {
+          try {
+            let MQ = MathQuill.getInterface(2);
+            let mathQuill = MQ.StaticMath(e[i]);
+          } catch (x) {
+            console.log("ERROR rendering MathQuill: " + x);
+          }
+        });
+      }
+    },
     getItemID() {
       let href = window.location.href;
       return href.substring(href.indexOf("id=") + 3);
+    },
+    componentDidUpdate () {
+      if (!MATHJAX) {
+        d3.select("#context")
+          .each((d, k, elts) => {
+            elts[k].placeholder = this.props.obj.context;
+          });
+        this.renderMath();
+      }
     },
     componentDidMount () {
       let params = this.props.obj.params;
@@ -995,17 +1050,23 @@ window.gcexports.viewer = (function () {
       keys.forEach((k) => {
         vals.push(params[k]);
       });
+      if (!MATHJAX) {
+        loadScript("/mathquill.js", () => {
+          loadStyle("/mathquill.css", () => {
+            this.componentDidUpdate();
+          });
+        });
+      }
     },
     render: function () {
       // If you have nested components, make sure you send the props down to the
       // owned components.
       let props = this.props;
       codeID = props.obj.gen;
-      let params = props.data.params || props.obj.params;
+      let params = props.data && props.data.params || props.obj.params;
       if (params) {
         injectParamsIntoUI(this.ui, params);
       }
-//      var data = props.obj ? [].concat(props.obj) : [];
       var elts = render.call(this, this.ui, props, this.dirty);
       return (
         <div>

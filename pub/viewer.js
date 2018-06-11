@@ -143,6 +143,7 @@ var d3 = _interopRequireWildcard(_d);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+var MATHJAX = false;
 window.gcexports.viewer = function () {
   function capture(el) {
     var mySVG = $(el).html();
@@ -262,17 +263,29 @@ window.gcexports.viewer = function () {
           }
           style.padding = "10 0 10 10";
           var bottomStyle = Object.assign({}, style, { borderTop: "0.5px solid #ddd" });
-          var val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
-          if (val instanceof Array) {
-            val = val.join(" ");
+          var val = void 0,
+              src = void 0,
+              width = void 0,
+              height = void 0,
+              n = void 0;
+          if (MATHJAX) {
+            val = d.value ? d.value : d.svg !== undefined ? d.svg : d;
+            if (val instanceof Array) {
+              val = val.join(" ");
+            }
+            src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
+
+            var _getSize = getSize(val);
+
+            width = _getSize.width;
+            height = _getSize.height;
+          } else {
+            val = d.val;
+            if (val instanceof Array) {
+              val = val.join(" ");
+            }
           }
-          var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(val);
-
-          var _getSize = getSize(val),
-              width = _getSize.width,
-              height = _getSize.height;
-
-          var n = 2 * i;
+          n = 2 * i;
           var leftCol = void 0;
           if (j === 0) {
             leftCol = React.createElement(
@@ -307,16 +320,29 @@ window.gcexports.viewer = function () {
               )
             ));
           } else {
-            bodyElts.push(React.createElement(
-              "tr",
-              { key: j },
-              leftCol,
-              React.createElement(
-                "td",
-                { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
-                React.createElement("img", { width: width, height: height, src: src })
-              )
-            ));
+            if (MATHJAX) {
+              bodyElts.push(React.createElement(
+                "tr",
+                { key: j },
+                leftCol,
+                React.createElement(
+                  "td",
+                  { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
+                  React.createElement("img", { width: width, height: height, src: src })
+                )
+              ));
+            } else {
+              bodyElts.push(React.createElement(
+                "tr",
+                { key: j },
+                leftCol,
+                React.createElement(
+                  "td",
+                  { key: "1", x: x, y: y, style: j === 0 ? style : bottomStyle },
+                  splitValue(val, name === "solution")
+                )
+              ));
+            }
           }
         });
         key++;
@@ -341,6 +367,7 @@ window.gcexports.viewer = function () {
   function unescapeXML(str) {
     return String(str).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "'");
   }
+
   function getSize(svg) {
     svg = svg.slice(svg.indexOf("width=") + 7 + 5);
     var width = svg.slice(0, svg.indexOf("ex")) * 8; // ex=8px
@@ -726,12 +753,12 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           if (n.attrs.id === "context") {
-            var context = props.data.context !== undefined ? props.data.context : props.obj.context;
+            var context = props.data.context || props.obj.context;
             var e = React.createElement(TextArea, _extends({ key: i, name: "context", style: n.style }, _this.props, {
               initValue: context, rows: "2" }));
             elts.push(e);
           } else if (n.attrs.id === "template") {
-            var template = props.data.template !== undefined ? props.data.template : props.obj.template;
+            var template = props.data.template || props.obj.template;
             elts.push(React.createElement(TextArea, _extends({ key: i, name: "template", style: n.style }, _this.props, {
               initValue: template, rows: "2" })));
           } else {
@@ -775,20 +802,32 @@ window.gcexports.viewer = function () {
         case "img":
           if (n.attrs.id === "seed") {
             var val = props.obj.data[0].val;
-            var svg = val[val.length - 1].svg;
-            var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
+            if (MATHJAX) {
+              var svg = val[val.length - 1].svg;
+              var src = "data:image/svg+xml;charset=UTF-8," + unescapeXML(svg);
 
-            var _getSize2 = getSize(svg),
-                width = _getSize2.width,
-                height = _getSize2.height;
+              var _getSize2 = getSize(svg),
+                  width = _getSize2.width,
+                  height = _getSize2.height;
 
-            elts.push(React.createElement(
-              "div",
-              { key: i, style: {
-                  margin: "20 0 10 0"
-                } },
-              React.createElement("img", _extends({ key: "0", style: n.style }, n.attrs, { width: width, height: height, src: src }))
-            ));
+              elts.push(React.createElement(
+                "div",
+                { key: i, style: {
+                    margin: "20 0 10 0"
+                  } },
+                React.createElement("img", _extends({ key: "0", style: n.style }, n.attrs, { width: width, height: height, src: src }))
+              ));
+            } else {
+              elts.push(React.createElement(
+                "div",
+                { key: i, style: {
+                    fontSize: "20",
+                    margin: "20 auto 10 auto",
+                    textAlign: "center"
+                  } },
+                splitValue(val[val.length - 1].val, true)
+              ));
+            }
           } else {
             elts.push(React.createElement("img", _extends({ key: i, style: n.style }, n.attrs)));
           }
@@ -1138,17 +1177,48 @@ window.gcexports.viewer = function () {
         }
       }
     },
+    renderMath: function renderMath() {
+      if (window.MathQuill) {
+        d3.selectAll(".mq").each(function (v, i, e) {
+          try {
+            var MQ = MathQuill.getInterface(2);
+            var mathQuill = MQ.StaticMath(e[i]);
+          } catch (x) {
+            console.log("ERROR rendering MathQuill: " + x);
+          }
+        });
+      }
+    },
     getItemID: function getItemID() {
       var href = window.location.href;
       return href.substring(href.indexOf("id=") + 3);
     },
+    componentDidUpdate: function componentDidUpdate() {
+      var _this3 = this;
+
+      if (!MATHJAX) {
+        d3.select("#context").each(function (d, k, elts) {
+          elts[k].placeholder = _this3.props.obj.context;
+        });
+        this.renderMath();
+      }
+    },
     componentDidMount: function componentDidMount() {
+      var _this4 = this;
+
       var params = this.props.obj.params;
       var keys = Object.keys(params);
       var vals = [];
       keys.forEach(function (k) {
         vals.push(params[k]);
       });
+      if (!MATHJAX) {
+        loadScript("/mathquill.js", function () {
+          loadStyle("/mathquill.css", function () {
+            _this4.componentDidUpdate();
+          });
+        });
+      }
     },
 
     render: function render() {
@@ -1156,11 +1226,10 @@ window.gcexports.viewer = function () {
       // owned components.
       var props = this.props;
       codeID = props.obj.gen;
-      var params = props.data.params || props.obj.params;
+      var params = props.data && props.data.params || props.obj.params;
       if (params) {
         injectParamsIntoUI(this.ui, params);
       }
-      //      var data = props.obj ? [].concat(props.obj) : [];
       var elts = _render.call(this, this.ui, props, this.dirty);
       return React.createElement(
         "div",

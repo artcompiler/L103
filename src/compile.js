@@ -1,7 +1,10 @@
 /* Copyright (c) 2016, Art Compiler LLC */
 /* @flow */
+const MATHJAX = false;
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
+/* MATHJAX
 import * as mjAPI from "mathjax-node/lib/main.js";
+*/
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
@@ -379,10 +382,6 @@ let transform = (function() {
                   errs = errs.concat(error(err, node.elts[0]));
                 }
                 result.value = data;
-                // result.steps.push({
-                //   name: name,
-                //   val: data,
-                // });
                 resume(errs, result);
               });
             }
@@ -1100,47 +1099,49 @@ let transform = (function() {
   return transform;
 })();
 let render = (function() {
-  mjAPI.config({
-    MathJax: {
-      SVG: {
-        font: "Tex",
-        linebreaks: {
-          automatic: true,
-          width: "50em",
+  if (MATHJAX) {
+    mjAPI.config({
+      MathJax: {
+        SVG: {
+          font: "Tex",
+          linebreaks: {
+            automatic: true,
+            width: "50em",
+          },
         },
-      },
-      displayAlign: "left",
+        displayAlign: "left",
+      }
+    });
+    mjAPI.start();
+    function tex2SVG(str, resume) {
+      try {
+        mjAPI.typeset({
+          math: str,
+          format: "TeX",
+          svg: true,
+          ex: 6,
+          width: 60,
+          linebreaks: true,
+        }, function (data) {
+          if (!data.errors) {
+            resume([], data.svg);
+          } else {
+            resume([], "");
+          }
+        });
+      } catch (e) {
+        resume(["MathJAX parsing error"], "");
+      }
     }
-  });
-  mjAPI.start();
-  function tex2SVG(str, resume) {
-    try {
-      mjAPI.typeset({
-        math: str,
-        format: "TeX",
-        svg: true,
-        ex: 6,
-        width: 60,
-        linebreaks: true,
-      }, function (data) {
-        if (!data.errors) {
-          resume([], data.svg);
-        } else {
-          resume([], "");
-        }
-      });
-    } catch (e) {
-      resume(["MathJAX parsing error"], "");
+    function escapeXML(str) {
+      return String(str)
+        .replace(/&(?!\w+;)/g, "&amp;")
+        .replace(/\n/g, " ")
+        .replace(/\\/g, "\\\\")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
-  }
-  function escapeXML(str) {
-    return String(str)
-      .replace(/&(?!\w+;)/g, "&amp;")
-      .replace(/\n/g, " ")
-      .replace(/\\/g, "\\\\")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
   }
   function sympyToLaTeX(val, resume) {
     var errs = [];
@@ -1274,6 +1275,90 @@ let render = (function() {
     outStr = outStr.replace(new RegExp(">>","g"), "}}");
     return outStr;
   }
+  function latexify(str) {
+    return "\\(" + str + "\\)";
+  }
+  function getMathQuill(str) {
+    // \text{text} => text
+    // math => \(math\)
+    let startMath, offset;
+    startMath = str.split("\\text{");
+    offset = 0;
+    let outStr = "";
+    startMath.forEach((v, i) => {
+      // Even indexes are LaTeX, odd have text prefixes.
+      if (i === 0) {
+        outStr += nontrivial(v) ? latexify(v) : " ";
+      } else {
+        let parts = ["", ""];
+        let n = 0;
+        done:
+        for (let i = 0; i < v.length; i++) {
+          // Look for closing }.
+          if (v[i] === "{") {
+            parts[0] += v[i];
+            n++;
+          } else if (v[i] === "}") {
+            if (n > 0) {
+              parts[0] += v[i];
+              n--;
+            } else {
+              // Found closing } so rest is LaTeX
+              parts[1] = v.substring(i+1);
+              break done;
+            }
+          } else {
+            parts[0] += v[i];
+          }
+        }
+        outStr += nontrivial(parts[0]) ? parts[0] : " ";
+        outStr += nontrivial(parts[1]) ? latexify(parts[1]) : " ";
+        offset++;
+      }
+    });
+    return outStr;
+  }
+  function getPlainText(str) {
+    // \text{text} => text
+    // math => \(math\)
+    let startMath, offset;
+    // First get rid of any explicit newlines
+    str = str.replace(new RegExp("\\\\\\\\","g"), "");
+    startMath = str.split("\\text{");
+    offset = 0;
+    let outStr = "";
+    startMath.forEach((v, i) => {
+      if (i === 0) {
+        outStr += nontrivial(v) ? v : " ";
+      } else {
+        let parts = ["", ""];
+        let n = 0;
+        done:
+        for (let i = 0; i < v.length; i++) {
+          // Look for closing }.
+          if (v[i] === "{") {
+            parts[0] += v[i];
+            n++;
+          } else if (v[i] === "}") {
+            if (n > 0) {
+              parts[0] += v[i];
+              n--;
+            } else {
+              // Found closing } so rest is outside of \text{..}
+              parts[1] = v.substring(i+1);
+              break done;
+            }
+          } else {
+            parts[0] += v[i];
+          }
+        }
+        outStr += nontrivial(parts[0]) ? parts[0] : " ";
+        outStr += nontrivial(parts[1]) ? parts[1] : " ";
+        offset++;
+      }
+    });
+    return outStr;
+  }
   function render(val, resume) {
     let checks = val.checks;
     let params = val.params;
@@ -1300,7 +1385,7 @@ let render = (function() {
       if (v.seed) {
         lst.push({
           name: "seed",
-          val: v.seed
+          val: getMathQuill(v.seed),
         });
       }
       let data = {};
@@ -1386,7 +1471,11 @@ let render = (function() {
           }
           if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(cntx)) {
             if (isFirst) {
-              cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${ <<var:" + k + ">> }");
+              if (MATHJAX) {
+                cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${ <<var:" + k + ">> }");
+              } else {
+                cntx = cntx.replace(new RegExp("{" + k + "}","g"), "\\( <<var:" + k + ">> \\)");
+              }
               cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), "<<var:" + k + ">>");
             } else {
               data[k] = v[k].replace(/\\/g, "\\\\");
@@ -1445,7 +1534,7 @@ let render = (function() {
         // Get the right order.
         lst.unshift({
           name: "stimulus",
-          val: getLaTeX(cntx, true),
+          val: getMathQuill(getLaTeX(cntx, true)),
         });
         isFirst = false;
       }
@@ -1454,16 +1543,23 @@ let render = (function() {
       }
       mapList(lst, (v, resume) => {
         if (typeof v.val === "string") {
-          tex2SVG(v.val, (err, svg) => {
-            if (err && err.length) {
-              errs = errs.concat(err);
-            }
+          if (MATHJAX) {
+            tex2SVG(v.val, (err, svg) => {
+              if (err && err.length) {
+                errs = errs.concat(err);
+              }
+              resume(errs, {
+                name: v.name,
+                val: v.val,
+                svg: escapeXML(svg),
+              });
+            });
+          } else {
             resume(errs, {
               name: v.name,
               val: v.val,
-              svg: escapeXML(svg),
             });
-          });
+          }
         } else {
           resume(errs, null);
         }
