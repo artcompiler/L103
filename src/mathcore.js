@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 41fc7bc
+ * Mathcore unversioned - 462b83e
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4302,6 +4302,7 @@ var Model = function() {
       8926:"\\curlyeqprec", 8927:"\\curlyeqsucc", 8928:null, 8929:null, 8930:null, 8931:null, 8932:null, 8933:null, 8934:"\\lnsim", 8935:"\\gnsim", 8936:"\\precnsim", 8937:"\\succnsim", 8938:"\\ntriangleleft", 8939:"\\ntriangleright", 8940:"\\ntrianglelefteq", 8941:"\\ntrianglerighteq", 8942:"\\vdots", 8943:"\\cdots", 8944:null, 8945:"\\ddots", 8946:null, 8947:null, 8948:null, 8949:null, 8950:null, 8951:null, 8952:null, 8953:null, 8954:null, 8955:null, 8956:null, 8957:null, 8958:null, 8959:null};
       var identifiers = keys(env);
       identifiers.push("to");
+      identifiers.push("mm");
       function isAlphaCharCode(c) {
         return c >= 65 && c <= 90 || c >= 97 && c <= 122
       }
@@ -4496,6 +4497,7 @@ var Model = function() {
           lexeme += ch
         }
         curIndex--;
+        console.log("variable() lexeme=" + lexeme);
         return TK_VAR
       }
       function latex() {
@@ -9867,8 +9869,20 @@ var Model = function() {
         }
         return numberNode(node.args[0], true)
       }, variable:function(node) {
-        var val;
-        if(val = Model.env[node.args[0]]) {
+        var name, val;
+        var parts = [node.args[0]];
+        var n = node.args[1];
+        while(n) {
+          console.log("scale() variable n=" + JSON.stringify(n));
+          parts.push(typeof n === "string" ? n : n.args[0]);
+          n = n.args[1]
+        }
+        name = parts.join("_");
+        console.log("scale() variable env=" + JSON.stringify(Model.env));
+        console.log("scale() variable node=" + JSON.stringify(node));
+        console.log("scale() variable name=" + JSON.stringify(name));
+        if(val = Model.env[name]) {
+          console.log("scale() name=" + name + " val=" + JSON.stringify(val));
           if(val.type === "unit") {
             if(val.base === "\\radian") {
               node = numberNode(val.value)

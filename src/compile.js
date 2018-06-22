@@ -143,7 +143,10 @@ let transform = (function() {
     assert(typeof resume === "function", message(1003));
     // Get the node from the pool of nodes.
     let node;
-    if (typeof nid === "object") {
+    if (!nid) {
+      resume([], null);
+      return;
+    } else if (typeof nid === "object") {
       node = nid;
     } else {
       node = nodePool[nid];
@@ -163,8 +166,8 @@ let transform = (function() {
     resume([], +val);
   }
   function ident(node, options, resume) {
-    let val = node.elts[0];
-    resume([], val);
+    let word = findWord(options, node.elts[0]);
+    resume([], word && word.val || node.elts[0]);
   }
   function bool(node, options, resume) {
     let val = node.elts[0];
@@ -185,6 +188,21 @@ let transform = (function() {
       });
     });
   }
+  function sub(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      val1 = +val1;
+      if (isNaN(val1)) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        val2 = +val2;
+        if (isNaN(val2)) {
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), val1 - val2);
+      });
+    });
+  }
   function mul(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       val1 = +val1;
@@ -197,6 +215,21 @@ let transform = (function() {
           err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
         }
         resume([].concat(err1).concat(err2), val1 * val2);
+      });
+    });
+  }
+  function div(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      val1 = +val1;
+      if (isNaN(val1)) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        val2 = +val2;
+        if (isNaN(val2)) {
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), val1 / val2);
       });
     });
   }
@@ -657,10 +690,11 @@ let transform = (function() {
   }
   function formula(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
+      console.log("formula() val=" + JSON.stringify(val, null, 2));
       resume([].concat(err), {
         type: "formula",
-        gen: val.values,
-        params: val.params,
+        gen: val,
+//        params: val.params,
       });
     });
   }
@@ -784,7 +818,7 @@ let transform = (function() {
     //   "e": "3",
     //   "f": "5",
     // }
-    // params [
+    // values [
     //   ["+", "a", "b", "c", "d", "e", "f"],
     //   ["+", " ", "1", "2", " ", "3", "4"],
     // ]
@@ -809,10 +843,13 @@ let transform = (function() {
           values = values.concat(generateDataFromArgs(keys, v));
         });
       }
-      resume([], {
-        params: params,
-        values: values,
-      });
+      console.log("params() params=" + JSON.stringify(params));
+      console.log("params() values=" + JSON.stringify(values));
+      // resume([], {
+      //   params: params,
+      //   values: values,
+      // });
+      resume([], values);
     });
     function expandArgs(args) {
       let table = [];
@@ -858,13 +895,15 @@ let transform = (function() {
           }
         });
         table.push(vals);
-      })
+      });
+      console.log("expandArgs() table=" + JSON.stringify(table, null, 2));
       return table;
     }
     function buildEnv(keys, vals) {
 //      let keys = Object.keys(params);
       let env = {}; //Object.assign({}, params);
       keys.forEach((k, i) => {
+//        console.log("buildEnv() k=" + JSON.stringify(k));
         if (vals[i] !== undefined) {
           env[k] = {
             type: "const",
@@ -872,17 +911,20 @@ let transform = (function() {
           };
         }
       });
+//      console.log("buildEnv() env=" + JSON.stringify(env));
       return env;
     }
     function evalExpr(env, expr, resume) {
       if (expr.indexOf("=") === 0) {
         expr = expr.substring(1);
+        console.log("evalExpr() expr=" + expr);
         MathCore.evaluateVerbose({
           method: "calculate",
           options: {
             env: env
           },
         }, expr, function (err, val) {
+          console.log("evalExpr() val=" + JSON.stringify(val));
           return resume([], val.result);
         });
       } else {
@@ -930,48 +972,132 @@ let transform = (function() {
   function args(node, options, resume) {
     resume([], options.args);
   }
+  function enterEnv(ctx, name, paramc) {
+    if (!ctx.env) {
+      ctx.env = [];
+    }
+    // recursion guard
+    if (ctx.env.length > 380) {
+      //return;  // just stop recursing
+      throw new Error("runaway recursion");
+    }
+    ctx.env.push({
+      name: name,
+      paramc: paramc,
+      lexicon: {},
+      pattern: [],
+    });
+  }
+  function exitEnv(ctx) {
+    ctx.env.pop();
+  }
+  function findWord(ctx, lexeme) {
+    let env = ctx.env;
+    if (!env) {
+      return null;
+    }
+    for (var i = env.length-1; i >= 0; i--) {
+      var word = env[i].lexicon[lexeme];
+      if (word) {
+        return word;
+      }
+    }
+    return null;
+  }
+  function addWord(ctx, lexeme, entry) {
+    topEnv(ctx).lexicon[lexeme] = entry;
+    return null;
+  }
+  function topEnv(ctx) {
+    return ctx.env[ctx.env.length-1]
+  }
   function lambda(node, options, resume) {
     // Return a function value.
-    visit(node.elts[0], options, function (err1, val1) {
-      visit(node.elts[1], options, function (err2, val2) {
-        let result = val2;
-        let keys = val1;
-        let vals = options.args[0];
-        keys.forEach((k, i) => {
-          // 
-          val2[k] = vals[i];
+    visit(node.elts[0], options, function (err0, params) {
+      visit(node.elts[3], options, function (err3, inits) {
+        let args = [].concat(options.args);
+        enterEnv(options, "lambda", params.length);
+        params.forEach(function (param, i) {
+          addWord(options, param, {
+            name: param,
+            val: args[i],
+          });
         });
-        resume([].concat(err1).concat(err2), val2);
+        visit(node.elts[1], options, function (err, val) {
+          exitEnv(options);
+          resume([].concat(err0).concat(err).concat(err), val)
+        });
       });
     });
   }
   function apply(node, options, resume) {
     // Apply a function to arguments.
-    visit(node.elts[1], options, function (err1, val1) {
-      // args
-      options.args = [val1];
-      visit(node.elts[0], options, function (err0, val0) {
-        // fn
-        resume([].concat(err1).concat(err0), val0);
+    visit(node.elts[1], options, function (err1, args) {
+      options.args = args;
+      visit(node.elts[0], options, function (err0, val) {
+        exitEnv(options);
+        resume([].concat(err0), val);
       });
     });
   }
   function map(node, options, resume) {
     // Apply a function to arguments.
-    visit(node.elts[1], options, function (err1, val1) {
+    visit(node.elts[1], options, function (err1, argsList) {
       // args
-      mapList(val1.values, (val, resume) => {
-        // Call a function for each set of values.
-        options.args = [val];
-        visit(node.elts[0], options, (err0, val0) => {
-          resume([].concat(err0), val0);
+      let errs = [];
+      let vals = [];
+      argsList.forEach(args => {
+        options.args = args;
+        visit(node.elts[0], options, function (err, val) {
+          vals.push(val);
+          errs = errs.concat(err);
         });
-      }, (err, val) => {
-        val1.values = val;
-        resume(err, val1);
       });
+      resume(errs, vals);
     });
   }
+  // function lambda(node, options, resume) {
+  //   // Return a function value.
+  //   visit(node.elts[0], options, function (err1, val1) {
+  //     visit(node.elts[1], options, function (err2, val2) {
+  //       let result = val2;
+  //       let keys = val1;
+  //       let vals = options.args[0];
+  //       keys.forEach((k, i) => {
+  //         // 
+  //         val2[k] = vals[i];
+  //       });
+  //       resume([].concat(err1).concat(err2), val2);
+  //     });
+  //   });
+  // }
+  // function apply(node, options, resume) {
+  //   // Apply a function to arguments.
+  //   visit(node.elts[1], options, function (err1, val1) {
+  //     // args
+  //     options.args = [val1];
+  //     visit(node.elts[0], options, function (err0, val0) {
+  //       // fn
+  //       resume([].concat(err1).concat(err0), val0);
+  //     });
+  //   });
+  // }
+  // function map(node, options, resume) {
+  //   // Apply a function to arguments.
+  //   visit(node.elts[1], options, function (err1, val1) {
+  //     // args
+  //     mapList(val1.values, (val, resume) => {
+  //       // Call a function for each set of values.
+  //       options.args = [val];
+  //       visit(node.elts[0], options, (err0, val0) => {
+  //         resume([].concat(err0), val0);
+  //       });
+  //     }, (err, val) => {
+  //       val1.values = val;
+  //       resume(err, val1);
+  //     });
+  //   });
+  // }
   function binding(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
@@ -1045,7 +1171,9 @@ let transform = (function() {
     "RECORD": record,
     "BINDING": binding,
     "ADD" : add,
+    "SUB" : sub,
     "MUL" : mul,
+    "DIV" : div,
     "POW" : pow,
     "STYLE" : style,
     "CALCULATE": calculate,
@@ -1360,6 +1488,7 @@ let render = (function() {
     return outStr;
   }
   function render(val, resume) {
+    console.log("render() val=" + JSON.stringify(val, null, 2));
     let checks = val.checks;
     let params = val.params;
     let latex = val.latex;
@@ -1376,6 +1505,7 @@ let render = (function() {
     let genList = [].concat(val.gen);
     let dynaData = [];
     let isFirst = true;
+    console.log("render() genList=" + JSON.stringify(genList, null, 2));
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
       let context = v.context || "{stimulus}";
