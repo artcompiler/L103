@@ -690,7 +690,6 @@ let transform = (function() {
   }
   function formula(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      console.log("formula() val=" + JSON.stringify(val, null, 2));
       resume([].concat(err), {
         type: "formula",
         gen: val,
@@ -843,12 +842,7 @@ let transform = (function() {
           values = values.concat(generateDataFromArgs(keys, v));
         });
       }
-      console.log("params() params=" + JSON.stringify(params));
-      console.log("params() values=" + JSON.stringify(values));
-      // resume([], {
-      //   params: params,
-      //   values: values,
-      // });
+      options.params = params;
       resume([], values);
     });
     function expandArgs(args) {
@@ -896,14 +890,11 @@ let transform = (function() {
         });
         table.push(vals);
       });
-      console.log("expandArgs() table=" + JSON.stringify(table, null, 2));
       return table;
     }
     function buildEnv(keys, vals) {
-//      let keys = Object.keys(params);
       let env = {}; //Object.assign({}, params);
       keys.forEach((k, i) => {
-//        console.log("buildEnv() k=" + JSON.stringify(k));
         if (vals[i] !== undefined) {
           env[k] = {
             type: "const",
@@ -911,20 +902,17 @@ let transform = (function() {
           };
         }
       });
-//      console.log("buildEnv() env=" + JSON.stringify(env));
       return env;
     }
     function evalExpr(env, expr, resume) {
       if (expr.indexOf("=") === 0) {
         expr = expr.substring(1);
-        console.log("evalExpr() expr=" + expr);
         MathCore.evaluateVerbose({
           method: "calculate",
           options: {
             env: env
           },
         }, expr, function (err, val) {
-          console.log("evalExpr() val=" + JSON.stringify(val));
           return resume([], val.result);
         });
       } else {
@@ -1487,10 +1475,9 @@ let render = (function() {
     });
     return outStr;
   }
-  function render(val, resume) {
-    console.log("render() val=" + JSON.stringify(val, null, 2));
+  function render(val, options, resume) {
     let checks = val.checks;
-    let params = val.params;
+    let params = options.params;
     let latex = val.latex;
     let type = val.type || "formula";
     let subtype = val.subtype || undefined;
@@ -1505,7 +1492,6 @@ let render = (function() {
     let genList = [].concat(val.gen);
     let dynaData = [];
     let isFirst = true;
-    console.log("render() genList=" + JSON.stringify(genList, null, 2));
     mapList(genList, (v, resume) => {
       // TODO if user context or template exists, use it.
       let context = v.context || "{stimulus}";
@@ -1732,7 +1718,7 @@ export let compiler = (function () {
         if (err && err.length) {
           resume([].concat(err), val);
         } else {
-          render(val, function (err, val) {
+          render(val, options, function (err, val) {
             resume([].concat(err), val);
           });
         }
