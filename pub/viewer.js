@@ -753,12 +753,12 @@ window.gcexports.viewer = function () {
           break;
         case "textarea":
           if (n.attrs.id === "context") {
-            var context = props.data.context || props.obj.context;
+            var context = props.data && props.data.context || props.obj.context;
             var e = React.createElement(TextArea, _extends({ key: i, name: "context", style: n.style }, _this.props, {
               initValue: context, rows: "2" }));
             elts.push(e);
           } else if (n.attrs.id === "template") {
-            var template = props.data.template || props.obj.template;
+            var template = props.data && props.data.template || props.obj.template;
             elts.push(React.createElement(TextArea, _extends({ key: i, name: "template", style: n.style }, _this.props, {
               initValue: template, rows: "2" })));
           } else {

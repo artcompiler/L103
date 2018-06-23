@@ -615,6 +615,7 @@ let transform = (function() {
     // Evaluate from right to left.
     visit(node.elts[1], options, function (err2, val2) {
       visit(node.elts[0], options, function (err1, val1) {
+        console.log("template() val1=" + JSON.stringify(val1));
         if (typeof val1 !== "string") {
           val1 = val1.value;
         }
@@ -979,13 +980,13 @@ let transform = (function() {
   function exitEnv(ctx) {
     ctx.env.pop();
   }
-  function findWord(ctx, lexeme) {
+  function findWord(ctx, name) {
     let env = ctx.env;
     if (!env) {
       return null;
     }
     for (var i = env.length-1; i >= 0; i--) {
-      var word = env[i].lexicon[lexeme];
+      var word = env[i].lexicon[name];
       if (word) {
         return word;
       }
@@ -1001,8 +1002,11 @@ let transform = (function() {
   }
   function lambda(node, options, resume) {
     // Return a function value.
+    console.log("lambda() nodePool=" + JSON.stringify(nodePool, null, 2));
+    console.log("lambda() node=" + JSON.stringify(node, null, 2));
     visit(node.elts[0], options, function (err0, params) {
       visit(node.elts[3], options, function (err3, inits) {
+        console.log("lambda() params=" + JSON.stringify(params));
         let args = [].concat(options.args);
         enterEnv(options, "lambda", params.length);
         params.forEach(function (param, i) {
@@ -1012,6 +1016,13 @@ let transform = (function() {
           });
         });
         visit(node.elts[1], options, function (err, val) {
+          let env = topEnv(options);
+          let lexicon = env.lexicon;
+          Object.keys(lexicon).forEach(n => {
+            // Reflect local bindings into the generator object.
+            val[n] = String(lexicon[n].val);
+          });
+          console.log("lambda() val=" + JSON.stringify(val));
           exitEnv(options);
           resume([].concat(err0).concat(err).concat(err), val)
         });
@@ -1508,8 +1519,11 @@ let render = (function() {
       if (template) {
         let tmpl = template;
         let keys = Object.keys(v);
+        let word;
         keys.forEach((k, i) => {
-          if (typeof v[k] !== "string") {
+          let val = v[k] || (word = findWord(options, k)) && word.val;
+              // See if there is a value.
+          if (typeof val !== "string") {
             return;
           }
           if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(tmpl)) {
@@ -1525,6 +1539,8 @@ let render = (function() {
             }
           }
         });
+        console.log("render() tmpl=" + tmpl);
+        console.log("render() data=" + JSON.stringify(data));
         let startMath = tmpl.split("[[");
         let outStr = "";
         let offset = 0;
