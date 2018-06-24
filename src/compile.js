@@ -107,6 +107,9 @@ function mapList(lst, fn, resume) {
 let transform = (function() {
   let nodePool;
   let version;
+  function node(nid) {
+    return nodePool[nid];
+  }
   function getVersion(pool) {
     return pool.version ? +pool.version : 0;
   }
@@ -174,6 +177,7 @@ let transform = (function() {
     resume([], !!val);
   }
   function add(node, options, resume) {
+    console.log("add() node=" + JSON.stringify(node));
     visit(node.elts[0], options, function (err1, val1) {
       val1 = +val1;
       if (isNaN(val1)) {
@@ -1005,27 +1009,39 @@ let transform = (function() {
     console.log("lambda() nodePool=" + JSON.stringify(nodePool, null, 2));
     console.log("lambda() node=" + JSON.stringify(node, null, 2));
     visit(node.elts[0], options, function (err0, params) {
-      visit(node.elts[3], options, function (err3, inits) {
-        console.log("lambda() params=" + JSON.stringify(params));
-        let args = [].concat(options.args);
-        enterEnv(options, "lambda", params.length);
-        params.forEach(function (param, i) {
+      let args = [].concat(options.args);
+      console.log("lambda() args=" + JSON.stringify(args));
+      enterEnv(options, "lambda", params.length);
+      params.forEach(function (param, i) {
+        let inits = nodePool[node.elts[3]].elts;
+        if (args[i]) {
+          console.log("lambda() param=" + param + " val=" + args[i]);
+          // Got an arg so use it.
           addWord(options, param, {
             name: param,
             val: args[i],
           });
-        });
-        visit(node.elts[1], options, function (err, val) {
-          let env = topEnv(options);
-          let lexicon = env.lexicon;
-          Object.keys(lexicon).forEach(n => {
-            // Reflect local bindings into the generator object.
-            val[n] = String(lexicon[n].val);
+        } else {
+          // Don't got an arg so use the init.
+          visit(inits[i], options, (err, val) => {
+            console.log("lambda() param=" + param + " val=" + val);
+            addWord(options, param, {
+              name: param,
+              val: val,
+            });
           });
-          console.log("lambda() val=" + JSON.stringify(val));
-          exitEnv(options);
-          resume([].concat(err0).concat(err).concat(err), val)
+        }
+      });
+      visit(node.elts[1], options, function (err, val) {
+        let env = topEnv(options);
+        let lexicon = env.lexicon;
+        Object.keys(lexicon).forEach(n => {
+          // Reflect local bindings into the generator object.
+          val[n] = String(lexicon[n].val);
         });
+        exitEnv(options);
+        console.log("lambda() val=" + JSON.stringify(val));
+        resume([].concat(err0).concat(err).concat(err), val)
       });
     });
   }
