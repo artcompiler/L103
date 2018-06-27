@@ -4497,7 +4497,6 @@ var Model = function() {
           lexeme += ch
         }
         curIndex--;
-        console.log("variable() lexeme=" + lexeme);
         return TK_VAR
       }
       function latex() {

@@ -1012,7 +1012,7 @@ let transform = (function() {
       let args = [].concat(options.args);
       enterEnv(options, "lambda", params.length);
       params.forEach(function (param, i) {
-        let inits = nodePool[node.elts[3]].elts;
+        let inits = node.elts[3] && nodePool[node.elts[3]].elts || [];
         if (args[i]) {
           // Got an arg so use it.
           addWord(options, param, {
@@ -1051,58 +1051,14 @@ let transform = (function() {
       // args
       let errs = [];
       let vals = [];
-      argsList.forEach(args => {
-        options.args = args;
+      mapList(argsList, (val, resume) => {
+        options.args = val;
         visit(node.elts[0], options, function (err, val) {
-          vals.push(val);
-          errs = errs.concat(err);
+          resume(err, val);
         });
-      });
-      resume(errs, vals);
+      }, resume);
     });
   }
-  // function lambda(node, options, resume) {
-  //   // Return a function value.
-  //   visit(node.elts[0], options, function (err1, val1) {
-  //     visit(node.elts[1], options, function (err2, val2) {
-  //       let result = val2;
-  //       let keys = val1;
-  //       let vals = options.args[0];
-  //       keys.forEach((k, i) => {
-  //         // 
-  //         val2[k] = vals[i];
-  //       });
-  //       resume([].concat(err1).concat(err2), val2);
-  //     });
-  //   });
-  // }
-  // function apply(node, options, resume) {
-  //   // Apply a function to arguments.
-  //   visit(node.elts[1], options, function (err1, val1) {
-  //     // args
-  //     options.args = [val1];
-  //     visit(node.elts[0], options, function (err0, val0) {
-  //       // fn
-  //       resume([].concat(err1).concat(err0), val0);
-  //     });
-  //   });
-  // }
-  // function map(node, options, resume) {
-  //   // Apply a function to arguments.
-  //   visit(node.elts[1], options, function (err1, val1) {
-  //     // args
-  //     mapList(val1.values, (val, resume) => {
-  //       // Call a function for each set of values.
-  //       options.args = [val];
-  //       visit(node.elts[0], options, (err0, val0) => {
-  //         resume([].concat(err0), val0);
-  //       });
-  //     }, (err, val) => {
-  //       val1.values = val;
-  //       resume(err, val1);
-  //     });
-  //   });
-  // }
   function binding(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
