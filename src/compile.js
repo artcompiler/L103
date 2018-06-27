@@ -177,16 +177,15 @@ let transform = (function() {
     resume([], !!val);
   }
   function add(node, options, resume) {
-    console.log("add() node=" + JSON.stringify(node));
     visit(node.elts[0], options, function (err1, val1) {
       val1 = +val1;
       if (isNaN(val1)) {
-        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+        err1 = err1.concat(error("Argument 1 must be a number.", node.elts[0]));
       }
       visit(node.elts[1], options, function (err2, val2) {
         val2 = +val2;
         if (isNaN(val2)) {
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+          err2 = err2.concat(error("Argument 2 must be a number.", node.elts[1]));
         }
         resume([].concat(err1).concat(err2), val1 + val2);
       });
@@ -460,6 +459,11 @@ let transform = (function() {
         val.stimulus = val.value;
         val.seed = val.value;
       }
+      let env = topEnv(options);
+      Object.keys(env.lexicon).forEach(key => {
+        // Add bindings to target for use in resolving {x} refs.
+        val[key] = String(env.lexicon[key].val);
+      });
       resume([], val);
     });
   }
@@ -619,7 +623,6 @@ let transform = (function() {
     // Evaluate from right to left.
     visit(node.elts[1], options, function (err2, val2) {
       visit(node.elts[0], options, function (err1, val1) {
-        console.log("template() val1=" + JSON.stringify(val1));
         if (typeof val1 !== "string") {
           val1 = val1.value;
         }
@@ -698,7 +701,6 @@ let transform = (function() {
       resume([].concat(err), {
         type: "formula",
         gen: val,
-//        params: val.params,
       });
     });
   }
@@ -1006,25 +1008,20 @@ let transform = (function() {
   }
   function lambda(node, options, resume) {
     // Return a function value.
-    console.log("lambda() nodePool=" + JSON.stringify(nodePool, null, 2));
-    console.log("lambda() node=" + JSON.stringify(node, null, 2));
     visit(node.elts[0], options, function (err0, params) {
       let args = [].concat(options.args);
-      console.log("lambda() args=" + JSON.stringify(args));
       enterEnv(options, "lambda", params.length);
       params.forEach(function (param, i) {
         let inits = nodePool[node.elts[3]].elts;
         if (args[i]) {
-          console.log("lambda() param=" + param + " val=" + args[i]);
           // Got an arg so use it.
           addWord(options, param, {
             name: param,
             val: args[i],
           });
         } else {
-          // Don't got an arg so use the init.
+          // Don't have an arg so evaluate the init and use its value.
           visit(inits[i], options, (err, val) => {
-            console.log("lambda() param=" + param + " val=" + val);
             addWord(options, param, {
               name: param,
               val: val,
@@ -1033,14 +1030,7 @@ let transform = (function() {
         }
       });
       visit(node.elts[1], options, function (err, val) {
-        let env = topEnv(options);
-        let lexicon = env.lexicon;
-        Object.keys(lexicon).forEach(n => {
-          // Reflect local bindings into the generator object.
-          val[n] = String(lexicon[n].val);
-        });
         exitEnv(options);
-        console.log("lambda() val=" + JSON.stringify(val));
         resume([].concat(err0).concat(err).concat(err), val)
       });
     });
@@ -1537,7 +1527,7 @@ let render = (function() {
         let keys = Object.keys(v);
         let word;
         keys.forEach((k, i) => {
-          let val = v[k] || (word = findWord(options, k)) && word.val;
+          let val = v[k];
               // See if there is a value.
           if (typeof val !== "string") {
             return;
@@ -1555,8 +1545,6 @@ let render = (function() {
             }
           }
         });
-        console.log("render() tmpl=" + tmpl);
-        console.log("render() data=" + JSON.stringify(data));
         let startMath = tmpl.split("[[");
         let outStr = "";
         let offset = 0;
