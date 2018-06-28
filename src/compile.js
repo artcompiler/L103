@@ -636,7 +636,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val1) {
       visit(node.elts[1], options, function (err, val2) {
         let values = [];
-        val2.values.forEach(v => {
+        val2.forEach(v => {
           if (val1 === "desmos_slope_intercept_question") {
             values.push({
               slope: v.m || v.slope,
