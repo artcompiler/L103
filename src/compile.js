@@ -680,8 +680,7 @@ let transform = (function() {
         resume([].concat(err), {
           type: "desmos",
           subtype: val1,
-          gen: val2.values,
-          params: val2.params,
+          gen: val2,
           values: values,
         });
       });
@@ -691,8 +690,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
         type: "formulaessay",
-        gen: val.values,
-        params: val.params,
+        gen: val,
       });
     });
   }
@@ -708,9 +706,7 @@ let transform = (function() {
     visit(node.elts[0], options, function (err, val) {
       resume([].concat(err), {
         type: "mcq",
-        gen: val.values,
-        params: val.params,
-        latex: val.latex,
+        gen: val,
       });
     });
   }
@@ -1048,15 +1044,14 @@ let transform = (function() {
   function map(node, options, resume) {
     // Apply a function to arguments.
     visit(node.elts[1], options, function (err1, argsList) {
-      // args
-      let errs = [];
-      let vals = [];
       mapList(argsList, (val, resume) => {
         options.args = val;
         visit(node.elts[0], options, function (err, val) {
           resume(err, val);
         });
-      }, resume);
+      }, (err, val) => {
+        resume(err, val);
+      });
     });
   }
   function binding(node, options, resume) {
