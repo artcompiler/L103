@@ -522,6 +522,7 @@ let transform = (function() {
               val2 = val.result;
             }
             resume(errs, val2);
+
           });
         } else {
           resume(errs, val2);
