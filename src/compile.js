@@ -501,8 +501,9 @@ let transform = (function() {
       var pattern = val1;
       visit(node.elts[1], options, function (err, val2) {
         errs = errs.concat(err);
-        let response = val2.value;
+        let response = val2.value || val2;
         if (response) {
+          response = "" + response;
           MathCore.evaluateVerbose({
             method: "format",
             options: {},  // blank options
@@ -511,8 +512,13 @@ let transform = (function() {
             if (err && err.length) {
               errs = errs.concat(error(err, node.elts[1]));
             }
-            val2.value = val.result;
+            if (typeof val2 === "object") {
+              val2.value = val.result;
+            } else {
+              val2 = val.result;
+            }
             resume(errs, val2);
+
           });
         }
       });
