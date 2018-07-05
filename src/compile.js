@@ -301,14 +301,6 @@ let transform = (function() {
       });
     });
   }
-  function precision(node, options, resume) {
-    visit(node.elts[0], options, (err, val) => {
-      option(options, "precision", val);
-      visit(node.elts[1], options, (err, val) => {
-        resume(err, val);
-      });
-    });
-  }
   function domain(node, options, resume) {
     visit(node.elts[0], options, (err, val) => {
       option(options, "domain", val);
@@ -494,26 +486,45 @@ let transform = (function() {
       });
     });
   }
+  function precision(node, options, resume) {
+    console.log("precision() nodePool=" + JSON.stringify(nodePool));
+    console.log("precision() node=" + JSON.stringify(node));
+    visit(node.elts[0], options, (err, val1) => {
+      option(options, "precision", val1);
+      visit(node.elts[1], options, (err, val2) => {
+        console.log("precision() val1=" + JSON.stringify(val1));
+        console.log("precision() val2=" + JSON.stringify(val2));
+        resume(err, val2);
+      });
+    });
+  }
   function format(node, options, resume) {
     var errs = [];
-    visit(node.elts[0], options, function (err, val1) {
+    visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      var pattern = val1;
-      visit(node.elts[1], options, function (err, val2) {
+      visit(node.elts[1], options, (err, val2) => {
+        var pattern = val1;
         errs = errs.concat(err);
-        let response = val2.value;
+        let response = val2.value || val2;
         if (response) {
+          response = "" + response;
           MathCore.evaluateVerbose({
             method: "format",
             options: {},  // blank options
             value: pattern,
-          }, response, function (err, val) {
+          }, response, (err, val) => {
             if (err && err.length) {
               errs = errs.concat(error(err, node.elts[1]));
             }
-            val2.value = val.result;
+            if (typeof val2 === "object") {
+              val2.value = val.result;
+            } else {
+              val2 = val.result;
+            }
             resume(errs, val2);
           });
+        } else {
+          resume(errs, val2);
         }
       });
     });
