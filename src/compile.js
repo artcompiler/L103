@@ -15,14 +15,14 @@ messages[1002] = "Invalid tag in node with Node ID %1.";
 messages[1003] = "No async callback provided.";
 messages[1004] = "No visitor method defined for '%1'.";
 function getGCHost() {
-  if (global.port === 5122) {
+  if (global.port === 5107) {
     return "localhost";
   } else {
     return "www.graffiticode.com";
   }
 }
 function getGCPort() {
-  if (global.port === 5122) {
+  if (global.port === 5107) {
     return "3000";
   } else {
     return "80";
@@ -122,6 +122,7 @@ let transform = (function() {
     return {
       str: str,
       nid: nid,
+
     };
   }
   function texToSympy(val, resume) {
@@ -332,90 +333,76 @@ let transform = (function() {
       }, resume);
     });
   }
-  function evalSympy(name, node, options, resume) {
+  function evalSympy(fn, expr, options, resume) {
     var errs = [];
     var result;
-    visit(node.elts[0], options, function (err, val0) {
-      if (typeof val0 !== "string") {
-        result = val0;
-        val0 = typeof val0.value === "string" ? val0.value  : " ";
-      } else {
-        result = {
-          value: val0,
-        }
-      }
+    MathCore.evaluateVerbose({
+      method: "variables",
+      options: {},
+    }, expr, function (err, val) {
       if (err && err.length) {
-        errs = errs.concat(err);
-      }
-      MathCore.evaluateVerbose({
-        method: "variables",
-        options: {},
-      }, val0, function (err, val) {
-        if (err && err.length) {
-          console.log("ERROR: " + JSON.stringify(err));
-          errs = errs.concat(error(err, node.elts[0]));
-          resume(errs, []);
-        } else {
-          let syms = val.result;
-          let index;
-          if ((index = syms.indexOf("\\pi")) >= 0) {
-            syms = (function(syms) {
-              var rest = syms.slice(index + 1);
-              syms.length = index;
-              return syms.concat(rest);
-            })(syms);
-          }
-          let symbols = "";
-          let params = "";
-          if (syms && syms.length) {
-            // Construct a list a symbols and parameters.
-            syms.forEach(s => {
-              if (symbols) {
-                symbols += " ";
-                params += ",";
-              }
-              symbols += s;
-              params += s;
-            });
-            symbols = "symbols('" + symbols + "')";
-            params = "(" + params + ")";
-          }
-          let opts = "";
-          Object.keys(options).forEach(k => {
-            switch (k) {
-            case "variable":
-            case "precision":
-              opts += "," + options[k];
-              break;
-            case "domain":
-              opts += "," + k + "=" + options[k];
-              break;
-            default:
-              break;
-            }
-          });
-          texToSympy(val0, (err, v) => {
-            if (err && err.length) {
-              errs = errs.concat(error(err, node.elts[0]));
-              resume(errs, []);
-            } else {
-              let args = v + opts;
-              let obj = {
-                func: "eval",
-                expr: "(lambda" + params + ":" + name +
-                  "(" + args + "))(" + symbols + ")",
-              };
-              getSympy("/api/v1/eval", obj, function (err, data) {
-                if (err && err.length) {
-                  errs = errs.concat(error(err, node.elts[0]));
-                }
-                result.value = data;
-                resume(errs, result);
-              });
-            }
-          });
+        console.log("ERROR: " + JSON.stringify(err));
+        errs = errs.concat(error(err, node.elts[0]));
+        resume(errs, []);
+      } else {
+        let syms = val.result;
+        let index;
+        if ((index = syms.indexOf("\\pi")) >= 0) {
+          syms = (function(syms) {
+            var rest = syms.slice(index + 1);
+            syms.length = index;
+            return syms.concat(rest);
+          })(syms);
         }
-      });
+        let symbols = "";
+        let params = "";
+        if (syms && syms.length) {
+          // Construct a list a symbols and parameters.
+          syms.forEach(s => {
+            if (symbols) {
+              symbols += " ";
+              params += ",";
+            }
+            symbols += s;
+            params += s;
+          });
+          symbols = "symbols('" + symbols + "')";
+          params = "(" + params + ")";
+        }
+        let opts = "";
+        Object.keys(options).forEach(k => {
+          switch (k) {
+          case "variable":
+          case "precision":
+            opts += "," + options[k];
+            break;
+          case "domain":
+            opts += "," + k + "=" + options[k];
+            break;
+          default:
+            break;
+          }
+        });
+        texToSympy(expr, (err, v) => {
+          if (err && err.length) {
+            errs = errs.concat(err);
+            resume(errs, []);
+          } else {
+            let args = v + opts;
+            let obj = {
+              func: "eval",
+              expr: "(lambda" + params + ":" + fn +
+                "(" + args + "))(" + symbols + ")",
+            };
+            getSympy("/api/v1/eval", obj, function (err, data) {
+              if (err && err.length) {
+                errs = errs.concat(err);
+              }
+              resume(errs, data);
+            });
+          }
+        });
+      }
     });
   }
   function value(node, options, resume) {
@@ -487,13 +474,9 @@ let transform = (function() {
     });
   }
   function precision(node, options, resume) {
-    console.log("precision() nodePool=" + JSON.stringify(nodePool));
-    console.log("precision() node=" + JSON.stringify(node));
     visit(node.elts[0], options, (err, val1) => {
       option(options, "precision", val1);
       visit(node.elts[1], options, (err, val2) => {
-        console.log("precision() val1=" + JSON.stringify(val1));
-        console.log("precision() val2=" + JSON.stringify(val2));
         resume(err, val2);
       });
     });
@@ -527,6 +510,132 @@ let transform = (function() {
         } else {
           resume(errs, val2);
         }
+      });
+    });
+  }
+  function simplified(node, options, resume) {
+    let input = options.input;
+    let rating = options.rating;
+    mapList(input, (d, resume) => {
+      MathCore.evaluateVerbose({
+        method: "isSimplified",
+        options: {},
+      }, d, function (err, val) {
+        resume(err, {
+          result: val.result,
+        });
+      });
+    }, (err, val) => {
+      rating.forEach((v, i) => {
+        rating[i].simplified = val[i].result;
+        rating[i].score += val[i].result ? 1 : 0;
+      });
+      resume(err, val);
+    });
+  }
+  function expanded(node, options, resume) {
+    let input = options.input;
+    let rating = options.rating;
+    mapList(input, (d, resume) => {
+      MathCore.evaluateVerbose({
+        method: "isExpanded",
+        options: {},
+      }, d, function (err, val) {
+        resume(err, {
+          result: val.result,
+        });
+      });
+    }, (err, val) => {
+      rating.forEach((v, i) => {
+        rating[i].expanded = val[i].result;
+        rating[i].score += val[i].result ? 1 : 0;
+      });
+      resume(err, val);
+    });
+  }
+  function factored(node, options, resume) {
+    let input = options.input;
+    let rating = options.rating;
+    mapList(input, (d, resume) => {
+      MathCore.evaluateVerbose({
+        method: "isFactorised",
+        options: {},
+      }, d, function (err, val) {
+        resume(err, {
+          result: val.result,
+        });
+      });
+    }, (err, val) => {
+      rating.forEach((v, i) => {
+        rating[i].factored = val[i].result;
+        rating[i].score += val[i].result ? 1 : 0;
+      });
+      resume(err, val);
+    });
+  }
+  function ignoreOrder(node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.ignoreOrder = true;
+      resume(errs, val1);
+    });
+  }
+  function literal(node, options, resume) {
+    var errs = [];
+    options.settings = {};
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      let input = options.input;
+      let rating = options.rating;
+      let value = val1;
+      mapList(input, (d, resume) => {
+        MathCore.evaluateVerbose({
+          method: "equivLiteral",
+          options: options.settings,
+          value: value,
+        }, d, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+          }
+          resume(err, {
+            result: val.result,
+          });
+        });
+      }, (err, val) => {
+        rating.forEach((v, i) => {
+          let name = "literal" + (options.settings.ignoreOrder && " ignoreOrder" || "") + " " + value;
+          rating[i][name] = val[i].result;
+          rating[i].score += val[i].result ? 1 : 0;
+        });
+        resume(err, val);
+      });
+    });
+  }
+  function symbolic(node, options, resume) {
+    var errs = [];
+    options.settings = {};
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      let input = options.input;
+      let rating = options.rating;
+      let value = val1;
+      mapList(input, (d, resume) => {
+        let expr = "(" + value + ")-(" + d + ")";
+        // TODO call sympy through Mathcore.
+        evalSympy("simplify", expr, options, (err, val) => {
+          resume(err, {
+            result: +val === 0,
+          });
+        });
+      }, (err, val) => {
+        rating.forEach((v, i) => {
+          let opt = "";
+          let key = "symbolic" + opt + " " + value;
+          rating[i][key] = val[i].result;
+          rating[i].score += val[i].result ? 1 : 0;
+        });
+        resume(err, val);
       });
     });
   }
@@ -769,6 +878,15 @@ let transform = (function() {
       });
     });
   }
+  function rubric(node, options, resume) {
+    visit(node.elts[1], options, function (err2, val2) {
+      options.input = val2.input;
+      options.rating = val2.rating;
+      visit(node.elts[0], options, function (err1, val1) {
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
   function concat(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       let str = "";
@@ -816,8 +934,37 @@ let transform = (function() {
     }
   }
   function inData(node, options, resume) {
-    let data = options.data && options.data.params ? options.data.params : [[]];
-    resume([], data);
+    // If there is input data, then use it, otherwise use default data.
+    if (node.elts.length === 0) {
+      // No args, so use the given data or empty.
+      let data = options.data ? options.data : [];
+      let rating = [];
+      data.forEach(d => {
+        rating.push({
+          value: d,
+        });
+      });
+      resume([], {
+        input: data,
+        rating: rating,
+      });
+    } else {
+      visit(node.elts[0], options, function (err1, val1) {
+        let rating = [];
+        let input = options.data && Object.keys(options.data).length !== 0 ? options.data : val1;
+        input.forEach(i => {
+          rating.push({
+            input: i,
+            score: 0,
+          });
+        });
+        let val = {
+          input: input,
+          rating: rating,
+        }
+        resume([].concat(err1), val);
+      });
+    }
   }
   function isArray(val) {
     return val instanceof Array;
@@ -1121,10 +1268,6 @@ let transform = (function() {
       options = {};
     }
     visit(node.elts[0], options, function (err, val) {
-      // Copy checks into object code.
-      val.checks = options.data && options.data.checks || undefined;
-      val.context = options.data && options.data.context || options.context || "{stimulus}";
-      val.template = options.data && options.data.template || options.template || "{response}";
       resume(err, val);
     });
   }
@@ -1143,8 +1286,14 @@ let transform = (function() {
     "MUL" : mul,
     "DIV" : div,
     "POW" : pow,
+    "IGNORE-ORDER" : ignoreOrder,
+    "RUBRIC" : rubric,
     "STYLE" : style,
     "CALCULATE": calculate,
+    "SIMPLIFIED": simplified,
+    "EXPANDED": expanded,
+    "FACTORED": factored,
+    "SYMBOLIC": symbolic,
     "SIMPLIFY": simplify,
     "SOLVE": solve,
     "EXPAND": expand,
@@ -1157,7 +1306,7 @@ let transform = (function() {
     "APART": apart,
     "MATCH": match,
     "CONCAT" : concat,
-    "LITERAL": seed,
+    "LITERAL": literal,
     "SEED": seed,
     "STIMULUS": stimulus,
     "SOLUTION": solution,
@@ -1371,321 +1520,9 @@ let render = (function() {
     outStr = outStr.replace(new RegExp(">>","g"), "}}");
     return outStr;
   }
-  function latexify(str) {
-    return "\\(" + str + "\\)";
-  }
-  function getMathQuill(str) {
-    // \text{text} => text
-    // math => \(math\)
-    let startMath, offset;
-    startMath = str.split("\\text{");
-    offset = 0;
-    let outStr = "";
-    startMath.forEach((v, i) => {
-      // Even indexes are LaTeX, odd have text prefixes.
-      if (i === 0) {
-        outStr += nontrivial(v) ? latexify(v) : " ";
-      } else {
-        let parts = ["", ""];
-        let n = 0;
-        done:
-        for (let i = 0; i < v.length; i++) {
-          // Look for closing }.
-          if (v[i] === "{") {
-            parts[0] += v[i];
-            n++;
-          } else if (v[i] === "}") {
-            if (n > 0) {
-              parts[0] += v[i];
-              n--;
-            } else {
-              // Found closing } so rest is LaTeX
-              parts[1] = v.substring(i+1);
-              break done;
-            }
-          } else {
-            parts[0] += v[i];
-          }
-        }
-        outStr += nontrivial(parts[0]) ? parts[0] : " ";
-        outStr += nontrivial(parts[1]) ? latexify(parts[1]) : " ";
-        offset++;
-      }
-    });
-    return outStr;
-  }
-  function getPlainText(str) {
-    // \text{text} => text
-    // math => \(math\)
-    let startMath, offset;
-    // First get rid of any explicit newlines
-    str = str.replace(new RegExp("\\\\\\\\","g"), "");
-    startMath = str.split("\\text{");
-    offset = 0;
-    let outStr = "";
-    startMath.forEach((v, i) => {
-      if (i === 0) {
-        outStr += nontrivial(v) ? v : " ";
-      } else {
-        let parts = ["", ""];
-        let n = 0;
-        done:
-        for (let i = 0; i < v.length; i++) {
-          // Look for closing }.
-          if (v[i] === "{") {
-            parts[0] += v[i];
-            n++;
-          } else if (v[i] === "}") {
-            if (n > 0) {
-              parts[0] += v[i];
-              n--;
-            } else {
-              // Found closing } so rest is outside of \text{..}
-              parts[1] = v.substring(i+1);
-              break done;
-            }
-          } else {
-            parts[0] += v[i];
-          }
-        }
-        outStr += nontrivial(parts[0]) ? parts[0] : " ";
-        outStr += nontrivial(parts[1]) ? parts[1] : " ";
-        offset++;
-      }
-    });
-    return outStr;
-  }
   function render(val, options, resume) {
-    let checks = val.checks;
-    let params = options.params;
-    let latex = val.latex;
-    let type = val.type || "formula";
-    let subtype = val.subtype || undefined;
-    let title = val.title;
-    let index = val.index;
-    let notes = val.notes;
-    let origContext = val.context;
-    let origTemplate = val.template;
-    let values = val.values;
-    var errs = [];
-    var vals = [];
-    let genList = [].concat(val.gen);
-    let dynaData = [];
-    let isFirst = true;
-    mapList(genList, (v, resume) => {
-      // TODO if user context or template exists, use it.
-      let context = v.context || "{stimulus}";
-      let template = v.template || "{response}";
-      // For each set of arguments...
-      let lst = [];
-      if (v.seed) {
-        lst.push({
-          name: "seed",
-          val: getMathQuill(v.seed),
-        });
-      }
-      let data = {};
-      if (template) {
-        let tmpl = template;
-        let keys = Object.keys(v);
-        let word;
-        keys.forEach((k, i) => {
-          let val = v[k];
-              // See if there is a value.
-          if (typeof val !== "string") {
-            return;
-          }
-          if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(tmpl)) {
-            if (isFirst) {
-              tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), "{{var:" + k + "}}");
-              tmpl = tmpl.replace(new RegExp("{response==" + k + "}","g"), "<<response==var:" + k + ">>"); // Erase value.
-              tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{ {{var:" + k + "}} }");
-            } else {
-              data[k] = v[k].replace(/\\/g, "\\\\");
-              tmpl = tmpl.replace(new RegExp("{" + k + "}","g"), v[k]);
-              tmpl = tmpl.replace(new RegExp("==" + k + "}","g"), v[k] + "}");
-              tmpl = tmpl.replace(new RegExp("\\[" + k + "\\]","g"), "\\text{" + v[k] + "}");
-            }
-          }
-        });
-        let startMath = tmpl.split("[[");
-        let outStr = "";
-        let offset = 0;
-        startMath.forEach((v, i) => {
-          // Even indexes are text, odd have LaTeX prefixes.
-          if (i === 0) {
-            outStr += nontrivial(v) ? v : "";
-          } else {
-            let parts = ["", ""];
-            let level = 0;
-            let eraseClosing = 0;
-            done:
-            for (let i = 0; i < v.length; i++) {
-              // Look for closing }
-              if (v[i] === "[") {
-                level++;
-                if (v[i-1] === "$") {
-                  // Skip ${
-                  parts[0] = parts[0].substring(0, parts[0].length - 1);
-                  eraseClosing = level; // Save closing brace level
-                } else {
-                  parts[0] += v[i];
-                }
-              } else if (v[i] === "]") {
-                if (level > 0) {
-                  // Have a nested brace.
-                  if (eraseClosing === level) {
-                    eraseClosing = 0;  // Clear erase brace level.
-                  } else {
-                    parts[0] += v[i];
-                  }
-                  level--;
-                } else if (v[i+1] === "]") {
-                  // Found closing ]].
-                  parts[1] = v.substring(i+2);
-                  break done;
-                }
-              } else {
-                parts[0] += v[i];
-              }
-            }
-            outStr += nontrivial(parts[0]) ? "\\text{" + parts[0] + "}": " ";
-            outStr += nontrivial(parts[1]) ? parts[1] : "";
-            offset++;
-          }
-        });
-        tmpl = outStr;
-        // Get the right order.
-        lst.unshift({
-          name: "solution",
-          val: getLaTeX(tmpl, false),
-        });
-      }
-      if (context) {
-        let cntx = context;
-        let keys = Object.keys(v);
-        keys.forEach((k, i) => {
-          if (typeof v[k] !== "string") {
-            return;
-          }
-          if (new RegExp("{" + k + "}|==" + k + "}|\\[" + k + "\\]").test(cntx)) {
-            if (isFirst) {
-              if (MATHJAX) {
-                cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${ <<var:" + k + ">> }");
-              } else {
-                cntx = cntx.replace(new RegExp("{" + k + "}","g"), "\\( <<var:" + k + ">> \\)");
-              }
-              cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), "<<var:" + k + ">>");
-            } else {
-              data[k] = v[k].replace(/\\/g, "\\\\");
-              cntx = cntx.replace(new RegExp("{" + k + "}","g"), "${" + v[k] + "}");
-              cntx = cntx.replace(new RegExp("\\[" + k + "\\]","g"), v[k]);
-            }
-          }
-        });
-        let startMath = cntx.split("{{");
-        let outStr = "";
-        let offset = 0;
-        startMath.forEach((v, i) => {
-          // Even indexes are text, odd have LaTeX prefixes.
-          if (i === 0) {
-            outStr += nontrivial(v) ? v : "";
-          } else {
-            let parts = ["", ""];
-            let level = 0;
-            let eraseClosing = 0;
-            done:
-            for (let i = 0; i < v.length; i++) {
-              // Look for closing }
-              if (v[i] === "{") {
-                level++;
-                if (v[i-1] === "$") {
-                  // Skip ${
-                  parts[0] = parts[0].substring(0, parts[0].length - 1);
-                  eraseClosing = level; // Save closing brace level
-                } else {
-                  parts[0] += v[i];
-                }
-              } else if (v[i] === "}") {
-                if (level > 0) {
-                  // Have a nested brace.
-                  if (eraseClosing === level) {
-                    eraseClosing = 0;  // Clear erase brace level.
-                  } else {
-                    parts[0] += v[i];
-                  }
-                  level--;
-                } else if (v[i+1] === "}") {
-                  // Found closing }}.
-                  parts[1] = v.substring(i+2);
-                  break done;
-                }
-              } else {
-                parts[0] += v[i];
-              }
-            }
-            outStr += nontrivial(parts[0]) ? "${" + parts[0] + "}": " ";
-            outStr += nontrivial(parts[1]) ? parts[1] : "";
-            offset++;
-          }
-        });
-        cntx = outStr;
-        // Get the right order.
-        lst.unshift({
-          name: "stimulus",
-          val: getMathQuill(getLaTeX(cntx, true)),
-        });
-        isFirst = false;
-      }
-      if (Object.keys(data).length > 0) {
-        dynaData.push(data);
-      }
-      mapList(lst, (v, resume) => {
-        if (typeof v.val === "string") {
-          if (MATHJAX) {
-            tex2SVG(v.val, (err, svg) => {
-              if (err && err.length) {
-                errs = errs.concat(err);
-              }
-              resume(errs, {
-                name: v.name,
-                val: v.val,
-                svg: escapeXML(svg),
-              });
-            });
-          } else {
-            resume(errs, {
-              name: v.name,
-              val: v.val,
-            });
-          }
-        } else {
-          resume(errs, null);
-        }
-      }, (err, val) => {
-        let name = lst.name;
-        resume(err, {
-          name: val.name,
-          val: val,
-        });
-      });
-    }, (err, val) => {
-      resume([], {
-        type: type,
-        subtype: subtype,
-        data: val,
-        params: params,
-        title: title,
-        index: index,
-        notes: notes,
-        context: origContext,
-        template: origTemplate,
-        checks: checks,
-        latex: latex,
-        dynaData: dynaData,
-        values: values,
-      });
-    });
+    console.log("render() val=" + JSON.stringify(val, null, 2));
+    resume([], val);
   }
   return render;
 })();
@@ -1710,7 +1547,7 @@ export let compiler = (function () {
       console.log("ERROR with code");
       console.log(x.stack);
       resume(["Compiler error"], {
-        score: 0
+        rating: 0
       });
     }
   }

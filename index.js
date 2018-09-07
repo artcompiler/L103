@@ -1,8 +1,8 @@
 /*
-   L122 compiler service.
+   L107 compiler service.
    @flow weak
 */
-const langID = "122";
+const langID = "107";
 // SHARED START
 const https = require("https");
 const express = require('express')
@@ -41,7 +41,6 @@ app.get("/compile", function(req, res) {
         } else {
           let code = body.src;
           let data = body.data;
-          data.REFRESH = body.refresh; // Stowaway flag.
           let t0 = new Date;
           let obj = compiler.compile(code, data, function (err, val) {
             if (err.length) {

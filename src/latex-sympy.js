@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.spokenmath = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.spokenmath = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -215,12 +215,10 @@ var Ast = exports.Ast = function () {
         node.args = [];
       }
     } else if (op !== null && (typeof op === "undefined" ? "undefined" : _typeof(op)) === "object") {
-      (function () {
-        var obj = op;
-        (0, _backward.forEach)(keys(obj), function (v, i) {
-          node[v] = obj[v];
-        });
-      })();
+      var obj = op;
+      (0, _backward.forEach)(keys(obj), function (v, i) {
+        node[v] = obj[v];
+      });
     }
     return node;
   };
@@ -655,12 +653,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Core = undefined;
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; /*
-                                                                                                                                                                                                                                                                               * Copyright 2016 Art Compiler LLC. All Rights Reserved.
-                                                                                                                                                                                                                                                                               *
-                                                                                                                                                                                                                                                                               */
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          * Copyright 2016 Art Compiler LLC. All Rights Reserved.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          */
 
 
 var _version = require("./version.js");
@@ -1130,17 +1128,15 @@ var _rules2 = require("./rules.js");
           str = str.replace("%%", args[0].args[0]);
         }
         if (str.indexOf("%*") >= 0) {
-          (function () {
-            var s = "";
-            (0, _backward.forEach)(args, function (arg) {
-              if (s !== "") {
-                s += " ";
-              }
-              // Replicate template for each argument.
-              s += str.replace("%*", arg.args[0]).replace("%M", arg.m).replace("%N", arg.n);
-            });
-            str = s; // Overwrite str.
-          })();
+          var s = "";
+          (0, _backward.forEach)(args, function (arg) {
+            if (s !== "") {
+              s += " ";
+            }
+            // Replicate template for each argument.
+            s += str.replace("%*", arg.args[0]).replace("%M", arg.m).replace("%N", arg.n);
+          });
+          str = s; // Overwrite str.
         }
         if (str.indexOf("%IP") >= 0) {
           str = str.replace("%IP", env.ip);
@@ -1515,72 +1511,56 @@ var _rules2 = require("./rules.js");
         },
         comma: function comma(node) {
           if (node.op === _model.Model.MATRIX || node.op === _model.Model.ROW || node.op === _model.Model.COL) {
-            var _ret2 = function () {
-              var env = {};
-              if (node.op === _model.Model.MATRIX) {
-                (0, _assert.assert)(node.args[0].op === _model.Model.ROW);
-                (0, _assert.assert)(node.args[0].args[0].op === _model.Model.COL);
-                node.m = env.m = node.args[0].args.length;
-                node.n = env.n = node.args[0].args[0].args.length;
-                (0, _backward.forEach)(node.args, function (n, i) {
-                  // matrix dimensions
-                  n.m = i + 1;
-                });
-              } else if (node.op === _model.Model.ROW) {
-                (0, _backward.forEach)(node.args, function (n, i) {
-                  n.m = i + 1;
-                  n.n = undefined;
-                });
-              } else {
-                (0, _backward.forEach)(node.args, function (n, i) {
-                  n.m = node.m;
-                  n.n = i + 1;
-                });
-              }
-              var matches = match(patterns, node);
-              if (matches.length === 0) {
-                return {
-                  v: node
-                };
-              }
-              // Use first match for now.
-              var template = matchedTemplate(rules, matches, node.args.length);
-              var args = [];
-              var argRules = getRulesForArgs(template, rules);
-              var nodeArgs = getNodeArgsForTemplate(node, template);
-              (0, _backward.forEach)(nodeArgs, function (n, i) {
-                args = args.concat(translate(n, [globalRules, argRules]));
-                args[i].m = n.m;
-                args[i].n = n.n;
+            var env = {};
+            if (node.op === _model.Model.MATRIX) {
+              (0, _assert.assert)(node.args[0].op === _model.Model.ROW);
+              (0, _assert.assert)(node.args[0].args[0].op === _model.Model.COL);
+              node.m = env.m = node.args[0].args.length;
+              node.n = env.n = node.args[0].args[0].args.length;
+              (0, _backward.forEach)(node.args, function (n, i) {
+                // matrix dimensions
+                n.m = i + 1;
               });
-              return {
-                v: expand(template, args, env)
-              };
-            }();
-
-            if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
+            } else if (node.op === _model.Model.ROW) {
+              (0, _backward.forEach)(node.args, function (n, i) {
+                n.m = i + 1;
+                n.n = undefined;
+              });
+            } else {
+              (0, _backward.forEach)(node.args, function (n, i) {
+                n.m = node.m;
+                n.n = i + 1;
+              });
+            }
+            var matches = match(patterns, node);
+            if (matches.length === 0) {
+              return node;
+            }
+            // Use first match for now.
+            var template = matchedTemplate(rules, matches, node.args.length);
+            var args = [];
+            var argRules = getRulesForArgs(template, rules);
+            var nodeArgs = getNodeArgsForTemplate(node, template);
+            (0, _backward.forEach)(nodeArgs, function (n, i) {
+              args = args.concat(translate(n, [globalRules, argRules]));
+              args[i].m = n.m;
+              args[i].n = n.n;
+            });
+            return expand(template, args, env);
           } else {
-            var _ret3 = function () {
-              var matches = match(patterns, node);
-              if (matches.length === 0) {
-                return {
-                  v: node
-                };
-              }
-              // Use first match for now.
-              var template = matchedTemplate(rules, matches, node.args.length);
-              var argRules = getRulesForArgs(template, rules);
-              var nodeArgs = getNodeArgsForTemplate(node, template);
-              var args = [];
-              (0, _backward.forEach)(nodeArgs, function (n, i) {
-                args = args.concat(translate(n, [globalRules, argRules]));
-              });
-              return {
-                v: expand(template, args)
-              };
-            }();
-
-            if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
+            var _matches = match(patterns, node);
+            if (_matches.length === 0) {
+              return node;
+            }
+            // Use first match for now.
+            var _template = matchedTemplate(rules, _matches, node.args.length);
+            var _argRules = getRulesForArgs(_template, rules);
+            var _nodeArgs = getNodeArgsForTemplate(node, _template);
+            var _args = [];
+            (0, _backward.forEach)(_nodeArgs, function (n, i) {
+              _args = _args.concat(translate(n, [globalRules, _argRules]));
+            });
+            return expand(_template, _args);
           }
         },
         equals: function equals(node) {
@@ -2147,62 +2127,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Model = undefined;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; /*
-                                                                                                                                                                                                                                                                               * Copyright 2013 Art Compiler LLC
-                                                                                                                                                                                                                                                                               *
-                                                                                                                                                                                                                                                                               * Licensed under the Apache License, Version 2.0 (the "License");
-                                                                                                                                                                                                                                                                               * you may not use this file except in compliance with the License.
-                                                                                                                                                                                                                                                                               * You may obtain a copy of the License at
-                                                                                                                                                                                                                                                                               *
-                                                                                                                                                                                                                                                                               *     http://www.apache.org/licenses/LICENSE-2.0
-                                                                                                                                                                                                                                                                               *
-                                                                                                                                                                                                                                                                               * Unless required by applicable law or agreed to in writing, software
-                                                                                                                                                                                                                                                                               * distributed under the License is distributed on an "AS IS" BASIS,
-                                                                                                                                                                                                                                                                               * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-                                                                                                                                                                                                                                                                               * See the License for the specific language governing permissions and
-                                                                                                                                                                                                                                                                               * limitations under the License.
-                                                                                                                                                                                                                                                                               */
-
-/*
-  This module defines an object model for evaluating and comparing LaTex
-  strings. The primary data structure is the Model class. Instances of the
-  Model class contain an AST (Ast instance) and zero or more plugins that
-  provide functions for evaluating, transforming and comparing models.
-
-  Basic Terms
-
-  Node - a node is a raw JavaScript object that consists of an 'op' property
-  that is a string indicating the node type, an 'args' property that is an array
-  that holds the operands of the operation, and any other "attribute" properties
-  used by plugins to elaborate the mean meaning of the node.
-
-  AST - an AST is an a Node that is an instance of the Ast class. The Ast class
-  provides methods for constructing and managing nodes.
-
-  Model - a model is a Node that is an instance of the Model class, which
-  inherits from the Ast class. The model class adds methods for creating nodes
-  from LaTex strings and rendering them to LaTex strings. Model values are
-  configured by Model plugins that implement operations for evaluating,
-  transforming and comparing nodes.
-
-  Overview
-
-  Every model object is also a factory for other model objects that share
-  the same set of plugins.
-
-    Model.fn.isEquivalent; // register plugin function
-    let model = new Model;
-    let expected = model.create("1 + 2");
-    let actual = model.create(response);
-    model.isEquivalent(expected, actual);
-    expected.isEquivalent(actual);
-
-  When all models in a particular JavaScript sandbox (global scope) use the same
-  plugins, those plugins can be registered with the Model class as default
-  plugins, as follows:
-
-*/
 
 var _backward = require("./backward.js");
 
@@ -3291,17 +3215,11 @@ var Model = exports.Model = function () {
         }
       }
       if (args.length > 1) {
-        var _ret = function () {
-          var expo = args.pop();
-          (0, _backward.forEach)(args.reverse(), function (base) {
-            expo = newNode(Model.POW, [base, expo]);
-          });
-          return {
-            v: expo
-          };
-        }();
-
-        if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+        var expo = args.pop();
+        (0, _backward.forEach)(args.reverse(), function (base) {
+          expo = newNode(Model.POW, [base, expo]);
+        });
+        return expo;
       } else {
         return args[0];
       }
@@ -4149,9 +4067,9 @@ var Model = exports.Model = function () {
         };
 
         while (isAlphaCharCode(c = src.charCodeAt(curIndex++))) {
-          var _ret2 = _loop();
+          var _ret = _loop();
 
-          if (_ret2 === "break") break;
+          if (_ret === "break") break;
         }
         curIndex--;
         // // Scan trailing primes ('). This handles single character identifier
@@ -4232,7 +4150,61 @@ var Model = exports.Model = function () {
     }
   };
   return Model;
-}();
+}(); /*
+      * Copyright 2013 Art Compiler LLC
+      *
+      * Licensed under the Apache License, Version 2.0 (the "License");
+      * you may not use this file except in compliance with the License.
+      * You may obtain a copy of the License at
+      *
+      *     http://www.apache.org/licenses/LICENSE-2.0
+      *
+      * Unless required by applicable law or agreed to in writing, software
+      * distributed under the License is distributed on an "AS IS" BASIS,
+      * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      * See the License for the specific language governing permissions and
+      * limitations under the License.
+      */
+
+/*
+  This module defines an object model for evaluating and comparing LaTex
+  strings. The primary data structure is the Model class. Instances of the
+  Model class contain an AST (Ast instance) and zero or more plugins that
+  provide functions for evaluating, transforming and comparing models.
+
+  Basic Terms
+
+  Node - a node is a raw JavaScript object that consists of an 'op' property
+  that is a string indicating the node type, an 'args' property that is an array
+  that holds the operands of the operation, and any other "attribute" properties
+  used by plugins to elaborate the mean meaning of the node.
+
+  AST - an AST is an a Node that is an instance of the Ast class. The Ast class
+  provides methods for constructing and managing nodes.
+
+  Model - a model is a Node that is an instance of the Model class, which
+  inherits from the Ast class. The model class adds methods for creating nodes
+  from LaTex strings and rendering them to LaTex strings. Model values are
+  configured by Model plugins that implement operations for evaluating,
+  transforming and comparing nodes.
+
+  Overview
+
+  Every model object is also a factory for other model objects that share
+  the same set of plugins.
+
+    Model.fn.isEquivalent; // register plugin function
+    let model = new Model;
+    let expected = model.create("1 + 2");
+    let actual = model.create(response);
+    model.isEquivalent(expected, actual);
+    expected.isEquivalent(actual);
+
+  When all models in a particular JavaScript sandbox (global scope) use the same
+  plugins, those plugins can be registered with the Model class as default
+  plugins, as follows:
+
+*/
 },{"./assert.js":1,"./ast.js":2,"./backward.js":3}],6:[function(require,module,exports){
 "use strict";
 
