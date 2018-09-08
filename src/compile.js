@@ -394,6 +394,7 @@ let transform = (function() {
               expr: "(lambda" + params + ":" + fn +
                 "(" + args + "))(" + symbols + ")",
             };
+            console.log("evalSympy() obj=" + JSON.stringify(obj));
             getSympy("/api/v1/eval", obj, function (err, data) {
               if (err && err.length) {
                 errs = errs.concat(err);
@@ -604,8 +605,12 @@ let transform = (function() {
         });
       }, (err, val) => {
         rating.forEach((v, i) => {
-          let name = "literal" + (options.settings.ignoreOrder && " ignoreOrder" || "") + " " + value;
-          rating[i][name] = val[i].result;
+          let opt = "";
+          let key = "literal" + opt;
+          rating[i][key] = {
+            value: value,
+            result: val[i].result,
+          }
           rating[i].score += val[i].result ? 1 : 0;
         });
         resume(err, val);
@@ -621,18 +626,26 @@ let transform = (function() {
       let rating = options.rating;
       let value = val1;
       mapList(input, (d, resume) => {
-        let expr = "(" + value + ")-(" + d + ")";
-        // TODO call sympy through Mathcore.
-        evalSympy("simplify", expr, options, (err, val) => {
+        MathCore.evaluateVerbose({
+          method: "equivSymbolic",
+          options: options.settings,
+          value: value,
+        }, d, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+          }
           resume(err, {
-            result: +val === 0,
+            result: val.result,
           });
         });
       }, (err, val) => {
         rating.forEach((v, i) => {
           let opt = "";
-          let key = "symbolic" + opt + " " + value;
-          rating[i][key] = val[i].result;
+          let key = "symbolic" + opt;
+          rating[i][key] = {
+            value: value,
+            result: val[i].result,
+          }
           rating[i].score += val[i].result ? 1 : 0;
         });
         resume(err, val);
@@ -883,6 +896,7 @@ let transform = (function() {
       options.input = val2.input;
       options.rating = val2.rating;
       visit(node.elts[0], options, function (err1, val1) {
+        delete val2.input; // Done with input values.
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -954,8 +968,8 @@ let transform = (function() {
         let input = options.data && Object.keys(options.data).length !== 0 ? options.data : val1;
         input.forEach(i => {
           rating.push({
-            input: i,
             score: 0,
+            input: i,
           });
         });
         let val = {
@@ -1414,111 +1428,6 @@ let render = (function() {
   }
   function escapeSpaces(str) {
     return str.replace(new RegExp(" ","g"), "\\ ");
-  }
-  function textualize(str) {
-    const LONG = 50;
-    // Wrap long text in multiple text blocks to enable line
-    // breaking.
-    let blocks = [];
-    let substr = "";
-    for (let i = 0; i < str.length; i++) {
-      if (!nontrivial(str[i]) && substr.length > LONG) {
-        substr += str[i];
-        blocks.push("\\text{" + substr + "} ");
-        substr = "";
-      } else {
-        substr += str[i];
-      }
-    }
-    if (nontrivial(substr)) {
-//      blocks.push("\\text{" + substr + "}\\\\");
-      blocks.push("\\text{" + substr + "} ");
-    }
-//    return blocks.join("\\\\ ");
-    return blocks.join(" ");
-  }
-  function getLaTeX(str, hasText) {
-    // {x}abc{y} => x\\text{abc}y
-    // [[x]]abc[[y]] => \\text{x}\\text{abc}\text{y}
-    let outStr, startMath, offset;
-    startMath = str.split("{response");
-    offset = 0;
-    outStr = "";
-    startMath.forEach((v, i) => {
-      // Even indexes are text, odd have LaTeX prefixes.
-      if (i === 0) {
-        outStr += v;
-      } else {
-        let parts = ["", ""];
-        let n = 0;
-        done:
-        for (let i = 0; i < v.length; i++) {
-          // Look for closing }.
-          if (v[i] === "{") {
-            parts[0] += v[i];
-            n++;
-          } else if (v[i] === "}") {
-            if (n > 0) {
-              parts[0] += v[i];
-              n--;
-            } else {
-              // Found closing }.
-              let start;
-              // {response==10} => \left[\left[10\right]\right]
-              parts[0] =
-                "\\left[\\left[" +
-                parts[0] +
-                "\\right]\\right]";
-              parts[1] += v.substring(i+1);
-              break done;
-            }
-          } else {
-            parts[0] += v[i];
-          }
-        }
-        outStr += nontrivial(parts[0]) ? parts[0] : " ";
-        outStr += nontrivial(parts[1]) ? parts[1] : " ";
-        offset++;
-      }
-    });
-    startMath = outStr.split("${");
-    outStr = "";
-    offset = 0;
-    startMath.forEach((v, i) => {
-      // Even indexes are text, odd have LaTeX prefixes.
-      if (i === 0) {
-        outStr += hasText ? (nontrivial(v) ? textualize(v) : "") : v;
-      } else {
-        let parts = ["", ""];
-        let n = 0;
-        done:
-        for (let i = 0; i < v.length; i++) {
-          // Look for closing }
-          if (v[i] === "{") {
-            parts[0] += v[i];
-            n++;
-          } else if (v[i] === "}") {
-            if (n > 0) {
-              parts[0] += v[i];
-              n--;
-            } else {
-              // Found closing }.
-              parts[1] = v.substring(i+1);
-              break done;
-            }
-          } else {
-            parts[0] += v[i];
-          }
-        }
-        outStr += nontrivial(parts[0]) ? parts[0] : " ";
-        outStr += hasText ? (nontrivial(parts[1]) ? textualize(parts[1]) : "") : parts[1];
-        offset++;
-      }
-    });
-    outStr = outStr.replace(new RegExp("<<response>>","g"), "{{response}}");
-    outStr = outStr.replace(new RegExp("<<","g"), "{{");
-    outStr = outStr.replace(new RegExp(">>","g"), "}}");
-    return outStr;
   }
   function render(val, options, resume) {
     console.log("render() val=" + JSON.stringify(val, null, 2));
