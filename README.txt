@@ -1,4 +1,4 @@
-# L121
+# L107
 
-A language for writing math problems.
+A language for writing math scorers.
 
