@@ -1,5 +1,5 @@
 /*
- * Mathcore v1.61.0 - 30e90aa
+ * Mathcore unversioned - b77322c
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4724,16 +4724,16 @@ var Model = function() {
   var latexSympy = require("./latex-sympy.js").Core;
   var http = require("http");
   var https = require("https");
-  function texToSympy(val, resume) {
+  function texToSympy(tex, resume) {
     var errs = [];
-    var source = val;
-    if(source) {
+    if(tex) {
       try {
-        latexSympy.translate({}, source, function(err, val) {
+        latexSympy.translate({}, tex, function(err, val) {
           if(err && err.length) {
             errs = errs.concat(err);
             val = ""
           }
+          console.log("texToSympy() val=" + val);
           resume(errs, val)
         })
       }catch(e) {
