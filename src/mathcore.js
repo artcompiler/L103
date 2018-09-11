@@ -4721,7 +4721,7 @@ var Model = function() {
   return Model
 }();
 (function(ast) {
-  var latexSympy = require("./latex-sympy.js").Core;
+  var latexSympy = require("./spokenmath.js").Core;
   var http = require("http");
   var https = require("https");
   function texToSympy(tex, resume) {
