@@ -394,7 +394,6 @@ let transform = (function() {
               expr: "(lambda" + params + ":" + fn +
                 "(" + args + "))(" + symbols + ")",
             };
-            console.log("evalSympy() obj=" + JSON.stringify(obj));
             getSympy("/api/v1/eval", obj, function (err, data) {
               if (err && err.length) {
                 errs = errs.concat(err);
@@ -1430,7 +1429,7 @@ let render = (function() {
     return str.replace(new RegExp(" ","g"), "\\ ");
   }
   function render(val, options, resume) {
-    console.log("render() val=" + JSON.stringify(val, null, 2));
+    console.log("render() val=" + JSON.stringify(val));
     resume([], val);
   }
   return render;

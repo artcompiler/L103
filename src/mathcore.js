@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - b77322c
+ * Mathcore unversioned - 74936ae
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -2682,8 +2682,8 @@ var Model = function() {
     return render(node)
   };
   var OpStr = {ADD:"+", SUB:"-", MUL:"mul", TIMES:"times", COEFF:"coeff", DIV:"div", FRAC:"frac", EQL:"=", ATAN2:"atan2", SQRT:"sqrt", VEC:"vec", PM:"pm", SIN:"sin", COS:"cos", TAN:"tan", SEC:"sec", COT:"cot", CSC:"csc", ARCSIN:"arcsin", ARCCOS:"arccos", ARCTAN:"arctan", ARCSEC:"arcsec", ARCCSC:"arccsc", ARCCOT:"arccot", SINH:"sinh", COSH:"cosh", TANH:"tanh", SECH:"sech", COTH:"coth", CSCH:"csch", ARCSINH:"arcsinh", ARCCOSH:"arccosh", ARCTANH:"arctanh", ARCSECH:"arcsech", ARCCSCH:"arccsch", ARCCOTH:"arccoth", 
-  LOG:"log", LN:"ln", LG:"lg", VAR:"var", NUM:"num", CST:"cst", COMMA:",", POW:"^", SUBSCRIPT:"_", ABS:"abs", PAREN:"()", HIGHLIGHT:"hi", LT:"lt", LE:"le", GT:"gt", GE:"ge", NE:"ne", NGTR:"ngtr", NLESS:"nless", APPROX:"approx", INTERVAL:"interval", LIST:"list", EXISTS:"exists", IN:"in", FORALL:"forall", LIM:"lim", EXP:"exp", TO:"to", SUM:"sum", DERIV:"deriv", INT:"int", PROD:"prod", PERCENT:"%", M:"M", RIGHTARROW:"->", FACT:"fact", BINOM:"binom", ROW:"row", COL:"col", COLON:"colon", MATRIX:"matrix", 
-  FORMAT:"format", OVERSET:"overset", UNDERSET:"underset", OVERLINE:"overline", DEGREE:"degree", BACKSLASH:"backslash", MATHBF:"mathbf", DOT:"dot", NONE:"none"};
+  LOG:"log", LN:"ln", LG:"lg", VAR:"var", NUM:"num", CST:"cst", COMMA:",", POW:"^", SUBSCRIPT:"_", ABS:"abs", PAREN:"()", HIGHLIGHT:"hi", LT:"lt", LE:"le", GT:"gt", GE:"ge", NE:"ne", NGTR:"ngtr", NLESS:"nless", APPROX:"approx", INTERVAL:"interval", LIST:"list", EXISTS:"exists", IN:"in", FORALL:"forall", LIM:"lim", EXP:"exp", TO:"to", SUM:"sum", DERIV:"deriv", PIPE:"pipe", INTEGRAL:"integral", PROD:"prod", PERCENT:"%", M:"M", RIGHTARROW:"->", FACT:"fact", BINOM:"binom", ROW:"row", COL:"col", COLON:"colon", 
+  MATRIX:"matrix", FORMAT:"format", OVERSET:"overset", UNDERSET:"underset", OVERLINE:"overline", DEGREE:"degree", BACKSLASH:"backslash", MATHBF:"mathbf", DOT:"dot", NONE:"none"};
   forEach(keys(OpStr), function(v, i) {
     Model[v] = OpStr[v]
   });
@@ -3132,7 +3132,7 @@ var Model = function() {
   tokenToOperator[TK_TO] = OpStr.TO;
   tokenToOperator[TK_VERTICALBAR] = OpStr.PIPE;
   tokenToOperator[TK_SUM] = OpStr.SUM;
-  tokenToOperator[TK_INT] = OpStr.INT;
+  tokenToOperator[TK_INT] = OpStr.INTEGRAL;
   tokenToOperator[TK_PROD] = OpStr.PROD;
   tokenToOperator[TK_CUP] = OpStr.CUP;
   tokenToOperator[TK_BIGCUP] = OpStr.BIGCUP;
@@ -3382,16 +3382,6 @@ var Model = function() {
       }
       return binaryNode(Model.MUL, [n, u])
     }
-    function isDerivative(n) {
-      if(n.op !== Model.FRAC) {
-        return
-      }
-      var numer = n.args[0];
-      var numerHead = numer.op === Model.MUL && (numer.args[0].op === Model.VAR && numer.args[0].args[0]) || numer.op === Model.VAR && numer.args[0];
-      var denom = n.args[1];
-      var denomHead = denom.op === Model.MUL && (denom.args[0].op === Model.VAR && denom.args[0].args[0]);
-      return numerHead === "d" && (denomHead === "d" && denom.args[1].op === Model.VAR) || undefined
-    }
     function primaryExpr() {
       var e;
       var tk;
@@ -3597,7 +3587,7 @@ var Model = function() {
           return newNode(tokenToOperator[tk], args);
           break;
         case TK_INT:
-        ;
+          return integralExpr();
         case TK_SUM:
         ;
         case TK_PROD:
@@ -3609,11 +3599,7 @@ var Model = function() {
             eat(TK_CARET, {oneCharToken:true});
             args.push(primaryExpr())
           }
-          if(tk === TK_INT) {
-            args = args.concat(integralExpr())
-          }else {
-            args.push(commaExpr())
-          }
+          args.push(commaExpr());
           return newNode(tokenToOperator[tk], args);
         case TK_EXISTS:
           next();
@@ -3956,10 +3942,36 @@ var Model = function() {
     function isMinusOne(node) {
       return node.op === Model.SUB && (node.args.length === 1 && isOne(node.args[0]))
     }
+    function isDerivative(n) {
+      if(n.op !== Model.FRAC) {
+        return
+      }
+      var numer = n.args[0];
+      var numerHead = numer.op === Model.MUL && (numer.args[0].op === Model.VAR && numer.args[0].args[0]) || (numer.op === Model.VAR && numer.args[0] || numer.op === Model.POW && (numer.args[0].op === Model.VAR && numer.args[0].args[0]));
+      var denom = n.args[1];
+      var denomHead = denom.op === Model.MUL && (denom.args[0].op === Model.VAR && denom.args[0].args[0]);
+      return numerHead === "d" && (denomHead === "d" && (denom.args[1] && denom.args[1].op === Model.VAR)) || denom.args[1] && (denom.args[1].op === Model.POW && (denom.args[1].args[0] && denom.args[1].args[0].op === Model.VAR))
+    }
+    function derivativeExpr(node) {
+      if(node.op !== Model.FRAC) {
+        return
+      }
+      var numer = node.args[0];
+      var denom = node.args[1];
+      var n = numer.op === Model.MUL && (numer.args.slice(1).length > 0 && multiplyNode(numer.args.slice(1))) || nodeOne;
+      assert(denom.args.length === 2);
+      var arg = denom.args[1];
+      var sym = arg.op === Model.POW && arg.args[0] || arg;
+      var order = arg.op === Model.POW && arg.args[1] || nodeOne;
+      return newNode(Model.DERIV, [n, sym, order])
+    }
     function multiplicativeExpr() {
       var t, expr, explicitOperator = false, prevExplicitOperator, isFraction, args = [];
       var n0;
       expr = fractionExpr();
+      if(isDerivative(expr)) {
+        expr = derivativeExpr(expr)
+      }
       if(expr.op === Model.MUL && !expr.isBinomial) {
         args = expr.args
       }else {
@@ -3977,6 +3989,9 @@ var Model = function() {
           explicitOperator = true
         }
         expr = fractionExpr();
+        if(isDerivative(expr)) {
+          expr = derivativeExpr(expr)
+        }
         if(t === TK_DIV) {
           expr = newNode(Model.POW, [expr, nodeMinusOne])
         }
@@ -4031,7 +4046,14 @@ var Model = function() {
                         t.isImplicit = undefined
                       }
                     }else {
-                      expr.isImplicit = true
+                      if(args[args.length - 1].op === Model.DERIV) {
+                        var arg = args.pop();
+                        var e = arg.args[0];
+                        var e = isOne(e) && expr || multiplyNode([e, expr]);
+                        expr = newNode(Model.DERIV, [e].concat(arg.args.slice(1)))
+                      }else {
+                        expr.isImplicit = true
+                      }
                     }
                   }
                 }
@@ -4248,16 +4270,6 @@ var Model = function() {
       }
       return expr
     }
-    function hasDX(node) {
-      var len = node.args.length;
-      var dvar = node.args[len - 2];
-      var ivar = node.args[len - 1];
-      return node && (node.op === Model.MUL && (dvar.op === Model.VAR && (dvar.args[0] === "d" && ivar.op === Model.VAR)))
-    }
-    function stripDX(node) {
-      assert(node.op === Model.MUL);
-      return multiplyNode(node.args.slice(0, node.args.length - 2))
-    }
     function flattenNestedNodes(node) {
       var args = [];
       if(node.op === Model.NUM || node.op === Model.VAR) {
@@ -4276,26 +4288,53 @@ var Model = function() {
       node.isMixedNumber = isMixedNumber;
       return node
     }
+    function hasDX(node) {
+      var len = node.args.length;
+      var dvar = node.args[len - 2];
+      var ivar = node.args[len - 1];
+      return node && (node.op === Model.MUL && (dvar.op === Model.VAR && (dvar.args[0] === "d" && (ivar.op === Model.VAR && ivar)))) || null
+    }
+    function stripDX(node) {
+      assert(node.op === Model.MUL);
+      return multiplyNode(node.args.slice(0, node.args.length - 2))
+    }
     function integralExpr() {
-      var expr = flattenNestedNodes(multiplicativeExpr());
-      var t;
-      var foundDX = hasDX(expr);
-      expr = foundDX ? stripDX(expr) : expr;
-      while(isAdditive(t = hd()) && !foundDX) {
-        next();
-        var expr2 = multiplicativeExpr();
-        foundDX = hasDX(expr2);
-        expr2 = foundDX ? stripDX(expr2) : expr2;
-        switch(t) {
-          case TK_SUB:
-            expr = binaryNode(Model.SUB, [expr, expr2]);
-            break;
-          default:
-            expr = binaryNode(Model.ADD, [expr, expr2], true);
-            break
+      eat(TK_INT);
+      var args = [];
+      if(hd() === TK_UNDERSCORE) {
+        next({oneCharToken:true});
+        args.push(primaryExpr());
+        if(hd() === TK_CARET) {
+          eat(TK_CARET, {oneCharToken:true});
+          args.push(primaryExpr())
         }
       }
-      return expr
+      var expr;
+      if(hd() === TK_INT) {
+        expr = integralExpr()
+      }else {
+        expr = flattenNestedNodes(multiplicativeExpr());
+        var t;
+        var dx = hasDX(expr);
+        expr = dx && stripDX(expr) || expr;
+        while(isAdditive(t = hd()) && !dx) {
+          next();
+          var expr2 = multiplicativeExpr();
+          dx = hasDX(expr2);
+          expr2 = dx && stripDX(expr2) || expr2;
+          switch(t) {
+            case TK_SUB:
+              expr = binaryNode(Model.SUB, [expr, expr2]);
+              break;
+            default:
+              expr = binaryNode(Model.ADD, [expr, expr2], true);
+              break
+          }
+        }
+      }
+      args.push(expr);
+      args.push(dx || nodeEmpty);
+      return newNode(Model.INTEGRAL, args)
     }
     function isRelational(t) {
       return t === TK_LT || (t === TK_LE || (t === TK_GT || (t === TK_GE || (t === TK_NGTR || (t === TK_NLESS || (t === TK_IN || (t === TK_TO || (t === TK_COLON || t === TK_VAR && lexeme() === "to"))))))))
@@ -4733,7 +4772,6 @@ var Model = function() {
             errs = errs.concat(err);
             val = ""
           }
-          console.log("texToSympy() val=" + val);
           resume(errs, val)
         })
       }catch(e) {
@@ -4790,89 +4828,6 @@ var Model = function() {
       resume(err)
     })
   }
-  function getSympy(path, data, resume) {
-    path = path.trim().replace(/ /g, "+");
-    var encodedData = JSON.stringify(data);
-    var options = {method:"GET", host:"sympy-artcompiler.herokuapp.com", port:"80", path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
-    var req = https.request(options, function(res) {
-      var data = "";
-      res.on("data", function(chunk) {
-        data += chunk
-      }).on("end", function() {
-        try {
-          resume([], JSON.parse(data))
-        }catch(e) {
-          resume(["ERROR Sympy: " + encodedData], {})
-        }
-      }).on("error", function() {
-        console.log("error() status=" + res.statusCode + " data=" + data);
-        resume([], {})
-      })
-    });
-    req.write(encodedData);
-    req.end();
-    req.on("error", function(e) {
-      console.log("ERROR: " + e);
-      resume([].concat(e), [])
-    })
-  }
-  function evalSympy(name, node, options, resume) {
-    var errs = [];
-    var result;
-    var syms = variables(node);
-    var index;
-    if((index = syms.indexOf("\\pi")) >= 0) {
-      syms = function(syms) {
-        var rest = syms.slice(index + 1);
-        syms.length = index;
-        return syms.concat(rest)
-      }(syms)
-    }
-    var symbols = "";
-    var params = "";
-    if(syms && syms.length) {
-      syms.forEach(function(s) {
-        if(symbols) {
-          symbols += " ";
-          params += ","
-        }
-        symbols += s;
-        params += s
-      });
-      symbols = "symbols('" + symbols + "')";
-      params = "(" + params + ")"
-    }
-    var opts = "";
-    Object.keys(options).forEach(function(k) {
-      switch(k) {
-        case "variable":
-        ;
-        case "precision":
-          opts += "," + options[k];
-          break;
-        case "domain":
-          opts += "," + k + "=" + options[k];
-          break;
-        default:
-          break
-      }
-    });
-    texToSympy(node, function(err, v) {
-      if(err && err.length) {
-        console.log("[1] evalSympy() err=" + err);
-        resume(err, [])
-      }else {
-        var args = v + opts;
-        var obj = {func:"eval", expr:"(lambda" + params + ":" + name + "(" + args + "))(" + symbols + ")"};
-        getSympy("/api/v1/eval", obj, function(err, data) {
-          if(err && err.length) {
-            console.log("[2] evalSympy() err=" + err)
-          }
-          resume(err, data)
-        })
-      }
-    })
-  }
   var messages = Assert.messages;
   Assert.reserveCodeRange(2E3, 2999, "mathmodel");
   messages[2E3] = "Internal error. %1";
@@ -4915,6 +4870,19 @@ var Model = function() {
   function stripNids(node) {
     forEach(keys(node), function(k) {
       if(indexOf(k, "Nid") > 0) {
+        delete node[k]
+      }
+    });
+    if(node.args) {
+      forEach(node.args, function(n) {
+        stripNids(n)
+      })
+    }
+    return node
+  }
+  function stripMetadata(node) {
+    forEach(keys(node), function(k) {
+      if(k !== "op" && k !== "args") {
         delete node[k]
       }
     });
@@ -5169,8 +5137,8 @@ var Model = function() {
                 return binaryNode(Model.POW, [negate(n.args[0]), nodeMinusOne])
               }
             }else {
-              if(n.op === Model.INT && n.args.length === 3) {
-                return newNode(Model.INT, [n.args[1], n.args[0], n.args[2]])
+              if(n.op === Model.INTEGRAL && n.args.length === 3) {
+                return newNode(Model.INTEGRAL, [n.args[1], n.args[0], n.args[2]])
               }
             }
           }
@@ -5582,7 +5550,7 @@ var Model = function() {
         ;
         case Model.DERIV:
         ;
-        case Model.INT:
+        case Model.INTEGRAL:
         ;
         case Model.PROD:
         ;
@@ -5603,6 +5571,8 @@ var Model = function() {
         case Model.DEGREE:
         ;
         case Model.DOT:
+        ;
+        case Model.PAREN:
           node = visit.unary(node, resume);
           break;
         case Model.COMMA:
@@ -5768,7 +5738,7 @@ var Model = function() {
               return nodePositiveInfinity
             }
             return 0;
-          case Model.INT:
+          case Model.INTEGRAL:
             return Number.POSITIVE_INFINITY;
           case Model.DEGREE:
           ;
@@ -7078,7 +7048,7 @@ var Model = function() {
             node = addNode([node.args[0], unaryNode(Model.PM, [node.args[1]])])
           }else {
             if(some(node.args, function(arg) {
-              return arg.op === Model.INT && arg.args.length === 3
+              return arg.op === Model.INTEGRAL && arg.args.length === 3
             })) {
               return normalizeIntegralAddition(node)
             }
@@ -7170,6 +7140,9 @@ var Model = function() {
         });
         node = newNode(node.op, args);
         switch(node.op) {
+          case Model.PAREN:
+            node = node.args[0];
+            break;
           case Model.SUB:
             if(node.args[0].op === Model.POW && isNeg(node.args[0].args[1])) {
               node = negate(node.args[0])
@@ -7199,7 +7172,7 @@ var Model = function() {
               node = unaryNode(node.op, [args[0]])
             }
             break;
-          case Model.INT:
+          case Model.INTEGRAL:
             node = normalizeIntegral(node);
             break;
           case Model.SIN:
@@ -8491,16 +8464,16 @@ var Model = function() {
     }
     function integralNode(start, stop, expr) {
       if(start) {
-        return newNode(Model.INT, [start, stop, expr])
+        return newNode(Model.INTEGRAL, [start, stop, expr])
       }else {
-        return newNode(Model.INT, [expr])
+        return newNode(Model.INTEGRAL, [expr])
       }
     }
     function normalizeIntegralAddition(node) {
       var terms = {};
       var args = [];
       forEach(node.args, function(n) {
-        if(n.op === Model.INT && n.args.length === 3) {
+        if(n.op === Model.INTEGRAL && n.args.length === 3) {
           var nid = ast.intern(n.args[2]);
           if(!terms[nid]) {
             terms[nid] = []
@@ -11516,10 +11489,16 @@ var Model = function() {
         })
       }else {
         if(true || !result && !inverseResult) {
-          var node = newNode(Model.SUB, [n1o, n2o]);
+          var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1o), stripMetadata(n2o)])]);
+          node.lbrk = 40;
+          node.rbrk = 41;
           var options = {};
           evalSympy("simplify", node, options, function(err, val) {
-            resume(err, +val === 0)
+            var n = Model.create(val);
+            assert(n.op === Model.LIST);
+            equivSymbolic(Model.create(n.args[0]), Model.create(n.args[1]), function(err, result) {
+              resume(null, result)
+            })
           })
         }else {
           result = inverseResult && !result || result;
@@ -11531,7 +11510,8 @@ var Model = function() {
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
-    var options = {method:"GET", host:"sympy-artcompiler.herokuapp.com", port:"80", path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
+    var LOCAL = true;
+    var options = {method:"GET", host:LOCAL && "localhost" || "sympy-artcompiler.herokuapp.com", port:LOCAL && "8000" || "80", path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
     var protocol = http;
     var req = protocol.request(options, function(res) {
       var data = "";
@@ -11558,64 +11538,59 @@ var Model = function() {
   function evalSympy(fn, expr, options, resume) {
     var errs = [];
     var result;
-    MathCore.evaluateVerbose({method:"variables", options:{}}, expr, function(err, val) {
+    var syms = variables(expr);
+    var index;
+    var excludes = ["\\pi", "\\infty"];
+    excludes.forEach(function(sym) {
+      if((index = syms.indexOf(sym)) >= 0) {
+        syms = function(syms) {
+          var rest = syms.slice(index + 1);
+          syms.length = index;
+          return syms.concat(rest)
+        }(syms)
+      }
+    });
+    var symbols = "";
+    var params = "";
+    if(syms && syms.length) {
+      syms.forEach(function(s) {
+        if(symbols) {
+          symbols += " ";
+          params += ","
+        }
+        symbols += s;
+        params += s
+      });
+      symbols = "symbols('" + symbols + "')";
+      params = "(" + params + ")"
+    }
+    var opts = "";
+    Object.keys(options).forEach(function(k) {
+      switch(k) {
+        case "variable":
+        ;
+        case "precision":
+          opts += "," + options[k];
+          break;
+        case "domain":
+          opts += "," + k + "=" + options[k];
+          break;
+        default:
+          break
+      }
+    });
+    texToSympy(expr, function(err, v) {
       if(err && err.length) {
-        console.log("ERROR: " + JSON.stringify(err));
-        errs = errs.concat(error(err, node.elts[0]));
+        errs = errs.concat(err);
         resume(errs, [])
       }else {
-        var syms = val.result;
-        var index;
-        if((index = syms.indexOf("\\pi")) >= 0) {
-          syms = function(syms) {
-            var rest = syms.slice(index + 1);
-            syms.length = index;
-            return syms.concat(rest)
-          }(syms)
-        }
-        var symbols = "";
-        var params = "";
-        if(syms && syms.length) {
-          syms.forEach(function(s) {
-            if(symbols) {
-              symbols += " ";
-              params += ","
-            }
-            symbols += s;
-            params += s
-          });
-          symbols = "symbols('" + symbols + "')";
-          params = "(" + params + ")"
-        }
-        var opts = "";
-        Object.keys(options).forEach(function(k) {
-          switch(k) {
-            case "variable":
-            ;
-            case "precision":
-              opts += "," + options[k];
-              break;
-            case "domain":
-              opts += "," + k + "=" + options[k];
-              break;
-            default:
-              break
-          }
-        });
-        texToSympy(expr, function(err, v) {
+        var args = v + opts;
+        var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
+        getSympy("/api/v1/eval", obj, function(err, data) {
           if(err && err.length) {
-            errs = errs.concat(err);
-            resume(errs, [])
-          }else {
-            var args = v + opts;
-            var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
-            getSympy("/api/v1/eval", obj, function(err, data) {
-              if(err && err.length) {
-                errs = errs.concat(err)
-              }
-              resume(errs, data)
-            })
+            errs = errs.concat(err)
           }
+          resume(errs, data)
         })
       }
     })
