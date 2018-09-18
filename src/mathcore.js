@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 74936ae
+ * Mathcore unversioned - 8528da6
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4772,6 +4772,7 @@ var Model = function() {
             errs = errs.concat(err);
             val = ""
           }
+          console.log("texToSympy() val=" + val);
           resume(errs, val)
         })
       }catch(e) {
@@ -11496,9 +11497,14 @@ var Model = function() {
           evalSympy("simplify", node, options, function(err, val) {
             var n = Model.create(val);
             assert(n.op === Model.LIST);
-            equivSymbolic(Model.create(n.args[0]), Model.create(n.args[1]), function(err, result) {
-              resume(null, result)
-            })
+            console.log("equivSymbolic() n=" + JSON.stringify(n));
+            n1 = scale(expand(normalize(simplify(expand(normalize(n.args[0]))))));
+            n2 = scale(expand(normalize(simplify(expand(normalize(n.args[1]))))));
+            var nid1 = ast.intern(n1);
+            var nid2 = ast.intern(n2);
+            var result = nid1 === nid2;
+            result = inverseResult && !result || result;
+            resume(null, result)
           })
         }else {
           result = inverseResult && !result || result;
@@ -11510,6 +11516,7 @@ var Model = function() {
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
+    console.log("getSympy() data=" + encodedData);
     var LOCAL = true;
     var options = {method:"GET", host:LOCAL && "localhost" || "sympy-artcompiler.herokuapp.com", port:LOCAL && "8000" || "80", path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
     var protocol = http;

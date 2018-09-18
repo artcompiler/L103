@@ -1429,7 +1429,6 @@ let render = (function() {
     return str.replace(new RegExp(" ","g"), "\\ ");
   }
   function render(val, options, resume) {
-    console.log("render() val=" + JSON.stringify(val));
     resume([], val);
   }
   return render;
