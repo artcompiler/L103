@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - b971939
+ * Mathcore unversioned - 1cf6b02
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4767,6 +4767,7 @@ var Model = function() {
   return Model
 }();
 (function(ast) {
+  var LOCAL = false;
   var latexSympy = require("./spokenmath.js").Core;
   var http = require("http");
   var https = require("https");
@@ -4792,7 +4793,7 @@ var Model = function() {
     var path = "/code";
     var data = {language:lang, src:src};
     var encodedData = JSON.stringify(data);
-    var options = {method:"PUT", host:"localhost", port:"3000", path:path, headers:{"Content-Type":"text/plain", "Content-Length":encodedData.length}};
+    var options = {method:"PUT", host:LOCAL && "localhost" || "www.graffiticode.com", port:LOCAL && "3000" || "443", path:path, headers:{"Content-Type":"text/plain", "Content-Length":encodedData.length}};
     var req = http.request(options, function(res) {
       var data = "";
       res.on("data", function(chunk) {
@@ -4817,7 +4818,7 @@ var Model = function() {
   }
   function putComp(auth, data, resume) {
     var encodedData = JSON.stringify(data);
-    var options = {host:"localhost", port:"3000", path:"/comp", method:"PUT", headers:{"Content-Type":"text/plain", "Content-Length":Buffer.byteLength(encodedData), "Authorization":auth}};
+    var options = {host:LOCAL && "localhost" || "www.graffiticode.com", port:LOCAL && "3000" || "443", path:"/comp", method:"PUT", headers:{"Content-Type":"text/plain", "Content-Length":Buffer.byteLength(encodedData), "Authorization":auth}};
     var req = http.request(options);
     req.on("response", function(res) {
       var data = "";
@@ -11571,7 +11572,6 @@ var Model = function() {
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
-    var LOCAL = false;
     var options = {method:"GET", host:LOCAL && "localhost" || "sympy-artcompiler.herokuapp.com", port:LOCAL && "8000" || "80", path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
     var protocol = http;
     var req = protocol.request(options, function(res) {
