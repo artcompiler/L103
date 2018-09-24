@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 1cf6b02
+ * Mathcore unversioned - 58e5e95
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4767,7 +4767,7 @@ var Model = function() {
   return Model
 }();
 (function(ast) {
-  var LOCAL = false;
+  var LOCAL = true;
   var latexSympy = require("./spokenmath.js").Core;
   var http = require("http");
   var https = require("https");
@@ -11525,9 +11525,7 @@ var Model = function() {
             node.rbrk = 41;
             var options = {};
             evalSympy("simplify", node, options, function(err, val) {
-              console.log("equivSymbolic val=" + JSON.stringify(val));
               var n = Model.create(val);
-              console.log("equivSymbolic n=" + JSON.stringify(n));
               assert(n.op === Model.PAREN && n.args[0].op === Model.LIST);
               n = n.args[0];
               n1 = scale(expand(normalize(simplify(expand(normalize(n.args[0]))))));
@@ -11535,7 +11533,6 @@ var Model = function() {
               var nid1 = ast.intern(n1);
               var nid2 = ast.intern(n2);
               var result = nid1 === nid2;
-              console.log("equivSymbolic() result=" + result);
               result = inverseResult && !result || result;
               resume(null, result)
             })
@@ -11579,7 +11576,6 @@ var Model = function() {
       res.on("data", function(chunk) {
         data += chunk
       }).on("end", function() {
-        console.log("getSympy() data=" + data);
         try {
           resume([], JSON.parse(data))
         }catch(e) {
@@ -11602,7 +11598,7 @@ var Model = function() {
     var result;
     var syms = variables(expr);
     var index;
-    var excludes = ["\\pi", "\\infty"];
+    var excludes = ["\\pi", "\\infty", "e"];
     excludes.forEach(function(sym) {
       if((index = syms.indexOf(sym)) >= 0) {
         syms = function(syms) {
@@ -11648,9 +11644,7 @@ var Model = function() {
       }else {
         var args = v + opts;
         var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
-        console.log("evalSympy() obj=" + JSON.stringify(obj));
         getSympy("/api/v1/eval", obj, function(err, data) {
-          console.log("evalSympy() data=" + JSON.stringify(data));
           if(err && err.length) {
             errs = errs.concat(err)
           }
