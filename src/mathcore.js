@@ -4767,7 +4767,7 @@ var Model = function() {
   return Model
 }();
 (function(ast) {
-  var LOCAL = true;
+  var LOCAL = false;
   var latexSympy = require("./spokenmath.js").Core;
   var http = require("http");
   var https = require("https");
