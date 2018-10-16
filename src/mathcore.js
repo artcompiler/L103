@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 3080048
+ * Mathcore unversioned - cfe0848
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4081,13 +4081,25 @@ var Model = function() {
         assert(loopCount++ < 1E3, "1000: Stuck in loop in mutliplicativeExpr()")
       }
       if(args.length > 1) {
-        return multiplyNode(args)
+        return trimEmptyBraces(multiplyNode(args))
       }else {
         return args[0]
       }
       function isMultiplicative(t) {
         return t === TK_MUL || (t === TK_DIV || t === TK_SLASH)
       }
+    }
+    function trimEmptyBraces(node) {
+      assert(node.op === Model.MUL, "1000: Internal error");
+      var args = node.args;
+      if(args[0].op === Model.COMMA && args[0].args.length === 0) {
+        args = args.slice(1, args.length);
+        args[0].isImplicit = false
+      }
+      if(args[args.length - 1].op === Model.COMMA && args[args.length - 1].args.length === 0) {
+        args = args.slice(0, args.length - 1)
+      }
+      return newNode(node.op, args)
     }
     function isNumber(n) {
       if((n.op === Model.SUB || n.op === Model.ADD) && n.args.length === 1) {
@@ -5678,7 +5690,11 @@ var Model = function() {
               d = degree(args[0], notAbsolute) * Math.abs(toNumber(expo))
             }
           }else {
-            d = Number.POSITIVE_INFINITY
+            if(!isNeg(args[1])) {
+              d = Number.POSITIVE_INFINITY
+            }else {
+              d = Number.NEGATIVE_INFINITY
+            }
           }
         }else {
           if(node.op === Model.LOG) {
@@ -5793,12 +5809,7 @@ var Model = function() {
         }
         return 0
       }, comma:function(node) {
-        var args = node.args;
-        var dd = [];
-        forEach(args, function(n) {
-          dd = dd.concat(degree(n, notAbsolute))
-        });
-        return dd
+        return[]
       }, equals:function(node) {
         var args = node.args;
         var d = 0;
@@ -6870,79 +6881,126 @@ var Model = function() {
       }
       return node
     }
+    function combineLikeFactors(ff) {
+      if(!ff || ff.length === 0) {
+        return[]
+      }
+      var base;
+      var expo = bigZero;
+      var baseNid = 0;
+      forEach(ff, function(f) {
+        var b, e;
+        if(f.op === Model.POW) {
+          b = f.args[0];
+          e = mathValue(f.args[1], true)
+        }else {
+          b = f;
+          e = bigOne
+        }
+        assert(e !== null);
+        assert(baseNid === 0 || ast.intern(b) === baseNid);
+        baseNid = ast.intern(b);
+        base = b;
+        expo = expo.add(e)
+      });
+      return[newNode(Model.POW, [base, numberNode(expo)])]
+    }
     function factorCommonExpressions(node) {
-      if(node.op !== Model.ADD || node.args.length !== 2) {
+      if(node.op !== Model.ADD) {
         return node
       }
-      var n1 = node.args[0];
-      var n2 = node.args[1];
       var changed = false;
+      var nargs = node.args.slice(0);
+      var n1 = nargs.shift();
       var nn1 = {};
-      var nn2 = {};
+      var nnf = {};
       var args = n1.op === Model.MUL ? n1.args : [n1];
       forEach(args, function(n, i) {
         var mv = mathValue(n, true);
         var key = mv !== null ? String(mv) : n.op === Model.POW && mathValue(n.args[1]) ? "nid$" + ast.intern(n.args[0]) : "nid$" + ast.intern(n);
-        if(!nn1[key]) {
-          nn1[key] = []
+        if(!nnf[key]) {
+          nnf[key] = []
         }
-        nn1[key].push(n)
+        nnf[key].push(n)
       });
-      var args = n2.op === Model.MUL ? n2.args : [n2];
-      forEach(args, function(n, i) {
-        var mv = mathValue(n, true);
-        var key = mv !== null ? String(mv) : n.op === Model.POW && mathValue(n.args[1]) ? "nid$" + ast.intern(n.args[0]) : "nid$" + ast.intern(n);
-        if(!nn2[key]) {
-          nn2[key] = []
+      nn1["1"] = [nodeOne];
+      var ttt = [nn1];
+      var nnn2 = [];
+      forEach(nargs, function(n2) {
+        var nn2 = {};
+        nnn2.push(nn2);
+        var args = n2.op === Model.MUL ? n2.args : [n2];
+        forEach(args, function(n, i) {
+          var mv = mathValue(n, true);
+          var key = mv !== null ? String(mv) : n.op === Model.POW && mathValue(n.args[1]) ? "nid$" + ast.intern(n.args[0]) : "nid$" + ast.intern(n);
+          if(!nn2[key]) {
+            nn2[key] = []
+          }
+          nn2[key].push(n)
+        });
+        var n1Keys = keys(nn1);
+        var n2Keys = keys(nn2);
+        var nfKeys = keys(nnf);
+        if(nfKeys.length === 1 || (n1Keys.length === 0 || (n2Keys.length === 0 || n2Keys.length === 1 && n2Keys[0] === "-1"))) {
+          return node
         }
-        nn2[key].push(n)
-      });
-      var nKeys = keys(nn1);
-      var dKeys = keys(nn2);
-      if(nKeys.length === 0 || (dKeys.length === 0 || dKeys.length === 1 && dKeys[0] === "-1")) {
-        return addNode([n1, n2])
-      }
-      var ff = [];
-      forEach(nKeys, function(k) {
-        if(!isNaN(+k)) {
-          return
-        }
-        var nn = nn1[k];
-        var dd = nn2[k];
-        if(dd) {
-          while(nn.length > 0 && dd.length > 0) {
-            var n1 = nn.pop();
-            var n2 = dd.pop();
-            var e1 = n1.op === Model.POW && mathValue(n1.args[1]) ? mathValue(n1.args[1], true) : bigOne;
-            var e2 = n2.op === Model.POW && mathValue(n2.args[1]) ? mathValue(n2.args[1], true) : bigOne;
-            if(isLessThan(e1, e2)) {
-              var e = e2.subtract(e1);
-              var b = n1.op === Model.POW && mathValue(n1.args[1], true) ? n1.args[0] : n1;
-              if(!isZero(e)) {
-                dd.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(e)]))
-              }
-              if(!isZero(e2)) {
-                ff.push(isOne(e1) ? b : newNode(Model.POW, [b, numberNode(e1)]))
-              }
-            }else {
-              var e = e1.subtract(e2);
-              var b = n1.op === Model.POW && mathValue(n1.args[1], true) ? n1.args[0] : n1;
-              if(!isZero(e)) {
-                nn.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(e)]))
-              }
-              if(!isZero(e2)) {
-                ff.push(isOne(e2) ? b : newNode(Model.POW, [b, numberNode(e2)]))
+        var ff = [];
+        forEach(nfKeys, function(k) {
+          if(nn2[k] && nn2[k].length) {
+            var fff = nnf[k] = combineLikeFactors(nnf[k]);
+            var ff1 = nn1[k] = combineLikeFactors(nn1[k]);
+            var ff2 = nn2[k] = combineLikeFactors(nn2[k]);
+            var fffLength = fff.length;
+            var ff2Length = ff2.length;
+            while(fffLength-- > 0 && ff2Length-- > 0) {
+              var ff = fff.pop();
+              var f2 = ff2.pop();
+              var ef = ff.op === Model.POW && mathValue(ff.args[1]) ? mathValue(ff.args[1], true) : bigOne;
+              var e2 = f2.op === Model.POW && mathValue(f2.args[1]) ? mathValue(f2.args[1], true) : bigOne;
+              if(isLessThan(ef, e2)) {
+                var e = e2.subtract(ef);
+                var b = ff.op === Model.POW && mathValue(ff.args[1], true) ? ff.args[0] : ff;
+                if(!isZero(e)) {
+                  ff2.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(e)]))
+                }
+                if(!isZero(ef)) {
+                  fff.push(isOne(ef) ? b : newNode(Model.POW, [b, numberNode(ef)]))
+                }
+              }else {
+                var e = ef.subtract(e2);
+                var b = ff.op === Model.POW && mathValue(ff.args[1], true) ? ff.args[0] : ff;
+                if(!isZero(e)) {
+                  ttt.forEach(function(nf1) {
+                    var ff1 = nf1[k];
+                    ff1.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(e)]))
+                  })
+                }
+                if(!isZero(e2)) {
+                  fff.push(isOne(e2) ? b : newNode(Model.POW, [b, numberNode(e2)]))
+                }
               }
             }
+            changed = true
+          }else {
+            var fff = nnf[k];
+            while(fff.length > 0) {
+              var ff = fff.pop();
+              ttt.forEach(function(nf1) {
+                var ff1 = nf1[k] || (nn1[k] = []);
+                ff1.push(ff)
+              })
+            }
+            changed = true
           }
-          changed = true
-        }
+        });
+        ttt.push(nn2)
       });
       if(!changed) {
         return node
       }
       var args = [];
-      forEach(nKeys, function(k) {
+      var addArgs = [];
+      forEach(keys(nn1), function(k) {
         args = args.concat(nn1[k])
       });
       if(args.length === 0) {
@@ -6954,20 +7012,32 @@ var Model = function() {
           n1 = multiplyNode(args)
         }
       }
+      addArgs.push(n1);
+      forEach(nnn2, function(nn2) {
+        var args = [];
+        var n2;
+        forEach(keys(nn2), function(k) {
+          args = args.concat(nn2[k])
+        });
+        if(args.length === 0) {
+          n2 = nodeOne
+        }else {
+          if(args.length === 1) {
+            n2 = args[0]
+          }else {
+            n2 = multiplyNode(args)
+          }
+        }
+        addArgs.push(n2)
+      });
       var args = [];
-      forEach(dKeys, function(k) {
-        args = args.concat(nn2[k])
+      forEach(keys(nnf), function(k) {
+        args = args.concat(nnf[k])
       });
       if(args.length === 0) {
-        n2 = nodeOne
-      }else {
-        if(args.length === 1) {
-          n2 = args[0]
-        }else {
-          n2 = multiplyNode(args)
-        }
+        return node
       }
-      return multiplyNode(ff.concat(addNode([n1, n2])))
+      return multiplyNode(args.concat(addNode(addArgs)))
     }
     function eraseCommonExpressions(n1, n2) {
       n1 = factorCommonExpressions(n1);
@@ -7277,6 +7347,14 @@ var Model = function() {
             }else {
               if(node.args[0] === "\\degree") {
                 node = fractionNode(nodePI, numberNode("180"))
+              }else {
+                if(option("ignoreUnits") && (Model.env[node.args[0]] && Model.env[node.args[0]].type === "unit")) {
+                  var vv = [];
+                  node.args[0].split("").forEach(function(v) {
+                    vv.push(variableNode(v))
+                  });
+                  return multiplyNode(vv)
+                }
               }
             }
           }
@@ -7684,13 +7762,13 @@ var Model = function() {
           var s0, s1;
           n0 = node.args[i];
           n1 = node.args[i + 1];
-          d0 = Math.abs(degree(n0));
-          d1 = Math.abs(degree(n1));
+          d0 = degree(n0);
+          d1 = degree(n1);
           if(d0 > d1) {
             node.args[i] = n1;
             node.args[i + 1] = n0
           }else {
-            if(d0 === d1) {
+            if(Math.abs(d0) === Math.abs(d1)) {
               v0 = variables(n0);
               v1 = variables(n1);
               var e0 = exponent(n0);
@@ -9674,10 +9752,9 @@ var Model = function() {
       return Math.log(x) / Math.log(b)
     }
     function mathValue(root, env, allowDecimal, normalizeUnits) {
-      if(!root) {
+      if(!root || !root.args) {
         return null
       }
-      assert(root && root.args, "2000: Internal error.");
       if(env === undefined) {
         env = Model.env
       }else {
@@ -11443,6 +11520,8 @@ var Model = function() {
     var inverseResult = option("inverseResult");
     var strict = option("strict");
     if(!inverseResult && !strict) {
+      var n1o = JSON.parse(JSON.stringify(n1));
+      var n2o = JSON.parse(JSON.stringify(n2));
       var ignoreOrder = option("ignoreOrder", false);
       try {
         var result = Model.fn.equivLiteral(n1, n2);
@@ -11457,6 +11536,8 @@ var Model = function() {
         }
         return true
       }
+      n1 = n1o;
+      n2 = n2o
     }
     if(isComparison(n1.op) && n1.op === n2.op) {
       var n1a0 = n1.args[0];
@@ -11504,6 +11585,7 @@ var Model = function() {
         }
       }
     }
+    var ignoreUnits = option("ignoreUnits", true);
     if(formulaKind(n1) !== formulaKind(n2)) {
       var result = false
     }else {
@@ -11524,6 +11606,7 @@ var Model = function() {
           equivSymbolic(Model.create(n1r), Model.create(n2r), function(err, result2) {
             option("strict", strict);
             option("inverseResult", inverseResult);
+            option("ignoreUnits", ignoreUnits);
             resume(null, result1 && result2)
           })
         })
@@ -11563,6 +11646,7 @@ var Model = function() {
               var nid2 = ast.intern(n2);
               var result = nid1 === nid2;
               result = inverseResult && !result || result;
+              option("ignoreUnits", ignoreUnits);
               resume(null, result)
             })
           }else {
@@ -11573,6 +11657,7 @@ var Model = function() {
               nid2 = ast.intern(n2);
               result = nid1 === nid2;
               result = inverseResult && !result || result;
+              option("ignoreUnits", ignoreUnits);
               resume(null, result)
             }else {
               if(!isComparison(n2.op) && (!isAggregate(n1) && !isAggregate(n2))) {
@@ -11584,16 +11669,22 @@ var Model = function() {
                 nid2 = ast.intern(n2);
                 result = nid1 === nid2;
                 result = inverseResult && !result || result;
+                option("ignoreUnits", ignoreUnits);
                 resume(null, result)
               }
             }
           }
         }else {
           result = inverseResult && !result || result;
+          option("ignoreUnits", ignoreUnits);
           resume(null, result)
         }
       }
     }
+    if(result) {
+      return inverseResult ? false : true
+    }
+    return inverseResult ? true : false
   };
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
@@ -11955,9 +12046,13 @@ var Model = function() {
   var option = Model.option = function option(p, v) {
     var options = Model.options;
     var opt = options && options[p];
-    if(v !== undefined) {
+    if(arguments.length > 1) {
       Model.options = options = options || {};
-      options[p] = v
+      if(v === undefined) {
+        delete options[p]
+      }else {
+        options[p] = v
+      }
     }
     if(opt === undefined) {
       switch(p) {
@@ -11984,6 +12079,8 @@ var Model = function() {
         case "compatibility":
         ;
         case "allowEulersNumber":
+        ;
+        case "ignoreUnits":
           opt = undefined;
           break;
         default:
@@ -12076,7 +12173,7 @@ var MathCore = function() {
       return e
     }
   }
-  var timeoutDuration = 3E6;
+  var timeoutDuration = 3E4;
   function setTimeoutDuration(duration) {
     timeoutDuration = duration
   }
@@ -12138,6 +12235,8 @@ var MathCore = function() {
       case "strict":
       ;
       case "allowEulersNumber":
+      ;
+      case "ignoreUnits":
         if(typeof v === "undefined" || typeof v === "boolean") {
           break
         }
