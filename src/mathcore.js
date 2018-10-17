@@ -3392,10 +3392,6 @@ var Model = function() {
         case TK_VAR:
           var args = [lexeme()];
           next();
-          if((t = hd()) === TK_UNDERSCORE) {
-            next({oneCharToken:true});
-            args.push(primaryExpr())
-          }
           e = newNode(Model.VAR, args);
           if(isChemCore()) {
             if(hd() === TK_LEFTBRACE && lookahead() === TK_RIGHTBRACE) {
@@ -4815,7 +4811,6 @@ var Model = function() {
     var errs = [];
     if(tex) {
       try {
-        console.log("texToSympy() tex=" + JSON.stringify(tex));
         latexSympy.translate({}, tex, function(err, val) {
           if(err && err.length) {
             errs = errs.concat(err);
@@ -5939,6 +5934,9 @@ var Model = function() {
       }, variable:function(node) {
         if(node.args[0] === "0") {
           return[]
+        }
+        if(node.op === Model.SUBSCRIPT) {
+          node = node.args[0]
         }
         return[node.args[0]]
       }, comma:function(node) {
@@ -11764,7 +11762,6 @@ var Model = function() {
       }else {
         var args = v + opts;
         var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
-        console.log("evalSympy() obj=" + JSON.stringify(obj));
         getSympy("/api/v1/eval", obj, function(err, data) {
           if(err && err.length) {
             errs = errs.concat(err)
