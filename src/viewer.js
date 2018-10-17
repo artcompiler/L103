@@ -37,8 +37,6 @@ window.gcexports.viewer = (function () {
       let x = spacing;
       let y = (2 * spacing + size) * i / 2;
       rgb = color(d.score / count);
-//      elts.push(<rect key={i} x={x} y={y} width={size} height={size} fill={rgb} fillOpacity="1" strokeOpacity="0"/>);
-//      elts.push(<text key={i+1} style={textStyle} x={x /*+ size + spacing*/} y={y + size}>{input}</text>);
       elts.push(<div className="mq" style={{
         margin: "20 5 0 5",
         border: "2px solid",
@@ -54,13 +52,11 @@ window.gcexports.viewer = (function () {
         let v = d[k].value;
         let r = typeof d[k] === "boolean" && d[k] || d[k].result;
         offset++
-        let value = typeof d.symbolic.value === "string" && <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
-//        let method = <tspan key="1">{ k + " " + (value || "")}</tspan>;
+        let value = (d.symbolic && typeof d.symbolic.value === "string" ||
+                     d.literal && typeof d.literal.value === "string") &&
+          <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
         let method = <div key="1"><span key="1">{k}</span> {value}</div>;
         rgb = color(r && 1 || 0);
-        // elts.push(<rect key={i} x={x} y={y + offset * (size + spacing)} width={size} height={size} fill={rgb} fillOpacity="1" strokeOpacity="0"/>);
-        // elts.push(<text key={i+1} style={textStyle} x={x + size + spacing} y={y + offset * (size + spacing) + spacing + spacing}>{method}</text>);
-        //elts.push(<rect key={i} x={x} y={y + offset * (size + spacing)} width={size} height={size} fill={rgb} fillOpacity="1" strokeOpacity="0"/>);
         elts.push(<div key={i} style={{
           borderLeft: "2px solid",
           borderColor: rgb,

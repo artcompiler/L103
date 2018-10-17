@@ -178,8 +178,6 @@ window.gcexports.viewer = function () {
       var x = spacing;
       var y = (2 * spacing + size) * i / 2;
       rgb = color(d.score / count);
-      //      elts.push(<rect key={i} x={x} y={y} width={size} height={size} fill={rgb} fillOpacity="1" strokeOpacity="0"/>);
-      //      elts.push(<text key={i+1} style={textStyle} x={x /*+ size + spacing*/} y={y + size}>{input}</text>);
       elts.push(React.createElement(
         "div",
         { className: "mq", style: {
@@ -199,7 +197,7 @@ window.gcexports.viewer = function () {
         var v = d[k].value;
         var r = typeof d[k] === "boolean" && d[k] || d[k].result;
         offset++;
-        var value = typeof d.symbolic.value === "string" && React.createElement(
+        var value = (d.symbolic && typeof d.symbolic.value === "string" || d.literal && typeof d.literal.value === "string") && React.createElement(
           "span",
           { key: "2", className: "mq" },
           v
@@ -208,7 +206,6 @@ window.gcexports.viewer = function () {
           { key: "2" },
           JSON.stringify(v)
         );
-        //        let method = <tspan key="1">{ k + " " + (value || "")}</tspan>;
         var method = React.createElement(
           "div",
           { key: "1" },
@@ -221,9 +218,6 @@ window.gcexports.viewer = function () {
           value
         );
         rgb = color(r && 1 || 0);
-        // elts.push(<rect key={i} x={x} y={y + offset * (size + spacing)} width={size} height={size} fill={rgb} fillOpacity="1" strokeOpacity="0"/>);
-        // elts.push(<text key={i+1} style={textStyle} x={x + size + spacing} y={y + offset * (size + spacing) + spacing + spacing}>{method}</text>);
-        //elts.push(<rect key={i} x={x} y={y + offset * (size + spacing)} width={size} height={size} fill={rgb} fillOpacity="1" strokeOpacity="0"/>);
         elts.push(React.createElement(
           "div",
           { key: i, style: {
