@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - cfe0848
+ * Mathcore unversioned - ae9a807
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3952,7 +3952,7 @@ var Model = function() {
       var numerHead = numer.op === Model.MUL && (numer.args[0].op === Model.VAR && numer.args[0].args[0]) || (numer.op === Model.VAR && numer.args[0] || numer.op === Model.POW && (numer.args[0].op === Model.VAR && numer.args[0].args[0]));
       var denom = n.args[1];
       var denomHead = denom.op === Model.MUL && (denom.args[0].op === Model.VAR && denom.args[0].args[0]);
-      return numerHead === "d" && (denomHead === "d" && (denom.args[1] && denom.args[1].op === Model.VAR)) || denom.args[1] && (denom.args[1].op === Model.POW && (denom.args[1].args[0] && denom.args[1].args[0].op === Model.VAR))
+      return numerHead === "d" && (denomHead === "d" && (denom.args[1] && denom.args[1].op === Model.VAR || denom.args[1] && (denom.args[1].op === Model.POW && (denom.args[1].args[0] && denom.args[1].args[0].op === Model.VAR))))
     }
     function derivativeExpr(node) {
       if(node.op !== Model.FRAC) {
