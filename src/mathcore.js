@@ -11630,19 +11630,25 @@ var Model = function() {
         if(!result) {
           if(true || option("SymPy")) {
             option("SymPy", undefined);
-            var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1o), stripMetadata(n2o)])]);
+            var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1o), stripMetadata(n2o), newNode(Model.ADD, [stripMetadata(n1o), negate(stripMetadata(n2o))])])]);
             node.lbrk = 40;
             node.rbrk = 41;
             var options = {};
             evalSympy("simplify", node, options, function(err, val) {
+              console.log("equivSymbolic() val=" + JSON.stringify(val));
               var n = Model.create(val);
               assert(n.op === Model.PAREN && n.args[0].op === Model.LIST);
               n = n.args[0];
-              n1 = scale(expand(normalize(simplify(expand(normalize(n.args[0]))))));
-              n2 = scale(expand(normalize(simplify(expand(normalize(n.args[1]))))));
-              var nid1 = ast.intern(n1);
-              var nid2 = ast.intern(n2);
-              var result = nid1 === nid2;
+              var result;
+              if(isZero(mathValue(n.args[2]))) {
+                result = true
+              }else {
+                n1 = scale(expand(normalize(simplify(expand(normalize(n.args[0]))))));
+                n2 = scale(expand(normalize(simplify(expand(normalize(n.args[1]))))));
+                var nid1 = ast.intern(n1);
+                var nid2 = ast.intern(n2);
+                result = nid1 === nid2
+              }
               result = inverseResult && !result || result;
               option("ignoreUnits", ignoreUnits);
               resume(null, result)
