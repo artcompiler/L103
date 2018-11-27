@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - ae9a807
+ * Mathcore unversioned - 9ee7d8f
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7334,6 +7334,7 @@ var Model = function() {
         }
         return node
       }, variable:function(node) {
+        var val;
         if(node.args[0] === "i" && !option("dontSimplifyImaginary")) {
           node = nodeImaginary
         }else {
@@ -7352,6 +7353,10 @@ var Model = function() {
                     vv.push(variableNode(v))
                   });
                   return multiplyNode(vv)
+                }else {
+                  if((val = Model.env[node.args[0]]) && val.type === "param") {
+                    node = val.value
+                  }
                 }
               }
             }
@@ -11613,8 +11618,8 @@ var Model = function() {
           var nn = eraseCommonExpressions(normalize(n1), normalize(n2));
           n1 = nn[0];
           n2 = nn[1];
-          var n1o = stripMetadata(n1);
-          var n2o = stripMetadata(n2);
+          var n1o = stripMetadata(n1o);
+          var n2o = stripMetadata(n2o);
           var mv1, mv2;
           if((mv1 = mathValue(n1, true)) && (mv2 = mathValue(n2, true))) {
             n1 = scale(n1);
