@@ -39,9 +39,9 @@ window.gcexports.viewer = (function () {
       rgb = color(d.score / count);
       elts.push(<div className="mq" style={{
         margin: "20 5 0 5",
-        border: "2px solid",
-        borderColor: rgb,
-        padding: 5,
+        //border: "2px solid",
+        //borderColor: rgb,
+        //padding: 5,
       }} key={i+1}>{d.input}</div>);
       i += 2;
       let offset = 0;

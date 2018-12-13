@@ -181,10 +181,10 @@ window.gcexports.viewer = function () {
       elts.push(React.createElement(
         "div",
         { className: "mq", style: {
-            margin: "20 5 0 5",
-            border: "2px solid",
-            borderColor: rgb,
-            padding: 5
+            margin: "20 5 0 5"
+            //border: "2px solid",
+            //borderColor: rgb,
+            //padding: 5,
           }, key: i + 1 },
         d.input
       ));
