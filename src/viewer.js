@@ -38,7 +38,7 @@ window.gcexports.viewer = (function () {
       let y = (2 * spacing + size) * i / 2;
       rgb = color(d.score / count);
       elts.push(<div className="mq" style={{
-        margin: "20 5 0 5",
+        margin: "20 5 0 0",
         //border: "2px solid",
         //borderColor: rgb,
         //padding: 5,
