@@ -28,5 +28,5 @@ A language for writing math scorers. Uses SymPy for symbolic processing.
 * Make sure everything is good.
   * Visit your local GC server (e.g. http://localhost:3000/lang?id=107) to test.
   * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`.
-  * See ![alt text](https://www.graffiticode.com/form?id=y5vHZqdQc0 "Logo Title Text 1")
+  * See https://www.graffiticode.com/form?id=y5vHZqdQc0
 
