@@ -28,6 +28,6 @@ A language for writing math scorers. Uses a remote SymPy service for symbolic pr
   * `$ make`
 * Make sure everything is good.
   * Visit your local GC server (e.g. http://localhost:3000/lang?id=107) to test.
-  * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`.
+  * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`
   * See https://www.graffiticode.com/form?id=y5vHZqdQc0 in the form view.
 
