@@ -12,6 +12,7 @@ A language for writing math scorers. Uses a remote SymPy service for symbolic pr
 * Clone and build mathcore (while in the L107 root directory.)
   * `$ git clone git@github.com:artcompiler/mathcore.git`
   * `$ cd mathcore`
+  * `$ git checkout L107`
   * `$ npm install`
   * `$ make`
   * `$ cd ..`
