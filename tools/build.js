@@ -38,7 +38,8 @@ function clean() {
 
 function compile() {
   console.log("Compiling...");
-  exec("cp ./spokenmath/build/spokenmath.js ./src/spokenmath.js");
+  exec("cp ./mathcore/lib/mathcore.js ./src/mathcore.js");
+  exec("cp ./latexsympy/build/spokenmath.js ./src/latexsympy.js");
   exec("babel src --out-dir lib");
 }
 

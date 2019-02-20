@@ -8,7 +8,7 @@ import * as mjAPI from "mathjax-node/lib/main.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
-import {Core} from "./spokenmath.js";
+import {Core} from "./latexsympy.js";
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
 messages[1002] = "Invalid tag in node with Node ID %1.";
