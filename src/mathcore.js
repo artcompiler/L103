@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 1532623
+ * Mathcore unversioned - ca21b69
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4804,7 +4804,7 @@ var Model = function() {
 }();
 (function(ast) {
   var LOCAL = false;
-  var latexSympy = require("./spokenmath.js").Core;
+  var latexSympy = require("./latexsympy.js").Core;
   var http = require("http");
   var https = require("https");
   function texToSympy(tex, resume) {
