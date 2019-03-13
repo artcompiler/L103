@@ -5,7 +5,7 @@ PUB = $(LIB:lib/%.js=pub/%.js)
 default: build run
 
 build:
-	npm run build
+	npm run build-dev
 
 run:
 	npm start
