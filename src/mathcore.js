@@ -3204,6 +3204,7 @@ var Model = function() {
       return ch === "."
     }
     function numberNode(n0, doScale, roundOnly) {
+      console.log("numberNode() n0=" + n0);
       var ignoreTrailingZeros = Model.option("ignoreTrailingZeros");
       var n1 = n0.toString();
       var n2 = "";
@@ -12142,6 +12143,8 @@ var MathCore = function() {
     }
   }
   function evaluateVerbose(spec, solution, resume) {
+    console.log("equivVerbose() spec=" + JSON.stringify(spec));
+    console.log("equivVerbose() solution=" + JSON.stringify(solution));
     var model, result;
     try {
       assert(spec, message(3001, [spec]));
