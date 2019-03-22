@@ -2,7 +2,7 @@
 
 A language for writing math scorers. Uses a remote SymPy service for symbolic processing.
 
-### Getting Started
+### Getting started
 
 * Get, build and start the Graffiticode host app (https://github.com/graffiticode/graffiticode).
 * Clone and initialize L107.
@@ -30,7 +30,7 @@ A language for writing math scorers. Uses a remote SymPy service for symbolic pr
   * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`
   * See https://www.graffiticode.com/form?id=y5vHZqdQc0 in the form view.
 
-### Refreshing Mathcore with Remote Commits
+### Refreshing local mathcore with remote commits
 
 * See local changes you've made.
   * `$ cd ./L107/mathcore`
@@ -44,7 +44,7 @@ A language for writing math scorers. Uses a remote SymPy service for symbolic pr
   * `$ git pull origin L107`
   * `$ make`
   
-### Refreshing Local latexsympy with Remote Commits
+### Refreshing local latexsympy with remote commits
 
 * See local changes you've made.
   * `$ cd ./L107/latexsympy`
