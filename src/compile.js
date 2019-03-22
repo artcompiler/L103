@@ -143,6 +143,24 @@ let transform = (function() {
       }
     }
   }
+  function trans(dialect, node, options, resume) {
+    var errs = [];
+    visit(node.elts[0], options, function (err, val) {
+      errs = errs.concat(err);
+      let latex = val;
+      let opts;
+      var methods = dialect + " " + (val.methods || "");
+      if (latex) {
+        texToSympy(latex, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+          }
+          val = "\\text{" + val + "}";
+          resume(errs, val);
+        });
+      }
+    });
+  }
   function visit(nid, options, resume) {
     assert(typeof resume === "function", message(1003));
     // Get the node from the pool of nodes.
@@ -512,6 +530,9 @@ let transform = (function() {
         }
       });
     });
+  }
+  function sympy(node, options, resume) {
+    return trans("SymPy", node, options, resume);
   }
   function simplified(node, options, resume) {
     let input = options.input;
@@ -1302,6 +1323,7 @@ let transform = (function() {
     "IGNORE-ORDER" : ignoreOrder,
     "RUBRIC" : rubric,
     "STYLE" : style,
+    "SYMPY": sympy,
     "CALCULATE": calculate,
     "SIMPLIFIED": simplified,
     "EXPANDED": expanded,

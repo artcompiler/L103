@@ -18,6 +18,7 @@ window.gcexports.globalLexicon = {
   "simplified" : { "tk": 1, "name": "SIMPLIFIED", "cls": "function", "length": 0, "arity": 0 },
   "expanded" : { "tk": 1, "name": "EXPANDED", "cls": "function", "length": 0 , "arity": 0 },
   "factored" : { "tk": 1, "name": "FACTORED", "cls": "function", "length": 0 , "arity": 0 },
+  "sympy" : { "tk": 1, "name": "SYMPY", "cls": "function", "length": 1 , "arity": 1 },
   "symbolic" : { "tk": 1, "name": "SYMBOLIC", "cls": "function", "length": 1 , "arity": 1 },
   "expand" : { "tk": 1, "name": "EXPAND", "cls": "function", "length": 1 , "arity": 1 },
   "factor" : { "tk": 1, "name": "FACTOR", "cls": "function", "length": 1 , "arity": 1 },
