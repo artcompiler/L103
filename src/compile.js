@@ -543,6 +543,8 @@ let transform = (function() {
         options: {},
       }, d, function (err, val) {
         resume(err, {
+          method: "isSimplified",
+          input: d,
           result: val.result,
         });
       });
@@ -655,6 +657,9 @@ let transform = (function() {
             errs = errs.concat(error(err, node.elts[0]));
           }
           resume(err, {
+            method: "equivSymbolic",
+            value: value,
+            input: d,
             result: val.result,
           });
         });
@@ -864,10 +869,32 @@ let transform = (function() {
       });
     });
   }
+  function sympyToLaTeX(val, resume) {
+    var errs = [];
+    let obj = {
+      func: "latex",
+      expr: val,
+    };
+    getSympy("/api/v1/eval", obj, (err, data) => {
+      if (err && err.length) {
+        errs = errs.concat(error(err, node.elts[0]));
+      }
+      resume(errs, data);
+    });
+  }
   function latex(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
-      val.latex = true;
-      resume([].concat(err), val);
+      if (val.indexOf("\\text") >= 0) {
+        val = val.substring(val.indexOf("\\text") + 5);
+        val = val.substring(val.indexOf("{") + 1);
+        val = val.substring(0, val.lastIndexOf("}"));
+        val = val.trim();
+      }
+      if (val) {
+        sympyToLaTeX(val, resume);
+      } else {
+        resume([].concat(err), val);
+      }
     });
   }
   function match(node, options, resume) {
@@ -916,7 +943,7 @@ let transform = (function() {
       options.input = val2.input;
       options.rating = val2.rating;
       visit(node.elts[0], options, function (err1, val1) {
-        delete val2.input; // Done with input values.
+//        val2.score = val1[0];
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -938,6 +965,40 @@ let transform = (function() {
         str = val1.toString();
       }
       resume(err1, str);
+    });
+  }
+  function and(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let vals = [];
+      val1.forEach(vv => {
+        vv.forEach((v, i) => {
+          vals[i] = vals[i] || {
+            type: "and",
+            result: true,
+              data: []
+          };
+          vals[i].data.push(v);
+          vals[i].result = vals[i].result && v.result;
+        });
+      });
+      resume(err1, vals);
+    });
+  }
+  function or(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      let vals = [];
+      val1.forEach(vv => {
+        vv.forEach((v, i) => {
+          vals[i] = vals[i] || {
+            type: "or",
+            result: false,
+            data: []
+          };
+          vals[i].data.push(v);
+          vals[i].result = vals[i].result || v.result;
+        });
+      });
+      resume(err1, vals);
     });
   }
   function paren(node, options, resume) {
@@ -1341,6 +1402,8 @@ let transform = (function() {
     "APART": apart,
     "MATCH": match,
     "CONCAT" : concat,
+    "AND" : and,
+    "OR" : or,
     "LITERAL": literal,
     "SEED": seed,
     "STIMULUS": stimulus,
@@ -1422,19 +1485,6 @@ let render = (function() {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
     }
-  }
-  function sympyToLaTeX(val, resume) {
-    var errs = [];
-    let obj = {
-      func: "latex",
-      expr: val,
-    };
-    getSympy("/api/v1/eval", obj, (err, data) => {
-      if (err && err.length) {
-        errs = errs.concat(error(err, node.elts[0]));
-      }
-      resume(errs, data);
-    });
   }
   function nontrivial(str) {
     for (let i = 0; str && i < str.length; i++) {

@@ -5,6 +5,8 @@ window.gcexports.globalLexicon = {
   "variable" : { "tk": 1, "name": "VARIABLE", "cls": "function", "length": 2 , "arity": 2 },
   "domain" : { "tk": 1, "name": "DOMAIN", "cls": "function", "length": 2 , "arity": 2 },
   "concat" : { "tk": 1, "name": "CONCAT", "cls": "function", "length": 1 , "arity": 1 },
+  "and" : { "tk": 1, "name": "AND", "cls": "function", "length": 1 , "arity": 1 },
+  "or" : { "tk": 1, "name": "OR", "cls": "function", "length": 1 , "arity": 1 },
   "add" : { "tk": 1, "name": "ADD", "cls": "function", "length": 2 , "arity": 2 },
   "sub" : { "tk": 1, "name": "SUB", "cls": "function", "length": 2 , "arity": 2 },
   "mul" : { "tk": 1, "name": "MUL", "cls": "function", "length": 2 , "arity": 2 },

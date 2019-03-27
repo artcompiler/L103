@@ -192,6 +192,7 @@ window.gcexports.viewer = function () {
       var offset = 0;
       Object.keys(d).forEach(function (k) {
         if (k === "input" || k === "score") {
+          //        if (k === "input") {
           return;
         }
         var v = d[k].value;
