@@ -190,15 +190,13 @@ window.gcexports.viewer = function () {
       ));
       i += 2;
       var offset = 0;
-      Object.keys(d).forEach(function (k) {
-        if (k === "input" || k === "score") {
-          //        if (k === "input") {
-          return;
-        }
-        var v = d[k].value;
-        var r = typeof d[k] === "boolean" && d[k] || d[k].result;
+      var validations = d.validations;
+      validations.forEach(function (val) {
+        var v = val.value;
+        var r = val.result;
+        var m = val.method;
         offset++;
-        var value = (d.symbolic && typeof d.symbolic.value === "string" || d.literal && typeof d.literal.value === "string") && React.createElement(
+        var value = (m === "symbolic" || m === "literal") && React.createElement(
           "span",
           { key: "2", className: "mq" },
           v
@@ -213,7 +211,7 @@ window.gcexports.viewer = function () {
           React.createElement(
             "span",
             { key: "1" },
-            k
+            m
           ),
           " ",
           value

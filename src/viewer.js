@@ -45,18 +45,15 @@ window.gcexports.viewer = (function () {
       }} key={i+1}>{d.input}</div>);
       i += 2;
       let offset = 0;
-      Object.keys(d).forEach(k => {
-        if (k === "input" || k === "score") {
-//        if (k === "input") {
-          return;
-        }
-        let v = d[k].value;
-        let r = typeof d[k] === "boolean" && d[k] || d[k].result;
+      let validations = d.validations;
+      validations.forEach(val => {
+        let v = val.value;
+        let r = val.result;
+        let m = val.method;
         offset++
-        let value = (d.symbolic && typeof d.symbolic.value === "string" ||
-                     d.literal && typeof d.literal.value === "string") &&
+        let value = (m === "symbolic" || m === "literal") &&
           <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
-        let method = <div key="1"><span key="1">{k}</span> {value}</div>;
+        let method = <div key="1"><span key="1">{m}</span> {value}</div>;
         rgb = color(r && 1 || 0);
         elts.push(<div key={i} style={{
           borderLeft: "2px solid",

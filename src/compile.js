@@ -612,6 +612,7 @@ let transform = (function() {
       let input = options.input;
       let rating = options.rating;
       let value = val1;
+      let validations = options.validations;
       mapList(input, (d, resume) => {
         MathCore.evaluateVerbose({
           method: "equivLiteral",
@@ -620,22 +621,25 @@ let transform = (function() {
         }, d, function (err, val) {
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
+            console.log("literal() errs=" + errs);
           }
           resume(err, {
+            method: "literal",
+            value: value,
             result: val.result,
           });
         });
       }, (err, val) => {
-        rating.forEach((v, i) => {
-          let opt = "";
-          let key = "literal" + opt;
-          rating[i][key] = {
+        input.forEach((v, i) => {
+          validations[i] = validations[i] || [];
+          validations[i].push({
+            method: "literal",
             value: value,
             result: val[i].result,
-          }
-          rating[i].score += val[i].result ? 1 : 0;
+          });
         });
-        resume(err, val);
+        console.log("literal() validations=" + JSON.stringify(validations, null, 2));
+        resume(err, validations);
       });
     });
   }
@@ -647,7 +651,10 @@ let transform = (function() {
       let input = options.input;
       let rating = options.rating;
       let value = val1;
+      let validations = options.validations;
       mapList(input, (d, resume) => {
+        console.log("symbolic() value=" + value);
+        console.log("symbolic() input=" + input);
         MathCore.evaluateVerbose({
           method: "equivSymbolic",
           options: options.settings,
@@ -655,25 +662,25 @@ let transform = (function() {
         }, d, function (err, val) {
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
+            console.log("symbolic() errs=" + errs);
           }
           resume(err, {
             method: "equivSymbolic",
             value: value,
-            input: d,
             result: val.result,
           });
         });
       }, (err, val) => {
-        rating.forEach((v, i) => {
-          let opt = "";
-          let key = "symbolic" + opt;
-          rating[i][key] = {
+        input.forEach((v, i) => {
+          validations[i] = validations[i] || [];
+          validations[i].push({
+            method: "symbolic",
             value: value,
             result: val[i].result,
-          }
-          rating[i].score += val[i].result ? 1 : 0;
+          });
         });
-        resume(err, val);
+        console.log("symbolic() validations=" + JSON.stringify(validations, null, 2));
+        resume(err, validations);
       });
     });
   }
@@ -939,12 +946,26 @@ let transform = (function() {
     });
   }
   function rubric(node, options, resume) {
+    options.validations = [];
     visit(node.elts[1], options, function (err2, val2) {
       options.input = val2.input;
       options.rating = val2.rating;
       visit(node.elts[0], options, function (err1, val1) {
-//        val2.score = val1[0];
-        resume([].concat(err1).concat(err2), val2);
+        console.log("rubric() val1=" + JSON.stringify(val1, null, 2));
+        //val1 = val1[0];
+        let vals = [];
+        val1.forEach((vv, i) => {
+          console.log("rubric() vv=" + JSON.stringify(vv, null, 2));
+          options.rating[i].scorer = vals[i] = vals[i] || {
+            input: val2.input[i],
+            result: vv.result,
+            validations: vv,
+          };
+        });
+        resume([].concat(err1).concat(err2), {
+          input: val2.input,
+          score: vals,
+        });
       });
     });
   }
@@ -968,16 +989,18 @@ let transform = (function() {
     });
   }
   function and(node, options, resume) {
+    options.validations = [];
     visit(node.elts[0], options, function (err1, val1) {
       let vals = [];
-      val1.forEach(vv => {
-        vv.forEach((v, i) => {
-          vals[i] = vals[i] || {
-            type: "and",
-            result: true,
-              data: []
-          };
-          vals[i].data.push(v);
+      val1 = val1[0];
+      val1.forEach((vv, i) => {
+        options.rating[i].scorer = vals[i] = vals[i] || {
+          type: "and",
+          result: true,
+          validations: vv,
+        };
+        console.log("and() vv=" + JSON.stringify(vv, null, 2));
+        vv.forEach((v, j) => {
           vals[i].result = vals[i].result && v.result;
         });
       });
@@ -985,16 +1008,18 @@ let transform = (function() {
     });
   }
   function or(node, options, resume) {
+    options.validations = [];
     visit(node.elts[0], options, function (err1, val1) {
       let vals = [];
-      val1.forEach(vv => {
-        vv.forEach((v, i) => {
-          vals[i] = vals[i] || {
-            type: "or",
-            result: false,
-            data: []
-          };
-          vals[i].data.push(v);
+      val1 = val1[0];
+      val1.forEach((vv, i) => {
+        options.rating[i].scorer = vals[i] = vals[i] || {
+          type: "or",
+          result: false,
+          validations: vv,
+        };
+        console.log("or() vv=" + JSON.stringify(vv, null, 2));
+        vv.forEach((v, j) => {
           vals[i].result = vals[i].result || v.result;
         });
       });
@@ -1034,11 +1059,11 @@ let transform = (function() {
       // No args, so use the given data or empty.
       let data = options.data ? options.data : [];
       let rating = [];
-      data.forEach(d => {
-        rating.push({
-          value: d,
-        });
-      });
+      // data.forEach(d => {
+      //   rating.push({
+      //     value: d,
+      //   });
+      // });
       resume([], {
         input: data,
         rating: rating,
@@ -1051,6 +1076,7 @@ let transform = (function() {
           rating.push({
             score: 0,
             input: i,
+            scorer: [],
           });
         });
         let val = {
@@ -1514,10 +1540,12 @@ export let compiler = (function () {
         data: data
       };
       transform(pool, options, function (err, val) {
+        console.log("[1] compile() err=" + err);
         if (err && err.length) {
           resume([].concat(err), val);
         } else {
           render(val, options, function (err, val) {
+            console.log("[2] compile() err=" + err);
             resume([].concat(err), val);
           });
         }
