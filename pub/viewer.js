@@ -139,6 +139,10 @@ var d3 = _interopRequireWildcard(_d);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 window.gcexports.viewer = function () {
+  var CLEAR = "#FEFEFE";
+  var YELLOW = "#E7B416";
+  var RED = "#CC3232";
+  var GREEN = "#2DC937";
   function capture(el) {
     var mySVG = $(el).html();
     return mySVG;
@@ -146,21 +150,21 @@ window.gcexports.viewer = function () {
 
   function color(score) {
     var rgb = void 0;
-    if (score === 1) {
-      rgb = "rgb(100, 255, 100)";
-    } else if (score === 0) {
-      rgb = "rgb(255, 100, 100)";
+    if (score === true || score === 1) {
+      rgb = GREEN;
+    } else if (score === false || score === -1) {
+      rgb = RED;
     } else {
-      //      rgb = "rgb(254, 243, 128)";
-      rgb = "rgb(255, 100, 100)";
+      rgb = YELLOW;
     }
     return rgb;
   }
 
   var textStyle = { fontSize: "14", fontFamily: "monospace" };
-  function _render(data) {
+  function _render(obj) {
     var elts = [];
     var i = 0;
+    var data = obj.rating || obj.score;
     data.forEach(function (d) {
       // Each datum has a score, input and rubric
       var rgb = void 0,
@@ -189,50 +193,84 @@ window.gcexports.viewer = function () {
         d.input
       ));
       i += 2;
-      var offset = 0;
-      var validations = d.validations;
-      validations.forEach(function (val) {
-        var v = val.value;
-        var r = val.result;
-        var m = val.method;
-        offset++;
-        var value = (m === "symbolic" || m === "literal") && React.createElement(
-          "span",
-          { key: "2", className: "mq" },
-          v
-        ) || React.createElement(
-          "div",
-          { key: "2" },
-          JSON.stringify(v)
-        );
-        var method = React.createElement(
-          "div",
-          { key: "1" },
-          React.createElement(
-            "span",
-            { key: "1" },
-            m
-          ),
-          " ",
-          value
-        );
-        rgb = color(r && 1 || 0);
-        elts.push(React.createElement(
-          "div",
-          { key: i, style: {
-              borderLeft: "2px solid",
-              borderColor: rgb,
-              padding: "0 5 0 5",
-              margin: 5
-            } },
-          method
-        ));
-        i += 2;
-      });
+      // let offset = 0;
+      elts.push(renderValidation(d.validation, i));
+      // validation.forEach(v => {
+      //   let val = renderValidation(v, i);
+      //   elts.push(val);
+      //   i += 2;
+      // });
     });
     return elts;
   }
-
+  function renderValidation(val, i) {
+    if (val.type === "method") {
+      var v = val.value;
+      var r = val.result;
+      var m = val.method;
+      var value = (m === "symbolic" || m === "literal") && React.createElement(
+        "span",
+        { key: "2", className: "mq" },
+        v
+      ) || React.createElement(
+        "div",
+        { key: "2" },
+        JSON.stringify(v)
+      );
+      var method = React.createElement(
+        "div",
+        { key: "1" },
+        React.createElement(
+          "span",
+          { key: "1" },
+          m
+        ),
+        " ",
+        value
+      );
+      var rgb = color(r);
+      return React.createElement(
+        "div",
+        { key: i, style: {
+            borderLeft: "2px solid",
+            borderColor: rgb,
+            padding: "0 5 0 5",
+            margin: 5
+          } },
+        method
+      );
+    } else if (val.type === "and") {
+      var validations = [];
+      var _r = true;
+      val.validations.forEach(function (v, i) {
+        var validation = renderValidation(v, i);
+        validations.push(validation);
+        _r = _r && v.result;
+      });
+      var _method = React.createElement(
+        "div",
+        { key: "1" },
+        React.createElement(
+          "span",
+          { key: "1" },
+          "and"
+        ),
+        " ",
+        validations
+      );
+      var _rgb = color(_r);
+      return React.createElement(
+        "div",
+        { key: i, style: {
+            borderLeft: "2px solid",
+            borderColor: _rgb,
+            padding: "0 5 0 5",
+            margin: 5
+          } },
+        _method
+      );
+    }
+  }
   function loadScript(src, resume) {
     var script = document.createElement("script");
     script.onload = resume;
@@ -290,8 +328,8 @@ window.gcexports.viewer = function () {
     },
     render: function render() {
       var props = this.props;
-      var data = props.obj.rating || [];
-      var elts = _render(data);
+      var obj = props.obj || {};
+      var elts = _render(obj);
       return React.createElement(
         "div",
         null,

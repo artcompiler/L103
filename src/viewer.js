@@ -4,6 +4,10 @@ import * as React from "react";
 import * as d3 from "d3";
 
 window.gcexports.viewer = (function () {
+  const CLEAR = "#FEFEFE";
+  const YELLOW = "#E7B416";
+  const RED = "#CC3232";
+  const GREEN = "#2DC937";
   function capture(el) {
     var mySVG = $(el).html();
     return mySVG;
@@ -11,21 +15,21 @@ window.gcexports.viewer = (function () {
 
   function color(score) {
     let rgb;
-    if (score === 1) {
-      rgb = "rgb(100, 255, 100)";
-    } else if (score === 0) {
-      rgb = "rgb(255, 100, 100)";
+    if (score === true || score === 1) {
+      rgb = GREEN;
+    } else if (score === false || score === -1) {
+      rgb = RED;
     } else {
-//      rgb = "rgb(254, 243, 128)";
-      rgb = "rgb(255, 100, 100)";
+      rgb = YELLOW;
     }
     return rgb;
   }
 
   let textStyle = {fontSize: "14", fontFamily: "monospace"};
-  function render(data) {
+  function render(obj) {
     let elts = [];
     let i = 0;
+    let data = obj.rating || obj.score;
     data.forEach(function (d) {
       // Each datum has a score, input and rubric
       let rgb, actual, expected = "";
@@ -44,29 +48,49 @@ window.gcexports.viewer = (function () {
         //padding: 5,
       }} key={i+1}>{d.input}</div>);
       i += 2;
-      let offset = 0;
-      let validations = d.validations;
-      validations.forEach(val => {
-        let v = val.value;
-        let r = val.result;
-        let m = val.method;
-        offset++
-        let value = (m === "symbolic" || m === "literal") &&
-          <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
-        let method = <div key="1"><span key="1">{m}</span> {value}</div>;
-        rgb = color(r && 1 || 0);
-        elts.push(<div key={i} style={{
-          borderLeft: "2px solid",
-          borderColor: rgb,
-          padding: "0 5 0 5",
-          margin: 5,
-        }}>{method}</div>);
-        i += 2;
-      });
+      // let offset = 0;
+      elts.push(renderValidation(d.validation, i));
+      // validation.forEach(v => {
+      //   let val = renderValidation(v, i);
+      //   elts.push(val);
+      //   i += 2;
+      // });
     });
     return elts;
   }
-
+  function renderValidation(val, i) {
+    if (val.type === "method") {
+      let v = val.value;
+      let r = val.result;
+      let m = val.method;
+      let value = (m === "symbolic" || m === "literal") &&
+        <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
+      let method = <div key="1"><span key="1">{m}</span> {value}</div>;
+      let rgb = color(r);
+      return <div key={i} style={{
+        borderLeft: "2px solid",
+        borderColor: rgb,
+        padding: "0 5 0 5",
+        margin: 5,
+      }}>{method}</div>;
+    } else if (val.type === "and") {
+      let validations = [];
+      let r = true;
+      val.validations.forEach((v, i) => {
+        let validation = renderValidation(v, i);
+        validations.push(validation);
+        r = r && v.result;
+      });
+      let method = <div key="1"><span key="1">and</span> {validations}</div>;
+      let rgb = color(r);
+      return <div key={i} style={{
+        borderLeft: "2px solid",
+        borderColor: rgb,
+        padding: "0 5 0 5",
+        margin: 5,
+      }}>{method}</div>;
+    }
+  }
   function loadScript(src, resume) {
     var script = document.createElement("script");
     script.onload = resume;
@@ -120,8 +144,8 @@ window.gcexports.viewer = (function () {
     },
     render: function () {
       var props = this.props;
-      var data = props.obj.rating || [];
-      var elts = render(data);
+      var obj = props.obj || {};
+      var elts = render(obj);
       return (
         <div>
         <div className="L107">

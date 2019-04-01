@@ -633,6 +633,7 @@ let transform = (function() {
         input.forEach((v, i) => {
           validations[i] = validations[i] || [];
           validations[i].push({
+            type: "method",
             method: "literal",
             value: value,
             result: val[i].result,
@@ -674,6 +675,7 @@ let transform = (function() {
         input.forEach((v, i) => {
           validations[i] = validations[i] || [];
           validations[i].push({
+            type: "method",
             method: "symbolic",
             value: value,
             result: val[i].result,
@@ -959,7 +961,7 @@ let transform = (function() {
           options.rating[i].scorer = vals[i] = vals[i] || {
             input: val2.input[i],
             result: vv.result,
-            validations: vv,
+            validation: vv instanceof Array && [0] || vv,  // FIXME alway pass an object here.
           };
         });
         resume([].concat(err1).concat(err2), {
