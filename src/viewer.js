@@ -73,15 +73,17 @@ window.gcexports.viewer = (function () {
         padding: "0 5 0 5",
         margin: 5,
       }}>{method}</div>;
-    } else if (val.type === "and") {
+    } else if (val.type === "and" || val.type === "or") {
       let validations = [];
       let r = true;
       val.validations.forEach((v, i) => {
         let validation = renderValidation(v, i);
         validations.push(validation);
-        r = r && v.result;
+        r =
+          val.type === "and" && r && v.result ||
+          val.type === "or" && r || v.result;
       });
-      let method = <div key="1"><span key="1">and</span> {validations}</div>;
+      let method = <div key="1"><span key="1"> {val.type} </span> {validations}</div>;
       let rgb = color(r);
       return <div key={i} style={{
         borderLeft: "2px solid",

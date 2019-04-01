@@ -681,7 +681,6 @@ let transform = (function() {
             result: val[i].result,
           });
         });
-        console.log("symbolic() validations=" + JSON.stringify(validations, null, 2));
         resume(err, validations);
       });
     });
@@ -952,12 +951,26 @@ let transform = (function() {
     visit(node.elts[1], options, function (err2, val2) {
       options.input = val2.input;
       options.rating = val2.rating;
-      visit(node.elts[0], options, function (err1, val1) {
+      console.log("nodePool=" + JSON.stringify(nodePool, null, 2));
+      console.log("rubric() node.elts[0]=" + JSON.stringify(node.elts[0], null, 2));
+      let n0 = node.elts[0];
+      if (nodePool[n0].tag === "LIST") {
+        if (nodePool[n0].elts.length > 1) {
+          n0 = {
+            tag: "AND",
+            elts: [n0],
+          };
+        } else {
+          n0 = nodePool[n0].elts[0];
+        }
+      }
+      visit(n0, options, function (err1, val1) {
         console.log("rubric() val1=" + JSON.stringify(val1, null, 2));
         //val1 = val1[0];
         let vals = [];
         val1.forEach((vv, i) => {
           console.log("rubric() vv=" + JSON.stringify(vv, null, 2));
+          vv = vv instanceof Array && vv[0] || vv;
           options.rating[i].scorer = vals[i] = vals[i] || {
             input: val2.input[i],
             result: vv.result,
@@ -994,6 +1007,7 @@ let transform = (function() {
     options.validations = [];
     visit(node.elts[0], options, function (err1, val1) {
       let vals = [];
+      console.log("and() val1=" + JSON.stringify(val1, null, 2));
       val1 = val1[0];
       val1.forEach((vv, i) => {
         options.rating[i].scorer = vals[i] = vals[i] || {
@@ -1001,7 +1015,6 @@ let transform = (function() {
           result: true,
           validations: vv,
         };
-        console.log("and() vv=" + JSON.stringify(vv, null, 2));
         vv.forEach((v, j) => {
           vals[i].result = vals[i].result && v.result;
         });
@@ -1020,7 +1033,6 @@ let transform = (function() {
           result: false,
           validations: vv,
         };
-        console.log("or() vv=" + JSON.stringify(vv, null, 2));
         vv.forEach((v, j) => {
           vals[i].result = vals[i].result || v.result;
         });

@@ -44,6 +44,7 @@ app.get("/compile", function(req, res) {
           let t0 = new Date;
           let obj = compiler.compile(code, data, function (err, val) {
             if (err.length) {
+              console.log("GET /compile ERROR " + (new Date - t0) + "ms");
               res.send({
                 error: err,
               });

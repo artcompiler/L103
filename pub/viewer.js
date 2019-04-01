@@ -239,13 +239,13 @@ window.gcexports.viewer = function () {
           } },
         method
       );
-    } else if (val.type === "and") {
+    } else if (val.type === "and" || val.type === "or") {
       var validations = [];
       var _r = true;
       val.validations.forEach(function (v, i) {
         var validation = renderValidation(v, i);
         validations.push(validation);
-        _r = _r && v.result;
+        _r = val.type === "and" && _r && v.result || val.type === "or" && _r || v.result;
       });
       var _method = React.createElement(
         "div",
@@ -253,7 +253,9 @@ window.gcexports.viewer = function () {
         React.createElement(
           "span",
           { key: "1" },
-          "and"
+          " ",
+          val.type,
+          " "
         ),
         " ",
         validations
