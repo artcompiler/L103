@@ -11851,6 +11851,8 @@ var Model = function() {
       var n = Model.create(val);
       if(n.op === Model.PAREN && n.args[0].op === Model.LIST) {
         var result;
+        var n1 = n.args[0].args[0];
+        var n2 = n.args[0].args[1];
         compare(n1, n2, function(err, val) {
           resume(err, val)
         })
