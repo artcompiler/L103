@@ -536,7 +536,7 @@ let transform = (function() {
   }
   function simplified(node, options, resume) {
     let input = options.input;
-    let rating = options.rating;
+    let validations = options.validations;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isSimplified",
@@ -549,51 +549,70 @@ let transform = (function() {
         });
       });
     }, (err, val) => {
-      rating.forEach((v, i) => {
-        rating[i].simplified = val[i].result;
-        rating[i].score += val[i].result ? 1 : 0;
+      input.forEach((v, i) => {
+        validations[i] = validations[i] || [];
+        validations[i].push({
+          type: "method",
+          method: "simplified",
+          value: value,
+          result: val[i].result,
+        });
       });
-      resume(err, val);
+      resume(err, validations);
     });
   }
   function expanded(node, options, resume) {
     let input = options.input;
-    let rating = options.rating;
+    let validations = options.validations;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isExpanded",
         options: {},
       }, d, function (err, val) {
         resume(err, {
+          method: "isExpanded",
+          input: d,
           result: val.result,
         });
       });
     }, (err, val) => {
-      rating.forEach((v, i) => {
-        rating[i].expanded = val[i].result;
-        rating[i].score += val[i].result ? 1 : 0;
+      input.forEach((v, i) => {
+        validations[i] = validations[i] || [];
+        validations[i].push({
+          type: "method",
+          method: "expanded",
+          value: value,
+          result: val[i].result,
+        });
       });
-      resume(err, val);
+      resume(err, validations);
     });
   }
   function factored(node, options, resume) {
     let input = options.input;
-    let rating = options.rating;
+    let validations = options.validations;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isFactorised",
         options: {},
       }, d, function (err, val) {
         resume(err, {
+          method: "isFactorised",
+          input: d,
           result: val.result,
         });
       });
     }, (err, val) => {
-      rating.forEach((v, i) => {
-        rating[i].factored = val[i].result;
-        rating[i].score += val[i].result ? 1 : 0;
+      input.forEach((v, i) => {
+        validations[i] = validations[i] || [];
+        validations[i].push({
+          type: "method",
+          method: "factored",
+          value: value,
+          result: val[i].result,
+        });
       });
-      resume(err, val);
+      resume(err, validations);
     });
   }
   function ignoreOrder(node, options, resume) {
@@ -639,7 +658,6 @@ let transform = (function() {
             result: val[i].result,
           });
         });
-        console.log("literal() validations=" + JSON.stringify(validations, null, 2));
         resume(err, validations);
       });
     });
@@ -654,8 +672,6 @@ let transform = (function() {
       let value = val1;
       let validations = options.validations;
       mapList(input, (d, resume) => {
-        console.log("symbolic() value=" + value);
-        console.log("symbolic() input=" + input);
         MathCore.evaluateVerbose({
           method: "equivSymbolic",
           options: options.settings,
@@ -885,7 +901,8 @@ let transform = (function() {
     };
     getSympy("/api/v1/eval", obj, (err, data) => {
       if (err && err.length) {
-        errs = errs.concat(error(err, node.elts[0]));
+        console.log("ERROR sympyToLaTeX() val=" + val);
+        errs = errs.concat(error(err));
       }
       resume(errs, data);
     });
@@ -951,8 +968,6 @@ let transform = (function() {
     visit(node.elts[1], options, function (err2, val2) {
       options.input = val2.input;
       options.rating = val2.rating;
-      console.log("nodePool=" + JSON.stringify(nodePool, null, 2));
-      console.log("rubric() node.elts[0]=" + JSON.stringify(node.elts[0], null, 2));
       let n0 = node.elts[0];
       if (nodePool[n0].tag === "LIST") {
         if (nodePool[n0].elts.length > 1) {
@@ -965,11 +980,9 @@ let transform = (function() {
         }
       }
       visit(n0, options, function (err1, val1) {
-        console.log("rubric() val1=" + JSON.stringify(val1, null, 2));
         //val1 = val1[0];
         let vals = [];
         val1.forEach((vv, i) => {
-          console.log("rubric() vv=" + JSON.stringify(vv, null, 2));
           vv = vv instanceof Array && vv[0] || vv;
           options.rating[i].scorer = vals[i] = vals[i] || {
             input: val2.input[i],
@@ -1007,7 +1020,6 @@ let transform = (function() {
     options.validations = [];
     visit(node.elts[0], options, function (err1, val1) {
       let vals = [];
-      console.log("and() val1=" + JSON.stringify(val1, null, 2));
       val1 = val1[0];
       val1.forEach((vv, i) => {
         options.rating[i].scorer = vals[i] = vals[i] || {
@@ -1554,12 +1566,11 @@ export let compiler = (function () {
         data: data
       };
       transform(pool, options, function (err, val) {
-        console.log("[1] compile() err=" + err);
         if (err && err.length) {
+          console.log("compile() err=" + JSON.stringify(err));
           resume([].concat(err), val);
         } else {
           render(val, options, function (err, val) {
-            console.log("[2] compile() err=" + err);
             resume([].concat(err), val);
           });
         }

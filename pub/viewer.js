@@ -241,11 +241,9 @@ window.gcexports.viewer = function () {
       );
     } else if (val.type === "and" || val.type === "or") {
       var validations = [];
-      var _r = true;
       val.validations.forEach(function (v, i) {
         var validation = renderValidation(v, i);
         validations.push(validation);
-        _r = val.type === "and" && _r && v.result || val.type === "or" && _r || v.result;
       });
       var _method = React.createElement(
         "div",
@@ -260,7 +258,7 @@ window.gcexports.viewer = function () {
         " ",
         validations
       );
-      var _rgb = color(_r);
+      var _rgb = color(val.result);
       return React.createElement(
         "div",
         { key: i, style: {
