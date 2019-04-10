@@ -4,10 +4,13 @@
 */
 const langID = "107";
 // SHARED START
+const fs = require('fs');
+const http = require("http");
 const https = require("https");
 const express = require('express')
 const compiler = require("./lib/compile.js");
 const app = express();
+const jsonDiff = require("json-diff");
 app.set('port', (process.env.PORT || "5" + langID));
 app.use(express.static(__dirname + '/pub'));
 app.get('/', function(req, res) {
@@ -16,9 +19,12 @@ app.get('/', function(req, res) {
 app.listen(app.get('port'), function() {
   global.port = +app.get('port');
   console.log("Node app is running at localhost:" + app.get('port'))
+  if (process.argv.includes("test")) {
+    test();
+  }
 });
 process.on('uncaughtException', function(err) {
-  console.log('Caught exception: ' + err.stack);
+  console.log('Caught exception: ' + err);
 });
 app.get("/version", function(req, res) {
   res.send(compiler.version || "v0.0.0");
@@ -41,10 +47,10 @@ app.get("/compile", function(req, res) {
         } else {
           let code = body.src;
           let data = body.data;
+          data.REFRESH = body.refresh; // Stowaway flag.
           let t0 = new Date;
-          let obj = compiler.compile(code, data, function (err, val) {
+          compiler.compile(code, data, function (err, val) {
             if (err.length) {
-              console.log("GET /compile ERROR " + (new Date - t0) + "ms");
               res.send({
                 error: err,
               });
@@ -116,7 +122,6 @@ function validate(token, resume) {
   } else {
     postAuth("/validate", {
       jwt: token,
-      lang: "L" + langID,
     }, (err, data) => {
       validated[token] = data;
       resume(err, data);
@@ -124,3 +129,68 @@ function validate(token, resume) {
     });
   }
 }
+const recompileItem = (id, host, resume) => {
+  let protocol, url;
+  if (host === "localhost") {
+    protocol = http;
+    url = "http://localhost:3000/data/?id=" + id + "&refresh=true&dontSave=true";
+  } else {
+    protocol = https;
+    url = "https://" + host + "/data/?id=" + id + "&refresh=true&dontSave=true";
+  }
+  var req = protocol.get(url, function(res) {
+    var data = "";
+    res.on('data', function (chunk) {
+      data += chunk;
+    }).on('end', function () {
+      try {
+        resume([], JSON.parse(data));
+      } catch (e) {
+        console.log("ERROR " + data);
+        console.log(e.stack);
+        resume([e], null);
+      }
+    }).on("error", function () {
+      console.log("error() status=" + res.statusCode + " data=" + data);
+    });
+  });
+};
+const testItems = (items, passed, failed) => {
+  passed = passed || [];
+  failed = failed || [];
+  if (items.length === 0) {
+    console.log(passed.length + " PASSED, " + failed.length + " FAILED");
+    return;
+  }
+  let itemID = items.shift();
+  let t0 = new Date;
+  recompileItem(itemID, "localhost", (err, localOBJ) => {
+    //console.log("testItems() localOBJ=" + JSON.stringify(localOBJ));
+    let t1 = new Date;
+    recompileItem(itemID, "www.graffiticode.com", (err, remoteOBJ) => {
+      //console.log("testItems() remoteOBJ=" + JSON.stringify(remoteOBJ));
+      let t2 = new Date;
+      let diff = jsonDiff.diffString(localOBJ, remoteOBJ);
+      if (!diff) {
+        console.log((items.length + 1) + " PASS " + itemID);
+        passed.push(itemID);
+      } else {
+        console.log((items.length + 1) + " FAIL " + itemID);
+        console.log(diff);
+        failed.push(itemID);
+      }
+      testItems(items, passed, failed);
+    });
+  });
+};
+const test = () => {
+  fs.readFile("tools/test.json", function (err, data) {
+    if (err) {
+      console.log(err);
+      data = "[]";
+    }
+    testItems(JSON.parse(data));
+  });
+};
+
+// SHARED STOP

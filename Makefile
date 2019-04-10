@@ -10,3 +10,5 @@ build:
 run:
 	npm start
 
+test: build
+	npm run test

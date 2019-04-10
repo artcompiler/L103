@@ -7,11 +7,13 @@
   "scripts": {
     "start": "node index.js",
     "build-dev": "./node_modules/babel-cli/bin/babel-node.js tools/build",
+    "test": "node index.js test",
     "flow": "flow; test $? -eq 0 -o $? -eq 2"
   },
   "dependencies": {
     "express": "^4.0.x",
-    "mathjax-node": "^1.1.0"
+    "mathjax-node": "^1.1.0",
+    "json-diff": "^0.5.4"
   },
   "engines": {
     "node": "latest"

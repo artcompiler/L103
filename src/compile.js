@@ -1097,7 +1097,7 @@ let transform = (function() {
     } else {
       visit(node.elts[0], options, function (err1, val1) {
         let rating = [];
-        let input = options.data && Object.keys(options.data).length !== 0 ? options.data : val1;
+        let input = options.data && Object.keys(options.data).length !== 0 && isArray(options.data) ? options.data : val1;
         input.forEach(i => {
           rating.push({
             score: 0,
