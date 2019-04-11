@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 7cda1f1
+ * Mathcore unversioned - 8ca27dd
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -11843,7 +11843,7 @@ var Model = function() {
     var result;
     var inverseResult = option("inverseResult");
     var strict = option("strict");
-    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1o), stripMetadata(n2o)])]);
+    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1), stripMetadata(n2)])]);
     node.lbrk = 40;
     node.rbrk = 41;
     var options = {};
@@ -11857,7 +11857,9 @@ var Model = function() {
           resume(err, val)
         })
       }else {
-        resume(["Error in SymPy code"])
+        compare(n1o, n2o, function(err, val) {
+          resume(err, val)
+        })
       }
     });
     var compare = function(n1, n2, resume) {
@@ -11929,7 +11931,7 @@ var Model = function() {
       }
       var ignoreUnits = option("ignoreUnits", true);
       if(formulaKind(n1) !== formulaKind(n2)) {
-        resume(null, !inverseResult)
+        resume(null, inverseResult)
       }else {
         if(option("compareSides") && (isComparison(n1.op) && n1.op === n2.op)) {
           var n1l = n1.args[0];
@@ -12023,7 +12025,13 @@ var Model = function() {
       res.on("data", function(chunk) {
         data += chunk
       }).on("end", function() {
-        resume([], JSON.parse(data))
+        var val;
+        try {
+          val = JSON.parse(data)
+        }catch(x) {
+          val = ""
+        }
+        resume([], val)
       }).on("error", function() {
         console.log("error() status=" + res.statusCode + " data=" + data);
         resume([], {})

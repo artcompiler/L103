@@ -24,7 +24,7 @@ app.listen(app.get('port'), function() {
   }
 });
 process.on('uncaughtException', function(err) {
-  console.log('Caught exception: ' + err);
+  console.log('Caught exception: ' + err.stack);
 });
 app.get("/version", function(req, res) {
   res.send(compiler.version || "v0.0.0");
@@ -197,8 +197,8 @@ const test = () => {
     let passed = [], failed = [];
     testItems(JSON.parse(data), passed, failed, (err, val) => {
       console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
+      process.exit(0);
     });
   });
 };
-
 // SHARED STOP
