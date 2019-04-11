@@ -122,6 +122,7 @@ function validate(token, resume) {
   } else {
     postAuth("/validate", {
       jwt: token,
+      lang: "L" + langID,
     }, (err, data) => {
       validated[token] = data;
       resume(err, data);
@@ -155,11 +156,9 @@ const recompileItem = (id, host, resume) => {
     });
   });
 };
-const testItems = (items, passed, failed) => {
-  passed = passed || [];
-  failed = failed || [];
+const testItems = (items, passed, failed, resume) => {
   if (items.length === 0) {
-    console.log(passed.length + " PASSED, " + failed.length + " FAILED");
+    resume([], "done");
     return;
   }
   let itemID = items.shift();
@@ -170,7 +169,7 @@ const testItems = (items, passed, failed) => {
     recompileItem(itemID, "www.graffiticode.com", (err, remoteOBJ) => {
       //console.log("testItems() remoteOBJ=" + JSON.stringify(remoteOBJ));
       let t2 = new Date;
-      let diff = jsonDiff.diffString(localOBJ, remoteOBJ);
+      let diff = jsonDiff.diffString(remoteOBJ, localOBJ);
       if (!diff) {
         console.log((items.length + 1) + " PASS " + itemID);
         passed.push(itemID);
@@ -179,17 +178,26 @@ const testItems = (items, passed, failed) => {
         console.log(diff);
         failed.push(itemID);
       }
-      testItems(items, passed, failed);
+      testItems(items, passed, failed, resume);
     });
   });
 };
+const msToMinSec = (ms) => {
+  let m = Math.floor(ms / 60000);
+  let s = ((ms % 60000) / 1000).toFixed(0);
+  return (m > 0 && m + "m " || "") + (s < 10 && "0" || "") + s + "s";
+}
 const test = () => {
-  fs.readFile("tools/test.json", function (err, data) {
+  fs.readFile("tools/test.json", (err, data) => {
     if (err) {
       console.log(err);
       data = "[]";
     }
-    testItems(JSON.parse(data));
+    let t0 = new Date;
+    let passed = [], failed = [];
+    testItems(JSON.parse(data), passed, failed, (err, val) => {
+      console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
+    });
   });
 };
 
