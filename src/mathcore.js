@@ -6127,10 +6127,21 @@ var Model = function() {
         if(node.args[0] === "0") {
           return[]
         }
-        if(node.op === Model.SUBSCRIPT) {
-          node = node.args[0]
+        var v = unpack(node);
+        return[v];
+        function unpack(node) {
+          var v = "";
+          forEach(node.args, function(n) {
+            if(v === "") {
+              v = n
+            }else {
+              if(n.op === Model.NUM || n.op === Model.VAR) {
+                v += "_" + unpack(n)
+              }
+            }
+          });
+          return v
         }
-        return[node.args[0]]
       }, comma:function(node) {
         var args = node.args;
         var val = [];
