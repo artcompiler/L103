@@ -904,6 +904,7 @@ let transform = (function() {
         console.log("ERROR sympyToLaTeX() val=" + val);
         errs = errs.concat(error(err));
       }
+      data = data.replace(/log/g, "ln");
       resume(errs, data);
     });
   }

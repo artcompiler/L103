@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 856af66
+ * Mathcore unversioned - 04d9467
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -6133,11 +6133,13 @@ var Model = function() {
           var v = "";
           forEach(node.args, function(n) {
             if(v === "") {
-              v = n
-            }else {
-              if(n.op === Model.NUM || n.op === Model.VAR) {
-                v += "_" + unpack(n)
+              if(n.op) {
+                v = unpack(n)
+              }else {
+                v = n
               }
+            }else {
+              v += "_" + unpack(n)
             }
           });
           return v
@@ -11866,7 +11868,7 @@ var Model = function() {
     node.rbrk = 41;
     var options = {};
     evalSympy("simplify", node, options, function(err, val) {
-      var n = Model.create(val);
+      var n = val;
       if(n.op === Model.PAREN && n.args[0].op === Model.LIST) {
         var result;
         var n1 = n.args[0].args[0];
@@ -12114,13 +12116,31 @@ var Model = function() {
         var args = v + opts;
         var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
         getSympy("/api/v1/eval", obj, function(err, data) {
+          var node;
           if(err && err.length) {
-            errs = errs.concat(err)
+            errs = errs.concat(err);
+            node = {}
+          }else {
+            node = sympyToMathcore(Model.create(data))
           }
-          resume(errs, data)
+          resume(errs, node)
         })
       }
     })
+  }
+  function sympyToMathcore(node) {
+    if(!node.op) {
+      return node
+    }
+    var args = [];
+    node.args.forEach(function(n) {
+      args.push(sympyToMathcore(n))
+    });
+    if(node.op === Model.LOG) {
+      assert(args[0].op === Model.NUM && args[0].args[0] === "10");
+      args[0] = variableNode("e")
+    }
+    return newNode(node.op, args)
   }
   function isEqualsComparison(op) {
     return op === Model.LE || (op === Model.GE || op === Model.EQL)
