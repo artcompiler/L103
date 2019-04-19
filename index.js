@@ -11,6 +11,7 @@ const express = require('express')
 const compiler = require("./lib/compile.js");
 const app = express();
 const jsonDiff = require("json-diff");
+const querystring = require("querystring");
 app.set('port', (process.env.PORT || "5" + langID));
 app.use(express.static(__dirname + '/pub'));
 app.get('/', function(req, res) {
@@ -145,12 +146,13 @@ const recompileItem = (id, host, resume) => {
       data += chunk;
     }).on('end', function () {
       try {
-        resume([], JSON.parse(data));
+        data = JSON.parse(data);
       } catch (e) {
         console.log("ERROR " + data);
         console.log(e.stack);
         resume([e], null);
       }
+      resume([], data);
     }).on("error", function () {
       console.log("error() status=" + res.statusCode + " data=" + data);
     });
@@ -187,15 +189,87 @@ const msToMinSec = (ms) => {
   let s = ((ms % 60000) / 1000).toFixed(0);
   return (m > 0 && m + "m " || "") + (s < 10 && "0" || "") + s + "s";
 }
+function getGCHost() {
+  const LOCAL = global.port === 5107;
+  if (LOCAL) {
+    return "localhost";
+  } else {
+    return "www.graffiticode.com";
+  }
+}
+function getGCPort() {
+  const LOCAL = global.port === 5107;
+  if (LOCAL) {
+    return "3000";
+  } else {
+    return "443";
+  }
+}
+function getTests(limit, resume) {
+  let query = {
+    table: "items",
+    where: "langid=" + langID + " and mark is not null",
+    fields: ["itemid"],
+  };
+  let options = {
+    method: "GET",
+    host: getGCHost(),
+    port: getGCPort(),
+    path: "/items?" + querystring.stringify(query).trim().replace(/ /g, "+")
+  };
+  const LOCAL = global.port === 5107;
+  const protocol = LOCAL ? http : https;
+  let req = protocol.get(options, function(res) {
+    let data = "";
+    res.on('data', function (chunk) {
+      data += chunk;
+    }).on('end', function () {
+      try {
+        data = JSON.parse(data);
+      } catch (e) {
+        console.log("parse error: " + data);
+        resume("parse error: " + data, []);
+      }
+      itemIDs = [];
+      limit = limit || data.length;
+      shuffle(data).slice(0, limit).forEach(d => {
+        itemIDs.push(d.itemid);
+      });
+      resume(null, itemIDs);
+    }).on("error", function () {
+      console.log("error() status=" + res.statusCode + " data=" + data);
+    });
+  });
+}
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
 const test = () => {
-  fs.readFile("tools/test.json", (err, data) => {
+  console.log("test() argv=" + process.argv);
+  let limit = +process.argv[3];
+  getTests(limit, (err, data) => {
     if (err) {
       console.log(err);
       data = "[]";
     }
     let t0 = new Date;
     let passed = [], failed = [];
-    testItems(JSON.parse(data), passed, failed, (err, val) => {
+    testItems(data, passed, failed, (err, val) => {
       console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
       process.exit(0);
     });

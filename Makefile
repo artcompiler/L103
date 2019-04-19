@@ -10,5 +10,8 @@ build:
 run:
 	npm start
 
+smoke: build
+	npm run test 100
+
 test: build
 	npm run test

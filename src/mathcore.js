@@ -4921,7 +4921,6 @@ var Model = function() {
             errs = errs.concat(err);
             val = ""
           }
-          console.log("texToSympy() val=" + val);
           resume(errs, val)
         })
       }catch(e) {

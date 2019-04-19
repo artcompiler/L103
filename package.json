@@ -12,8 +12,9 @@
   },
   "dependencies": {
     "express": "^4.0.x",
+    "json-diff": "^0.5.4",
     "mathjax-node": "^1.1.0",
-    "json-diff": "^0.5.4"
+    "querystring": "^0.2.0"
   },
   "engines": {
     "node": "latest"
