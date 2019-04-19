@@ -4917,8 +4917,8 @@ var Model = function() {
     if(tex) {
       try {
         latexSympy.translate({}, tex, function(err, val) {
-          if(err && err.length) {
-            errs = errs.concat(err);
+          errs = errs.concat(err);
+          if(errs && errs.length) {
             val = ""
           }
           resume(errs, val)

@@ -1220,7 +1220,7 @@ var _rules2 = require("./rules.js");
           args: [str]
         };
       }
-      (0, _assert.assert)(args.length === 1 && isEmpty(args[0]));
+      //      assert(args.length === 1 && isEmpty(args[0]));
       return args[0];
     }
     function isEmpty(node) {
@@ -2093,7 +2093,9 @@ var Core = exports.Core = function () {
       options: options
     };
     var evaluator = makeEvaluator(spec, resume);
-    evaluator.evaluate(solution, resume);
+    evaluator.evaluate(solution, function (err, val) {
+      resume(err, val);
+    });
   }
   function makeEvaluator(spec, resume) {
     var valueNode = void 0;
@@ -2108,9 +2110,19 @@ var Core = exports.Core = function () {
       valueNode = value != undefined ? _model.Model.create(value, "spec") : undefined;
       _model.Model.popEnv();
     } catch (e) {
-      console.log(JSON.stringify(spec));
-      console.log(e.stack);
+      console.log("ERROR makeEvaluator() " + e.stack);
       pendingError = e;
+      resume({
+        result: null,
+        errorCode: parseErrorCode(message),
+        message: parseMessage(message),
+        stack: e.stack,
+        location: e.location,
+        model: null, // Unused, for now.
+        toString: function toString() {
+          return this.errorCode + ": (" + this.location + ") " + this.message + "\n" + this.stack;
+        }
+      }, ""); // If error, empty string.
     }
     var evaluate = function evaluate(solution, resume) {
       try {
@@ -2135,8 +2147,7 @@ var Core = exports.Core = function () {
         _model.Model.popEnv();
         resume(null, result);
       } catch (e) {
-        console.log(JSON.stringify(solution));
-        console.log(e.stack);
+        console.log("ERROR evaluate() " + e.stack);
         var _message = e.message;
         resume({
           result: null,

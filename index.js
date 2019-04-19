@@ -165,24 +165,33 @@ const testItems = (items, passed, failed, resume) => {
   }
   let itemID = items.shift();
   let t0 = new Date;
-  recompileItem(itemID, "localhost", (err, localOBJ) => {
-    //console.log("testItems() localOBJ=" + JSON.stringify(localOBJ));
-    let t1 = new Date;
-    recompileItem(itemID, "www.graffiticode.com", (err, remoteOBJ) => {
-      //console.log("testItems() remoteOBJ=" + JSON.stringify(remoteOBJ));
-      let t2 = new Date;
-      let diff = jsonDiff.diffString(remoteOBJ, localOBJ);
-      if (!diff) {
-        console.log((items.length + 1) + " PASS " + itemID);
-        passed.push(itemID);
-      } else {
-        console.log((items.length + 1) + " FAIL " + itemID);
-        console.log(diff);
-        failed.push(itemID);
-      }
-      testItems(items, passed, failed, resume);
+  try {
+    console.log(itemID);
+    recompileItem(itemID, "localhost", (err, localOBJ) => {
+      //console.log("testItems() localOBJ=" + JSON.stringify(localOBJ));
+      let t1 = new Date;
+      recompileItem(itemID, "localhost" /*"www.graffiticode.com"*/, (err, remoteOBJ) => {
+        process.stdout.write((items.length + 1) + " " + itemID);
+        //console.log("testItems() remoteOBJ=" + JSON.stringify(remoteOBJ));
+        let t2 = new Date;
+        let diff = jsonDiff.diffString(remoteOBJ, localOBJ);
+        if (!diff) {
+          console.log(" PASS");
+          passed.push(itemID);
+        } else {
+          console.log(" FAIL");
+          console.log(diff);
+          failed.push(itemID);
+        }
+        testItems(items, passed, failed, resume);
+      });
     });
-  });
+  } catch (e) {
+    process.stdout.write((items.length + 1) + " " + itemID);
+    console.log(" ERROR");
+    failed.push(itemID);
+    testItems(items, passed, failed, resume);
+  }
 };
 const msToMinSec = (ms) => {
   let m = Math.floor(ms / 60000);
@@ -260,7 +269,6 @@ function shuffle(array) {
   return array;
 }
 const test = () => {
-  console.log("test() argv=" + process.argv);
   let limit = +process.argv[3];
   getTests(limit, (err, data) => {
     if (err) {
@@ -269,6 +277,7 @@ const test = () => {
     }
     let t0 = new Date;
     let passed = [], failed = [];
+    data = ["NVef7Vxmse"];
     testItems(data, passed, failed, (err, val) => {
       console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
       process.exit(0);
