@@ -11881,7 +11881,7 @@ var Model = function() {
         })
       }
     });
-    var compare = function(n1, n2, resume) {
+    function compare(n1, n2, resume) {
       if(!strict) {
         var n1o = JSON.parse(JSON.stringify(n1));
         var n2o = JSON.parse(JSON.stringify(n2));

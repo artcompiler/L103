@@ -166,11 +166,10 @@ const testItems = (items, passed, failed, resume) => {
   let itemID = items.shift();
   let t0 = new Date;
   try {
-    console.log(itemID);
     recompileItem(itemID, "localhost", (err, localOBJ) => {
       //console.log("testItems() localOBJ=" + JSON.stringify(localOBJ));
       let t1 = new Date;
-      recompileItem(itemID, "localhost" /*"www.graffiticode.com"*/, (err, remoteOBJ) => {
+      recompileItem(itemID, "www.graffiticode.com", (err, remoteOBJ) => {
         process.stdout.write((items.length + 1) + " " + itemID);
         //console.log("testItems() remoteOBJ=" + JSON.stringify(remoteOBJ));
         let t2 = new Date;
@@ -277,7 +276,6 @@ const test = () => {
     }
     let t0 = new Date;
     let passed = [], failed = [];
-    data = ["NVef7Vxmse"];
     testItems(data, passed, failed, (err, val) => {
       console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
       process.exit(0);
