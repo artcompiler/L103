@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 7cda1f1
+ * Mathcore unversioned - 7094955
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4917,8 +4917,8 @@ var Model = function() {
     if(tex) {
       try {
         latexSympy.translate({}, tex, function(err, val) {
-          if(err && err.length) {
-            errs = errs.concat(err);
+          errs = errs.concat(err);
+          if(errs && errs.length) {
             val = ""
           }
           resume(errs, val)
@@ -6109,21 +6109,40 @@ var Model = function() {
         });
         return val
       }, unary:function(node) {
-        var args = [];
-        forEach(node.args, function(n) {
-          args = args.concat(variables(n))
+        var args = node.args;
+        var val = [];
+        forEach(args, function(n) {
+          var vars = variables(n);
+          forEach(vars, function(v) {
+            if(indexOf(val, v) < 0) {
+              val.push(v)
+            }
+          })
         });
-        return args
+        return val
       }, numeric:function(node) {
         return[]
       }, variable:function(node) {
         if(node.args[0] === "0") {
           return[]
         }
-        if(node.op === Model.SUBSCRIPT) {
-          node = node.args[0]
+        var v = unpack(node);
+        return[v];
+        function unpack(node) {
+          var v = "";
+          forEach(node.args, function(n) {
+            if(v === "") {
+              if(n.op) {
+                v = unpack(n)
+              }else {
+                v = n
+              }
+            }else {
+              v += "_" + unpack(n)
+            }
+          });
+          return v
         }
-        return[node.args[0]]
       }, comma:function(node) {
         var args = node.args;
         var val = [];
@@ -11843,12 +11862,12 @@ var Model = function() {
     var result;
     var inverseResult = option("inverseResult");
     var strict = option("strict");
-    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1o), stripMetadata(n2o)])]);
+    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1), stripMetadata(n2)])]);
     node.lbrk = 40;
     node.rbrk = 41;
     var options = {};
     evalSympy("simplify", node, options, function(err, val) {
-      var n = Model.create(val);
+      var n = val;
       if(n.op === Model.PAREN && n.args[0].op === Model.LIST) {
         var result;
         var n1 = n.args[0].args[0];
@@ -11857,10 +11876,12 @@ var Model = function() {
           resume(err, val)
         })
       }else {
-        resume(["Error in SymPy code"])
+        compare(n1o, n2o, function(err, val) {
+          resume(err, val)
+        })
       }
     });
-    var compare = function(n1, n2, resume) {
+    function compare(n1, n2, resume) {
       if(!strict) {
         var n1o = JSON.parse(JSON.stringify(n1));
         var n2o = JSON.parse(JSON.stringify(n2));
@@ -11929,7 +11950,7 @@ var Model = function() {
       }
       var ignoreUnits = option("ignoreUnits", true);
       if(formulaKind(n1) !== formulaKind(n2)) {
-        resume(null, !inverseResult)
+        resume(null, inverseResult)
       }else {
         if(option("compareSides") && (isComparison(n1.op) && n1.op === n2.op)) {
           var n1l = n1.args[0];
@@ -12023,7 +12044,13 @@ var Model = function() {
       res.on("data", function(chunk) {
         data += chunk
       }).on("end", function() {
-        resume([], JSON.parse(data))
+        var val;
+        try {
+          val = JSON.parse(data)
+        }catch(x) {
+          val = ""
+        }
+        resume([], val)
       }).on("error", function() {
         console.log("error() status=" + res.statusCode + " data=" + data);
         resume([], {})
@@ -12056,14 +12083,13 @@ var Model = function() {
     if(syms && syms.length) {
       syms.forEach(function(s) {
         if(symbols) {
-          symbols += " ";
+          symbols += ",";
           params += ","
         }
-        symbols += s;
+        symbols += "symbols('" + s + "')";
         params += s
       });
-      symbols = "symbols('" + symbols + "')";
-      params = "(" + params + ")"
+      params = " " + params
     }
     var opts = "";
     Object.keys(options).forEach(function(k) {
@@ -12088,13 +12114,31 @@ var Model = function() {
         var args = v + opts;
         var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
         getSympy("/api/v1/eval", obj, function(err, data) {
+          var node;
           if(err && err.length) {
-            errs = errs.concat(err)
+            errs = errs.concat(err);
+            node = {}
+          }else {
+            node = sympyToMathcore(Model.create(data))
           }
-          resume(errs, data)
+          resume(errs, node)
         })
       }
     })
+  }
+  function sympyToMathcore(node) {
+    if(!node.op) {
+      return node
+    }
+    var args = [];
+    node.args.forEach(function(n) {
+      args.push(sympyToMathcore(n))
+    });
+    if(node.op === Model.LOG) {
+      assert(args[0].op === Model.NUM && args[0].args[0] === "10");
+      args[0] = variableNode("e")
+    }
+    return newNode(node.op, args)
   }
   function isEqualsComparison(op) {
     return op === Model.LE || (op === Model.GE || op === Model.EQL)

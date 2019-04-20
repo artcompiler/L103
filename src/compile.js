@@ -679,7 +679,7 @@ let transform = (function() {
         }, d, function (err, val) {
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
-            console.log("symbolic() errs=" + errs);
+            console.log("symbolic() errs=" + JSON.stringify(errs));
           }
           resume(err, {
             method: "equivSymbolic",
@@ -904,6 +904,7 @@ let transform = (function() {
         console.log("ERROR sympyToLaTeX() val=" + val);
         errs = errs.concat(error(err));
       }
+      data = data.replace(/log/g, "ln");
       resume(errs, data);
     });
   }
