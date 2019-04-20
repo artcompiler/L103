@@ -2160,6 +2160,7 @@ var Core = exports.Core = function () {
             return this.errorCode + ": (" + this.location + ") " + this.message + "\n" + this.stack;
           }
         }], ""); // If error, empty string.
+        return;
       }
     };
     return {

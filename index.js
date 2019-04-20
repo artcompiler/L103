@@ -25,7 +25,7 @@ app.listen(app.get('port'), function() {
   }
 });
 process.on('uncaughtException', function(err) {
-  console.log('Caught exception: ' + err.stack);
+  console.log('ERROR L107 Uncaught exception: ' + err.stack);
 });
 app.get("/version", function(req, res) {
   res.send(compiler.version || "v0.0.0");
@@ -277,6 +277,7 @@ const test = () => {
     }
     let t0 = new Date;
     let passed = [], failed = [];
+    data = ["nKQUjlbVIV"];
     testItems(data, passed, failed, (err, val) => {
       console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
       process.exit(0);
