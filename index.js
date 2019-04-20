@@ -166,6 +166,7 @@ const testItems = (items, passed, failed, resume) => {
   let itemID = items.shift();
   let t0 = new Date;
   try {
+    process.stdout.write(itemID + ": ");
     recompileItem(itemID, "localhost", (err, localOBJ) => {
       //console.log("testItems() localOBJ=" + JSON.stringify(localOBJ));
       let t1 = new Date;

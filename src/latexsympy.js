@@ -2112,7 +2112,7 @@ var Core = exports.Core = function () {
     } catch (e) {
       console.log("ERROR makeEvaluator() " + e.stack);
       pendingError = e;
-      resume({
+      resume([{
         result: null,
         errorCode: parseErrorCode(message),
         message: parseMessage(message),
@@ -2122,7 +2122,7 @@ var Core = exports.Core = function () {
         toString: function toString() {
           return this.errorCode + ": (" + this.location + ") " + this.message + "\n" + this.stack;
         }
-      }, ""); // If error, empty string.
+      }], ""); // If error, empty string.
     }
     var evaluate = function evaluate(solution, resume) {
       try {
@@ -2145,11 +2145,11 @@ var Core = exports.Core = function () {
             break;
         }
         _model.Model.popEnv();
-        resume(null, result);
+        resume([], result);
       } catch (e) {
         console.log("ERROR evaluate() " + e.stack);
         var _message = e.message;
-        resume({
+        resume([{
           result: null,
           errorCode: parseErrorCode(_message),
           message: parseMessage(_message),
@@ -2159,7 +2159,7 @@ var Core = exports.Core = function () {
           toString: function toString() {
             return this.errorCode + ": (" + this.location + ") " + this.message + "\n" + this.stack;
           }
-        }, ""); // If error, empty string.
+        }], ""); // If error, empty string.
       }
     };
     return {
