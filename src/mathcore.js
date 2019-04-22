@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 7094955
+ * Mathcore unversioned - 5db228c
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3498,13 +3498,13 @@ var Model = function() {
           next();
           switch(hd()) {
             case TK_LEFTBRACKET:
-              var root = bracketExpr(TK_LEFTBRACKET);
+              var root = bracketExpr();
               var base = braceExpr();
-              e = newNode(Model.POW, [base, newNode(Model.POW, [root, nodeMinusOne])]);
+              e = newNode(Model.SQRT, [base, root]);
               break;
             case TK_LEFTBRACE:
-              var base = braceExpr();
-              e = newNode(Model.POW, [base, newNode(Model.POW, [newNode(Model.NUM, ["2"]), nodeMinusOne])]);
+              base = braceExpr();
+              e = newNode(Model.SQRT, [base, newNode(Model.NUM, ["2"])]);
               break;
             default:
               assert(false, message(1001, ["{ or (", String.fromCharCode(hd())]));
@@ -4919,7 +4919,7 @@ var Model = function() {
         latexSympy.translate({}, tex, function(err, val) {
           errs = errs.concat(err);
           if(errs && errs.length) {
-            val = ""
+            val = null
           }
           resume(errs, val)
         })
@@ -7563,6 +7563,11 @@ var Model = function() {
             }else {
               node = unaryNode(node.op, [args[0]])
             }
+            break;
+          case Model.SQRT:
+            var base = node.args[0];
+            var root = node.args[1];
+            node = newNode(Model.POW, [base, newNode(Model.POW, [root, nodeMinusOne])]);
             break;
           case Model.INTEGRAL:
             node = normalizeIntegral(node);
@@ -12108,16 +12113,18 @@ var Model = function() {
     });
     texToSympy(expr, function(err, v) {
       if(err && err.length) {
+        console.log("[1] ERROR evalSympy() err=" + JSON.stringify(err));
         errs = errs.concat(err);
-        resume(errs, [])
+        resume(errs, null)
       }else {
         var args = v + opts;
         var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
         getSympy("/api/v1/eval", obj, function(err, data) {
           var node;
           if(err && err.length) {
+            console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
             errs = errs.concat(err);
-            node = {}
+            node = null
           }else {
             node = sympyToMathcore(Model.create(data))
           }
