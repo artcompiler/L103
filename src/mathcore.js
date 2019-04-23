@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 5db228c
+ * Mathcore unversioned - 68029ce
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7957,7 +7957,11 @@ var Model = function() {
     }
     var sortedNodes = [];
     function sort(root) {
-      Assert.checkTimeout();
+      try {
+        Assert.checkTimeout()
+      }catch(e) {
+        return root
+      }
       assert(root && root.args, "2000: Internal error.");
       var nid = ast.intern(root);
       if(root.sortNid === nid) {
@@ -12520,11 +12524,15 @@ var MathCore = function() {
       Assert.setTimeout(timeoutDuration, message(3005, [timeoutDuration]));
       var evaluator = makeEvaluator(spec);
       evaluator.evaluate(solution, function(err, val) {
-        resume(null, val)
+        if(err && err.length) {
+          resume(err)
+        }else {
+          resume(null, val)
+        }
       })
     }catch(e) {
       trace(e + "\n" + e.stack);
-      resume(e.stack, undefined)
+      resume(e.stack)
     }
   }
   function evaluateVerbose(spec, solution, resume) {
@@ -12570,7 +12578,7 @@ var MathCore = function() {
       return e
     }
   }
-  var timeoutDuration = 3E4;
+  var timeoutDuration = 15E3;
   function setTimeoutDuration(duration) {
     timeoutDuration = duration
   }
