@@ -277,7 +277,7 @@ const test = () => {
     }
     let t0 = new Date;
     let passed = [], failed = [];
-    //data = ["nKQUjlbVIV"];
+    data = ["7ORiZjj0IO", "rVYfn5mMh0"];
     testItems(data, passed, failed, (err, val) => {
       console.log(passed.length + " PASSED, " + failed.length + " FAILED (" + msToMinSec(new Date - t0) + ")");
       process.exit(0);
