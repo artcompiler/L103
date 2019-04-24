@@ -26,7 +26,7 @@ describe('routes', () => {
       app.get('/compile', routes.compile(compiler));
     });
 
-    it('should call compile function', (done) => {
+    it('Call compile function', (done) => {
       request(app)
         .get('/compile')
         .set('Content-type', 'text/plain')
@@ -41,7 +41,7 @@ describe('routes', () => {
         });
     });
 
-    it('should return 400 for bad body', (done) => {
+    it('Return 400 for bad body', (done) => {
       request(app)
         .get('/compile')
         .set('Content-type', 'text/plain')
@@ -49,14 +49,14 @@ describe('routes', () => {
         .expect(400, 'Bad Request', done);
     });
 
-    it('should return 400 for json body', (done) => {
+    it('Return 400 for json body', (done) => {
       request(app)
         .get('/compile')
         .send({src: {}, data: {}})
         .expect(400, 'Bad Request', done);
     });
 
-    it('should return 400 for no data', (done) => {
+    it('Return 400 for no data', (done) => {
       request(app)
         .get('/compile')
         .set('Content-type', 'text/plain')
@@ -64,7 +64,7 @@ describe('routes', () => {
         .expect(400, 'Bad Request', done);
     });
 
-    it('should return 400 for no code', (done) => {
+    it('Return 400 for no code', (done) => {
       request(app)
         .get('/compile')
         .set('Content-type', 'text/plain')

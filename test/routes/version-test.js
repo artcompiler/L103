@@ -5,7 +5,7 @@ const routes = require('./../../src/routes');
 
 describe('routes', () => {
   describe('version', () => {
-    it('should return specified compiler version', (done) => {
+    it('Return specified compiler version', (done) => {
       const compiler = {
         version: 'v1.2.3'
       };
@@ -16,7 +16,7 @@ describe('routes', () => {
         .expect(200, 'v1.2.3', done);
     });
 
-    it('should return v0.0.0 when no compiler version', (done) => {
+    it('Return v0.0.0 when no compiler version', (done) => {
       const compiler = {};
       const app = express();
       app.get('/version', routes.version(compiler));

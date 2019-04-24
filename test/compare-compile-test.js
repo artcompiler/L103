@@ -8,7 +8,7 @@ const REMOTE_GATEWAY = 'https://www.graffiticode.com/';
 const LANG_ID = 107;
 getTests(function (err, testData) {
   describe('Compare compile', function() {
-    this.timeout(20000);
+    this.timeout(50000);
     function checkGateway(host, resume) {
       request.head(host, function (err, res) {
         if (err) {
@@ -60,7 +60,7 @@ getTests(function (err, testData) {
     }
     describe('running ' + (testData && testData.length || 0) + ' tests', function () {
       testData && testData.forEach(function (data) {
-        it(`should compile data: ${data}`, function (done) {
+        it(data, function (done) {
           getLocalAndRemoteCompile(data, function (err, local, remote) {
             if (err) {
               done(err);
@@ -90,8 +90,12 @@ function getTests(resume) {
       resume(new Error(`compile returned ${res.statusCode}`));
     }
     let data = [];
-    let count = process.argv.indexOf('--smoke') > 0 && 25 || body.length;
-    shuffle(JSON.parse(body)).slice(0, count).forEach(d => {
+    let smoke = process.argv.indexOf('--smoke') > 0;
+    let tests = JSON.parse(body);
+    if (smoke) {
+      tests = shuffle(tests).slice(0, 25);
+    }
+    tests.forEach(d => {
       data.push(d.itemid);
     });
     resume(null, data);
