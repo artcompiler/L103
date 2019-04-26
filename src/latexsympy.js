@@ -3665,6 +3665,19 @@ var Model = exports.Model = function () {
             t = args.pop();
             expr = binaryNode(Model.ADD, [t, expr]);
             expr.isMixedFraction = true;
+          } else if (args.length > 0 && args[args.length - 1].op === Model.VAR && expr.op === Model.VAR && expr.args[0].indexOf("'") === 0) {
+            // Merge previous var with current '.
+            expr = binaryNode(Model.POW, [args.pop(), expr]);
+            expr.isImplicit = expr.args[0].isImplicit;
+          } else if (args.length > 0 && (args[args.length - 1].op === Model.MUL || args[args.length - 1].op === Model.DOT) && // 2x', 2*x', 2\cdot x'
+          args[args.length - 1].args[args[args.length - 1].args.length - 1].op === Model.VAR && expr.op === Model.VAR && expr.args[0].indexOf("'") === 0) {
+            t = args.pop();
+            expr = multiplyNode(t.args.concat(binaryNode(Model.POW, [t.args.pop(), expr])));
+            expr.isImplicit = expr.args[0].isImplicit;
+          } else if (args.length > 0 && args[args.length - 1].op === Model.VAR && expr.op === Model.POW && expr.args[0].op === Model.VAR && expr.args[0].args[0].indexOf("'") === 0) {
+            // Merge previous var with current ' and raise to the power.
+            expr = newNode(Model.POW, [binaryNode(Model.POW, [args.pop(), expr.args[0]])].concat(expr.args.slice(1)));
+            expr.isImplicit = expr.args[0].args[0].isImplicit;
           } else if (Model.option("ignoreCoefficientOne") && args.length === 1 && isOneOrMinusOne(args[0]) && isPolynomialTerm(args[0], expr)) {
             // 1x -> x
             if (isOne(args[0])) {
@@ -3675,10 +3688,6 @@ var Model = exports.Model = function () {
           } else if (args.length > 0 && (n0 = isRepeatingDecimal([args[args.length - 1], expr]))) {
             args.pop();
             expr = n0;
-          } else if (expr.op === Model.VAR && expr.args[0].indexOf("'") === 0) {
-            var t = args.pop();
-            expr = binaryNode(Model.MUL, [t, expr]);
-            expr.isImplicit = true;
           } else if (isENotation(args, expr)) {
             // 1E2, 1E-2, 1e2
             var tmp = args.pop();
@@ -4708,14 +4717,12 @@ var Model = exports.Model = function () {
 
           if (_ret === "break") break;
         }
+        // Group primes into a single var.
+        while (_lexeme.lastIndexOf("'") === _lexeme.length - 1 && c === CC_SINGLEQUOTE) {
+          _lexeme += String.fromCharCode(c);
+          c = src.charCodeAt(curIndex++);
+        }
         curIndex--;
-        // // Scan trailing primes ('). This handles single character identifier
-        // // with trailing primes.
-        // while ((c=src.charCodeAt(curIndex++)) === "'".charCodeAt(0)) {
-        //   let ch = String.fromCharCode(c);
-        //   lexeme += ch;
-        // }
-        // curIndex--;
         return TK_VAR;
       }
       // Recognize \frac, \sqrt.
@@ -4848,7 +4855,7 @@ var Model = exports.Model = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var rules = exports.rules = { "data": {}, "words": { "\\infty": "oo", "\\pi": "pi", "e": "E" }, "types": { "integerPosNeg": ["(\\type{integerPosNeg})", "\\type{integer}", "-\\type{integer}"], "integerExpr": ["\\type{integerPosNeg}", "(\\type{integerExpr})", "\\type{integerExpr}\\times\\type{integerExpr}", "\\type{integerExpr}+\\type{integerExpr}", "\\type{integerExpr}-\\type{integerExpr}", "\\type{integerExpr}^\\type{integerExpr}"], "commonFraction": ["\\frac{\\type{integer}}{2}", "\\frac{\\type{integer}}{3}", "\\frac{\\type{integer}}{4}", "\\frac{\\type{integer}}{5}", "\\frac{\\type{integer}}{6}", "\\frac{\\type{integer}}{7}", "\\frac{\\type{integer}}{8}", "\\frac{\\type{integer}}{9}", "\\frac{\\type{integer}}{10}"], "simpleExpression": ["\\type{commonFraction}", "\\type{number}", "-\\type{number}", "-\\type{variable}", "\\type{variable}", "\\type{variable}\\type{variable}", "\\type{number}\\type{variable}"] }, "rules": { "\\ln{?}": ["ln(%2)"], "\\log{?}": ["log(%2,%1)"], "\\log_?{?}": ["log(%2,%1)"], "\\frac{d^?}{d?^?}?": ["diff(%1, (%2,%3))"], "\\int \\int ? d? d?": ["integrate %1 %2 %3"], "\\int_?^? ? d?": ["integrate(%3,(%4,%1,%2))"], "\\int ? d?": ["integrate(%1,%2)"], "\\lim_? ?": [{ "limit(%2, %1, '+-')": { "? \\rightarrow ?": "%1, %2", "? \\to ?": "%1, %2", "(?,?)": "(%1, %2)" } }], "\\sum_?^? ?": [{ "summation(%3,(%1,%2))": { "? = ?": "%1,%2" } }], "\\sin{?}": ["sin(%1)"], "\\cos{?}": ["cos(%1)"], "\\tan{?}": ["tan(%1)"], "\\cot{?}": ["cot(%1)"], "\\sec{?}": ["sec(%1)"], "\\csc{?}": ["csc(%1)"], "\\sin^{-1}{?}": ["asin(%1)"], "\\cos^{-1}{?}": ["acos(%1)"], "\\tan^{-1}{?}": ["atan(%1)"], "\\cot^{-1}{?}": ["acot(%1)"], "\\sec^{-1}{?}": ["asec(%1)"], "\\csc^{-1}{?}": ["acsc(%1)"], "\\sinh{?}": ["sinh(%1)"], "\\cosh{?}": ["cosh(%1)"], "\\tanh{?}": ["tanh(%1)"], "\\coth{?}": ["coth(%1)"], "\\operatorname{sech}{?}": ["sech(%6)"], "\\operatorname{csch}{?}": ["csch(%5)"], "\\sinh^{-1}{?}": ["asinh(%1)"], "\\cosh^{-1}{?}": ["acosh(%1)"], "\\tanh^{-1}{?}": ["atanh(%1)"], "\\coth^{-1}{?}": ["acoth(%1)"], "\\operatorname{sech}^{-1}{?}": ["asech(%6)"], "\\operatorname{csch}^{-1}{?}": ["acsch(%5)"], "\\frac{\\type{integerExpr}}{\\type{integerExpr}}": ["(S(%1)/%2)"], "\\frac{?}{?}": ["(%1/%2)"], "|?|": ["Abs(%1)"], "\\abs{?}": ["Abs(%1)"], "\\type{integerExpr}^\\type{integerExpr}": ["S(%1)**%2"], "?^?": ["(%1)**%2"], "\\sqrt{?}": ["sqrt(%1)"], "\\sqrt[?]{?}": ["root(%1,%2)"], "-?": ["-%1"], "?\\degree": ["rad(%1)"], "?+?": ["(%1+%2)"], "?-?": ["(%1-%2)"], "?*?": ["(%1*%2)"], "?\\cdot?": ["(%1*%2)"], "\\type{integerExpr}\\div\\type{integerExpr}": ["(S(%1)/%2)"], "?\\div?": ["(%1/%2)"], "?<?": ["Lt(%1,%2)"], "?\\le?": ["Le(%1,%2)"], "?>?": ["Gt(%1,%2)"], "?\\ge?": ["Ge(%1,%2)"], "?=?": [{ "Eq(%1,%2)": { "\\frac{d^?}{d?^?}?": "Derivative(%1,(%2,%3))" } }], "?\\ne?": ["Ne(%1,%2)"], "?_?": ["%1_%2"], "(\\type{simpleExpression})": ["%1"], "(?)": ["(%1)"], "? ?": ["(%1*%2)"], "?,?": ["%1,%2"], "?": ["%1"] } };
+var rules = exports.rules = { "data": {}, "words": { "\\infty": "oo", "\\pi": "pi", "e": "E" }, "types": { "integerPosNeg": ["(\\type{integerPosNeg})", "\\type{integer}", "-\\type{integer}"], "integerExpr": ["\\type{integerPosNeg}", "(\\type{integerExpr})", "\\type{integerExpr}\\times\\type{integerExpr}", "\\type{integerExpr}+\\type{integerExpr}", "\\type{integerExpr}-\\type{integerExpr}", "\\type{integerExpr}^\\type{integerExpr}"], "commonFraction": ["\\frac{\\type{integer}}{2}", "\\frac{\\type{integer}}{3}", "\\frac{\\type{integer}}{4}", "\\frac{\\type{integer}}{5}", "\\frac{\\type{integer}}{6}", "\\frac{\\type{integer}}{7}", "\\frac{\\type{integer}}{8}", "\\frac{\\type{integer}}{9}", "\\frac{\\type{integer}}{10}"], "simpleExpression": ["\\type{commonFraction}", "\\type{number}", "-\\type{number}", "-\\type{variable}", "\\type{variable}", "\\type{variable}\\type{variable}", "\\type{number}\\type{variable}"] }, "rules": { "\\ln{?}": ["ln(%2)"], "\\log{?}": ["log(%2,%1)"], "\\log_?{?}": ["log(%2,%1)"], "?'?": [{ "Derivative(%1,(%2,1))": { "?' ": "%1" } }], "?''?": [{ "Derivative(%1,(%2,2))": { "?'' ": "%1" } }], "?'''?": [{ "Derivative(%1,(%2,3))": { "?''' ": "%1" } }], "?' ": ["%1_prime"], "?'' ": ["%1_doubleprime"], "?''' ": ["%1_tripleprime"], "\\frac{d^?}{d?^?}?": ["diff(%1, (%2,%3))"], "\\int \\int ? d? d?": ["integrate %1 %2 %3"], "\\int_?^? ? d?": ["integrate(%3,(%4,%1,%2))"], "\\int ? d?": ["integrate(%1,%2)"], "\\lim_? ?": [{ "limit(%2, %1, '+-')": { "? \\rightarrow ?": "%1, %2", "? \\to ?": "%1, %2", "(?,?)": "(%1, %2)" } }], "\\sum_?^? ?": [{ "summation(%3,(%1,%2))": { "? = ?": "%1,%2" } }], "\\sin{?}": ["sin(%1)"], "\\cos{?}": ["cos(%1)"], "\\tan{?}": ["tan(%1)"], "\\cot{?}": ["cot(%1)"], "\\sec{?}": ["sec(%1)"], "\\csc{?}": ["csc(%1)"], "\\sin^{-1}{?}": ["asin(%1)"], "\\cos^{-1}{?}": ["acos(%1)"], "\\tan^{-1}{?}": ["atan(%1)"], "\\cot^{-1}{?}": ["acot(%1)"], "\\sec^{-1}{?}": ["asec(%1)"], "\\csc^{-1}{?}": ["acsc(%1)"], "\\sinh{?}": ["sinh(%1)"], "\\cosh{?}": ["cosh(%1)"], "\\tanh{?}": ["tanh(%1)"], "\\coth{?}": ["coth(%1)"], "\\operatorname{sech}{?}": ["sech(%6)"], "\\operatorname{csch}{?}": ["csch(%5)"], "\\sinh^{-1}{?}": ["asinh(%1)"], "\\cosh^{-1}{?}": ["acosh(%1)"], "\\tanh^{-1}{?}": ["atanh(%1)"], "\\coth^{-1}{?}": ["acoth(%1)"], "\\operatorname{sech}^{-1}{?}": ["asech(%6)"], "\\operatorname{csch}^{-1}{?}": ["acsch(%5)"], "\\frac{\\type{integerExpr}}{\\type{integerExpr}}": ["(S(%1)/%2)"], "\\frac{?}{?}": ["(%1/%2)"], "|?|": ["Abs(%1)"], "\\abs{?}": ["Abs(%1)"], "\\type{integerExpr}^\\type{integerExpr}": ["S(%1)**%2"], "?^?": ["(%1)**%2"], "\\sqrt{?}": ["sqrt(%1)"], "\\sqrt[?]{?}": ["root(%1,%2)"], "-?": ["-%1"], "?\\degree": ["rad(%1)"], "?+?": ["(%1+%2)"], "?-?": ["(%1-%2)"], "?*?": ["(%1*%2)"], "?\\cdot?": ["(%1*%2)"], "\\type{integerExpr}\\div\\type{integerExpr}": ["(S(%1)/%2)"], "?\\div?": ["(%1/%2)"], "?<?": ["Lt(%1,%2)"], "?\\le?": ["Le(%1,%2)"], "?>?": ["Gt(%1,%2)"], "?\\ge?": ["Ge(%1,%2)"], "?=?": [{ "Eq(%1,%2)": { "\\frac{d^?}{d?^?}?": "Derivative(%1,(%2,%3))" } }], "?\\ne?": ["Ne(%1,%2)"], "?_?": ["%1_%2"], "(\\type{simpleExpression})": ["%1"], "(?)": ["(%1)"], "? ?": ["(%1*%2)"], "?,?": ["%1,%2"], "?": ["%1"] } };
 },{}],7:[function(require,module,exports){
 "use strict";
 

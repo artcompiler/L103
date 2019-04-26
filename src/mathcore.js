@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - ef97c06
+ * Mathcore unversioned - ce98570
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3391,7 +3391,7 @@ var Model = function() {
       return binaryNode(Model.MUL, [n, u])
     }
     function primaryExpr() {
-      var e;
+      var node;
       var tk;
       var op;
       switch(tk = hd()) {
@@ -3400,7 +3400,11 @@ var Model = function() {
         case TK_VAR:
           var args = [lexeme()];
           next();
-          e = newNode(Model.VAR, args);
+          if((t = hd()) === TK_UNDERSCORE) {
+            next({oneCharToken:true});
+            args.push(primaryExpr())
+          }
+          node = newNode(Model.VAR, args);
           if(isChemCore()) {
             if(hd() === TK_LEFTBRACE && lookahead() === TK_RIGHTBRACE) {
               eat(TK_LEFTBRACE);
@@ -3409,34 +3413,34 @@ var Model = function() {
           }
           break;
         case TK_NUM:
-          e = numberNode(lexeme());
+          node = numberNode(lexeme());
           next();
           break;
         case TK_LEFTCMD:
           if(lookahead() === TK_LEFTBRACE) {
-            e = braceExpr(tk)
+            node = braceExpr(tk)
           }else {
             if(lookahead() === TK_VERTICALBAR) {
-              e = absExpr(tk)
+              node = absExpr(tk)
             }else {
-              e = parenExpr(tk)
+              node = parenExpr(tk)
             }
           }
           break;
         case TK_LEFTBRACKET:
         ;
         case TK_LEFTPAREN:
-          e = parenExpr(tk);
+          node = parenExpr(tk);
           break;
         case TK_RIGHTBRACKET:
           if(Model.option("allowInterval") && !inParenExpr) {
-            e = parenExpr(tk)
+            node = parenExpr(tk)
           }else {
-            e = nodeEmpty
+            node = nodeEmpty
           }
           break;
         case TK_LEFTBRACE:
-          e = braceExpr();
+          node = braceExpr();
           break;
         case TK_BEGIN:
           next();
@@ -3464,17 +3468,17 @@ var Model = function() {
           eat(TK_END);
           braceExpr();
           if(indexOf(figure.args[0], "matrix") >= 0 || indexOf(figure.args[0], "array") === 0) {
-            e = newNode(Model.MATRIX, [tbl])
+            node = newNode(Model.MATRIX, [tbl])
           }else {
             assert(false, "1000: Unrecognized LaTeX name")
           }
           break;
         case TK_VERTICALBAR:
-          e = absExpr();
+          node = absExpr();
           break;
         case TK_ABS:
           next();
-          var e = unaryNode(Model.ABS, [braceExpr()]);
+          node = unaryNode(Model.ABS, [braceExpr()]);
           break;
         case TK_FRAC:
           next();
@@ -3482,8 +3486,8 @@ var Model = function() {
           var expr2 = braceExpr();
           expr1 = expr1.args.length === 0 ? newNode(Model.COMMA, [nodeNone]) : expr1;
           expr2 = expr1.args.length === 0 ? newNode(Model.COMMA, [nodeNone]) : expr2;
-          e = newNode(Model.FRAC, [expr1, expr2]);
-          e.isFraction = isSimpleFraction(e);
+          node = newNode(Model.FRAC, [expr1, expr2]);
+          node.isFraction = isSimpleFraction(node);
           break;
         case TK_BINOM:
           next();
@@ -3491,8 +3495,8 @@ var Model = function() {
           var k = braceExpr();
           var num = unaryNode(Model.FACT, [n]);
           var den = binaryNode(Model.POW, [binaryNode(Model.MUL, [unaryNode(Model.FACT, [k]), unaryNode(Model.FACT, [binaryNode(Model.ADD, [n, negate(k)])])]), nodeMinusOne]);
-          e = binaryNode(Model.MUL, [num, den]);
-          e.isBinomial = true;
+          node = binaryNode(Model.MUL, [num, den]);
+          node.isBinomial = true;
           break;
         case TK_SQRT:
           next();
@@ -3500,11 +3504,11 @@ var Model = function() {
             case TK_LEFTBRACKET:
               var root = bracketExpr();
               var base = braceExpr();
-              e = newNode(Model.SQRT, [base, root]);
+              node = newNode(Model.SQRT, [base, root]);
               break;
             case TK_LEFTBRACE:
-              base = braceExpr();
-              e = newNode(Model.SQRT, [base, newNode(Model.NUM, ["2"])]);
+              var base = braceExpr();
+              node = newNode(Model.SQRT, [base, newNode(Model.NUM, ["2"])]);
               break;
             default:
               assert(false, message(1001, ["{ or (", String.fromCharCode(hd())]));
@@ -3514,7 +3518,7 @@ var Model = function() {
         case TK_VEC:
           next();
           var name = braceExpr();
-          e = newNode(Model.VEC, [name]);
+          node = newNode(Model.VEC, [name]);
           break;
         case TK_SIN:
         ;
@@ -3675,10 +3679,10 @@ var Model = function() {
           return nodeEmpty;
         default:
           assert(!Model.option("strict"), message(1006, [tokenToOperator[tk]]));
-          e = nodeEmpty;
+          node = nodeEmpty;
           break
       }
-      return e
+      return node
     }
     function matrixExpr() {
       var args = [];
@@ -4107,50 +4111,66 @@ var Model = function() {
               expr = binaryNode(Model.ADD, [t, expr]);
               expr.isMixedNumber = true
             }else {
-              if(Model.option("ignoreCoefficientOne") && (args.length === 1 && (isOneOrMinusOne(args[0]) && isPolynomialTerm(args[0], expr)))) {
-                if(isOne(args[0])) {
-                  args.pop()
-                }else {
-                  expr = negate(expr)
-                }
+              if(args.length > 0 && (args[args.length - 1].op === Model.VAR && (expr.op === Model.VAR && expr.args[0].indexOf("'") === 0))) {
+                expr = binaryNode(Model.POW, [args.pop(), expr]);
+                expr.isImplicit = expr.args[0].isImplicit
               }else {
-                if(args.length > 0 && (n0 = isRepeatingDecimal([args[args.length - 1], expr]))) {
-                  args.pop();
-                  expr = n0
+                if(args.length > 0 && ((args[args.length - 1].op === Model.MUL || args[args.length - 1].op === Model.DOT) && (args[args.length - 1].args[args[args.length - 1].args.length - 1].op === Model.VAR && (expr.op === Model.VAR && expr.args[0].indexOf("'") === 0)))) {
+                  t = args.pop();
+                  expr = multiplyNode(t.args.concat(binaryNode(Model.POW, [t.args.pop(), expr])));
+                  expr.isImplicit = expr.args[0].isImplicit
                 }else {
-                  if(isENotation(args, expr)) {
-                    var tmp = args.pop();
-                    expr = binaryNode(Model.POW, [numberNode("10"), unaryExpr()]);
-                    expr = binaryNode(Model.MUL, [tmp, expr]);
-                    expr.isScientific = true
+                  if(args.length > 0 && (args[args.length - 1].op === Model.VAR && (expr.op === Model.POW && (expr.args[0].op === Model.VAR && expr.args[0].args[0].indexOf("'") === 0)))) {
+                    expr = newNode(Model.POW, [binaryNode(Model.POW, [args.pop(), expr.args[0]])].concat(expr.args.slice(1)));
+                    expr.isImplicit = expr.args[0].args[0].isImplicit
                   }else {
-                    if(!isChemCore() && isPolynomialTerm(args[args.length - 1], expr)) {
-                      expr.isPolynomial = true;
-                      var t = args.pop();
-                      if(!t.isPolynomial) {
-                        if(t.op === Model.MUL && t.args[t.args.length - 1].isPolynomial) {
-                          assert(t.args.length === 2);
-                          var prefix = t.args[0];
-                          var suffix = t.args[1];
-                          expr.isPolynomial = suffix.isPolynomial = false;
-                          expr.isImplicit = true;
-                          expr = binaryNode(Model.MUL, [prefix, binaryNode(Model.MUL, [suffix, expr], true)]);
-                          expr.args[1].isPolynomial = true;
-                          expr.args[1].isImplicit = true
-                        }else {
-                          expr = binaryNode(Model.MUL, [t, expr])
-                        }
-                        expr.isImplicit = t.isImplicit;
-                        t.isImplicit = undefined
+                    if(Model.option("ignoreCoefficientOne") && (args.length === 1 && (isOneOrMinusOne(args[0]) && isPolynomialTerm(args[0], expr)))) {
+                      if(isOne(args[0])) {
+                        args.pop()
+                      }else {
+                        expr = negate(expr)
                       }
                     }else {
-                      if(args[args.length - 1].op === Model.DERIV) {
-                        var arg = args.pop();
-                        var e = arg.args[0];
-                        var e = isOne(e) && expr || multiplyNode([e, expr]);
-                        expr = newNode(Model.DERIV, [e].concat(arg.args.slice(1)))
+                      if(args.length > 0 && (n0 = isRepeatingDecimal([args[args.length - 1], expr]))) {
+                        args.pop();
+                        expr = n0
                       }else {
-                        expr.isImplicit = true
+                        if(isENotation(args, expr)) {
+                          var tmp = args.pop();
+                          expr = binaryNode(Model.POW, [numberNode("10"), unaryExpr()]);
+                          expr = binaryNode(Model.MUL, [tmp, expr]);
+                          expr.isScientific = true
+                        }else {
+                          if(!isChemCore() && isPolynomialTerm(args[args.length - 1], expr)) {
+                            expr.isPolynomial = true;
+                            var t = args.pop();
+                            if(!t.isPolynomial) {
+                              if(t.op === Model.MUL && t.args[t.args.length - 1].isPolynomial) {
+                                assert(t.args.length === 2);
+                                var prefix = t.args[0];
+                                var suffix = t.args[1];
+                                expr.isPolynomial = suffix.isPolynomial = false;
+                                expr.isImplicit = true;
+                                expr = binaryNode(Model.MUL, [prefix, binaryNode(Model.MUL, [suffix, expr], true)]);
+                                expr.args[1].isPolynomial = true;
+                                expr.args[1].isImplicit = true
+                              }else {
+                                expr = binaryNode(Model.MUL, [t, expr])
+                              }
+                              expr.isImplicit = t.isImplicit;
+                              t.isImplicit = undefined
+                            }
+                          }else {
+                            if(args[args.length - 1].op === Model.DERIV) {
+                              var arg = args.pop();
+                              var e = arg.args[0];
+                              var e = isOne(e) && expr || multiplyNode([e, expr]);
+                              expr = newNode(Model.DERIV, [e].concat(arg.args.slice(1)))
+                            }else {
+                              expr.isImplicit = true
+                            }
+                          }
+                        }
                       }
                     }
                   }
@@ -4814,7 +4834,7 @@ var Model = function() {
         }else {
           curIndex = startIndex
         }
-        while(c === CC_SINGLEQUOTE) {
+        while(lexeme.lastIndexOf("'") === lexeme.length - 1 && c === CC_SINGLEQUOTE) {
           lexeme += String.fromCharCode(c);
           c = src.charCodeAt(curIndex++)
         }
@@ -4914,19 +4934,22 @@ var Model = function() {
   var https = require("https");
   function texToSympy(tex, resume) {
     var errs = [];
-    if(tex) {
+    if(tex && tex.op !== Model.NONE) {
       try {
         latexSympy.translate({}, tex, function(err, val) {
           errs = errs.concat(err);
           if(errs && errs.length) {
             val = null
           }
+          console.log("texToSympy() val=" + val);
           resume(errs, val)
         })
       }catch(e) {
         errs = errs.concat(e.message);
         resume(errs, "")
       }
+    }else {
+      resume([], "")
     }
   }
   function putCode(lang, src, resume) {
@@ -7462,20 +7485,22 @@ var Model = function() {
           if(ast.intern(n) === ast.intern(nodeOne)) {
             return
           }
-          if(args.length > 0 && isMinusOne(args[args.length - 1])) {
-            if(isMinusOne(n)) {
-              args.pop();
-              return
-            }
-            if(isPositiveInfinity(n)) {
-              args.pop();
-              args.push(nodeNegativeInfinity);
-              return
-            }
-            if(isNegativeInfinity(n)) {
-              args.pop();
-              args.push(nodePositiveInfinity);
-              return
+          if(args.length > 0) {
+            if(isMinusOne(args[args.length - 1])) {
+              if(isMinusOne(n)) {
+                args.pop();
+                return
+              }
+              if(isPositiveInfinity(n)) {
+                args.pop();
+                args.push(nodeNegativeInfinity);
+                return
+              }
+              if(isNegativeInfinity(n)) {
+                args.pop();
+                args.push(nodePositiveInfinity);
+                return
+              }
             }
           }
           if(n.op === Model.MUL) {
@@ -7569,7 +7594,7 @@ var Model = function() {
             var root = node.args[1];
             node = newNode(Model.POW, [base, newNode(Model.POW, [root, nodeMinusOne])]);
             break;
-          case Model.INTEGRAL:
+          case Model.INT:
             node = normalizeIntegral(node);
             break;
           case Model.SIN:
@@ -7657,6 +7682,11 @@ var Model = function() {
         }
         return node
       }, exponential:function(node) {
+        if(node.args.length === 2 && (node.args[0].op === Model.VAR && (node.args[1].op === Model.VAR && node.args[1].args[0].indexOf("'") === 0))) {
+          node = variableNode(node.args[0].args[0] + node.args[1].args[0]);
+          node.isImplicit = node.args[0].isImplicit;
+          return node
+        }
         var isUnit = false;
         var base = node.args[0];
         var expo = node.args[1];
@@ -7819,20 +7849,22 @@ var Model = function() {
           if(ast.intern(n) === ast.intern(nodeOne)) {
             return
           }
-          if(args.length > 0 && isMinusOne(args[args.length - 1])) {
-            if(isMinusOne(n)) {
-              args.pop();
-              return
-            }
-            if(isPositiveInfinity(n)) {
-              args.pop();
-              args.push(nodeNegativeInfinity);
-              return
-            }
-            if(isNegativeInfinity(n)) {
-              args.pop();
-              args.push(nodePositiveInfinity);
-              return
+          if(args.length > 0) {
+            if(isMinusOne(args[args.length - 1])) {
+              if(isMinusOne(n)) {
+                args.pop();
+                return
+              }
+              if(isPositiveInfinity(n)) {
+                args.pop();
+                args.push(nodeNegativeInfinity);
+                return
+              }
+              if(isNegativeInfinity(n)) {
+                args.pop();
+                args.push(nodePositiveInfinity);
+                return
+              }
             }
           }
           if(n.op === Model.MUL) {
@@ -7922,6 +7954,10 @@ var Model = function() {
               }else {
                 if(isMinusOne(node.args[0]) && isMinusOne(node.args[1])) {
                   return nodeMinusOne
+                }else {
+                  if(node.args[0].op === Model.VAR && (node.args[1].op === Model.VAR && node.args[1].indexOf("'") === 0)) {
+                    return variableNode(node.args[0].args[0] + node.args[1].args[0])
+                  }
                 }
               }
             }
@@ -8397,7 +8433,7 @@ var Model = function() {
               args.push(binaryNode(Model.COEFF, [args.pop(), normalizeLiteral(n)], flatten))
             }else {
               if(n.isImplicit && args.length > 0) {
-                args.push(multiplyNode([args.pop(), normalizeLiteral(n)], flatten))
+                args.push(binaryNode(Model.MUL, [args.pop(), normalizeLiteral(n)], flatten))
               }else {
                 args.push(normalizeLiteral(n))
               }
@@ -8422,11 +8458,16 @@ var Model = function() {
             return newNode(node.op, args)
         }
       }, exponential:function(node) {
-        var args = [];
-        forEach(node.args, function(n) {
-          args.push(normalizeLiteral(n))
-        });
-        node.args = args;
+        if(node.args.length === 2 && (node.args[0].op === Model.VAR && (node.args[1].op === Model.VAR && node.args[1].args[0].indexOf("'") === 0))) {
+          node = variableNode(node.args[0].args[0] + node.args[1].args[0]);
+          node.isImplicit = node.args[0].isImplicit
+        }else {
+          var args = [];
+          forEach(node.args, function(n) {
+            args.push(normalizeLiteral(n))
+          });
+          node.args = args
+        }
         return node
       }, variable:function(node) {
         return node
@@ -10923,7 +10964,10 @@ var Model = function() {
           if(mv = mathValue(multiplyNode([numberNode(mv2), n]), true)) {
             mv2 = mv
           }else {
-            args.push(scale(n))
+            if(isEmptyNode(n)) {
+            }else {
+              args.push(scale(n))
+            }
           }
         });
         var n;
@@ -12075,66 +12119,70 @@ var Model = function() {
   function evalSympy(fn, expr, options, resume) {
     var errs = [];
     var result;
-    var syms = variables(expr);
-    var index;
-    var excludes = ["\\pi", "\\infty", "e"];
-    excludes.forEach(function(sym) {
-      if((index = syms.indexOf(sym)) >= 0) {
-        syms = function(syms) {
-          var rest = syms.slice(index + 1);
-          syms.length = index;
-          return syms.concat(rest)
-        }(syms)
-      }
-    });
-    var symbols = "";
-    var params = "";
-    if(syms && syms.length) {
-      syms.forEach(function(s) {
-        if(symbols) {
-          symbols += ",";
-          params += ","
+    var syms = variables(normalize(expr));
+    var symNode = Model.create(String(syms));
+    texToSympy(symNode, function(err, val) {
+      syms = val && val.split(",") || [];
+      var index;
+      var excludes = ["\\pi", "\\infty", "e"];
+      excludes.forEach(function(sym) {
+        if((index = syms.indexOf(sym)) >= 0) {
+          syms = function(syms) {
+            var rest = syms.slice(index + 1);
+            syms.length = index;
+            return syms.concat(rest)
+          }(syms)
         }
-        symbols += "symbols('" + s + "')";
-        params += s
       });
-      params = " " + params
-    }
-    var opts = "";
-    Object.keys(options).forEach(function(k) {
-      switch(k) {
-        case "variable":
-        ;
-        case "precision":
-          opts += "," + options[k];
-          break;
-        case "domain":
-          opts += "," + k + "=" + options[k];
-          break;
-        default:
-          break
-      }
-    });
-    texToSympy(expr, function(err, v) {
-      if(err && err.length) {
-        console.log("[1] ERROR evalSympy() err=" + JSON.stringify(err));
-        errs = errs.concat(err);
-        resume(errs, null)
-      }else {
-        var args = v + opts;
-        var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
-        getSympy("/api/v1/eval", obj, function(err, data) {
-          var node;
-          if(err && err.length) {
-            console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
-            errs = errs.concat(err);
-            node = null
-          }else {
-            node = sympyToMathcore(Model.create(data))
+      var symbols = "";
+      var params = "";
+      if(syms && syms.length) {
+        syms.forEach(function(s) {
+          if(symbols) {
+            symbols += ",";
+            params += ","
           }
-          resume(errs, node)
-        })
+          symbols += "symbols('" + s + "')";
+          params += s
+        });
+        params = " " + params
       }
+      var opts = "";
+      Object.keys(options).forEach(function(k) {
+        switch(k) {
+          case "variable":
+          ;
+          case "precision":
+            opts += "," + options[k];
+            break;
+          case "domain":
+            opts += "," + k + "=" + options[k];
+            break;
+          default:
+            break
+        }
+      });
+      texToSympy(expr, function(err, v) {
+        if(err && err.length) {
+          console.log("[1] ERROR evalSympy() err=" + JSON.stringify(err));
+          errs = errs.concat(err);
+          resume(errs, null)
+        }else {
+          var args = v + opts;
+          var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
+          getSympy("/api/v1/eval", obj, function(err, data) {
+            var node;
+            if(err && err.length) {
+              console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
+              errs = errs.concat(err);
+              node = null
+            }else {
+              node = sympyToMathcore(Model.create(data))
+            }
+            resume(errs, node)
+          })
+        }
+      })
     })
   }
   function sympyToMathcore(node) {

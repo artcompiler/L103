@@ -93,7 +93,7 @@ function getTests(resume) {
     let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body);
     if (smoke) {
-      tests = shuffle(tests).slice(0, 25);
+      tests = shuffle(tests).slice(0, 100);
     }
     tests.forEach(d => {
       data.push(d.itemid);
