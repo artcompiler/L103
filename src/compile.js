@@ -1560,6 +1560,7 @@ let render = (function() {
 })();
 export let compiler = (function () {
   exports.compile = function compile(pool, data, resume) {
+//    console.log("compile() pool=" + JSON.stringify(pool));
     // Compiler takes an AST in the form of a node pool and transforms it into
     // an object to be rendered on the client by the viewer for this language.
     try {

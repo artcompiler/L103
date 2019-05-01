@@ -42,6 +42,11 @@ getTests(function (err, testData) {
         if (res.statusCode !== 200) {
           resume(new Error(`compile ${host} returned ${res.statusCode}`));
         }
+        try {
+          body = JSON.parse(body);
+        } catch (e) {
+          console.log("ERROR not JSON: " + body);
+        }
         resume(null, body);
       });
     }
@@ -65,12 +70,20 @@ getTests(function (err, testData) {
             if (err) {
               done(err);
             } else {
-              if (jsonDiff.diffString(remote, local)) {
-                console.log(jsonDiff.diffString(remote, local));
+              let expected, result;
+              try {
+                if (jsonDiff.diffString(remote, local)) {
+                  console.log(jsonDiff.diffString(remote, local));
+                }
+                result = jsonDiff.diffString(remote, local);
+                expected = "";
+                expect(result).to.be.equal(expected);
+                done();
+              } catch (e) {
+                console.log("ERROR " + e);
+                expect(false).to.be.true();
+                done();
               }
-//              expect(jsonDiff.diffString(remote, local)).to.be.equal('');
-              expect(remote === local).to.be.equal(true);
-              done();
             }
           });
         });
@@ -98,11 +111,13 @@ function getTests(resume) {
     let tests = JSON.parse(body);
     if (smoke) {
       tests = shuffle(tests).slice(0, 100);
+    } else {
+      // Uncommment and use slice to narrow the test cases run with 'make test'.
+      // tests = tests.slice(200, 250);
     }
     tests.forEach(d => {
       data.push(d.itemid);
     });
-    data = ["l12SOVmZIX"];
     resume(null, data);
   });
 }
