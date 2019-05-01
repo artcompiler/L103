@@ -12120,7 +12120,7 @@ var Model = function() {
     texToSympy(symNode, function(err, val) {
       syms = val && val.split(",") || [];
       var index;
-      var excludes = ["\\pi", "\\infty", "e"];
+      var excludes = ["E", "\\pi", "\\infty", "e"];
       excludes.forEach(function(sym) {
         if((index = syms.indexOf(sym)) >= 0) {
           syms = function(syms) {
@@ -12166,6 +12166,7 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
+          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
             var node;
             if(err && err.length) {

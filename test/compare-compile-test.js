@@ -40,7 +40,7 @@ getTests(function (err, testData) {
           return resume(err);
         }
         if (res.statusCode !== 200) {
-          resume(new Error(`compile returned ${res.statusCode}`));
+          resume(new Error(`compile ${host} returned ${res.statusCode}`));
         }
         resume(null, body);
       });
@@ -65,7 +65,11 @@ getTests(function (err, testData) {
             if (err) {
               done(err);
             } else {
-              expect(jsonDiff.diffString(remote, local)).to.be.equal('');
+              if (jsonDiff.diffString(remote, local)) {
+                console.log(jsonDiff.diffString(remote, local));
+              }
+//              expect(jsonDiff.diffString(remote, local)).to.be.equal('');
+              expect(remote === local).to.be.equal(true);
               done();
             }
           });
@@ -98,6 +102,7 @@ function getTests(resume) {
     tests.forEach(d => {
       data.push(d.itemid);
     });
+    data = ["l12SOVmZIX"];
     resume(null, data);
   });
 }

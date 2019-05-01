@@ -204,7 +204,9 @@ window.gcexports.viewer = function () {
     return elts;
   }
   function renderValidation(val, i) {
-    if (val.type === "method") {
+    if (!val) {
+      // Do nothing.
+    } else if (val.type === "method") {
       var v = val.value;
       var r = val.result;
       var m = val.method;
