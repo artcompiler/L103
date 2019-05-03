@@ -96,7 +96,7 @@ function getTests(resume) {
   console.log("Getting tests...");
   const hostUrl = new url.URL(LOCAL_GATEWAY);
   hostUrl.searchParams.set('table', 'items');
-  hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark is not null');
+  hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark=1');
   hostUrl.searchParams.set('fields', ['itemid']);
   hostUrl.pathname = '/items';
   request(hostUrl.toString(), function(err, res, body) {
