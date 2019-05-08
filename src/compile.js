@@ -933,6 +933,47 @@ let transform = (function() {
       });
     });
   }
+  function isUnit(node, options, resume) {
+    var errs = [];
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      let input = options.input;
+      let rating = options.rating;
+      let value = val1;
+      let validations = options.validations;
+      mapList(input, (d, resume) => {
+        MathCore.evaluateVerbose({
+          method: "isUnit",
+          options: options.settings,
+          value: value,
+        }, d, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+            console.log("syntax() errs=" + JSON.stringify(errs));
+          }
+          resume(err, {
+            method: "isUnit",
+            value: value,
+            result: val.result,
+          });
+        });
+      }, (err, val) => {
+        input.forEach((v, i) => {
+          validations[i] = validations[i] || [];
+          validations[i].push({
+            type: "method",
+            method: "isunit",
+            value: value,
+            result: val[i].result,
+          });
+        });
+        resume(err, validations);
+      });
+    });
+  }
   function numeric(node, options, resume) {
     var errs = [];
     if (!options.settings) {
@@ -1716,6 +1757,7 @@ let transform = (function() {
     "SIMPLIFIED": simplified,
     "EXPANDED": expanded,
     "IS-TRUE": isTrue,
+    "IS-UNIT": isUnit,
     "FACTORED": factored,
     "SYMBOLIC": symbolic,
     "SYNTAX": syntax,
