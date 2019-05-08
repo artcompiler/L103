@@ -22,6 +22,7 @@ window.gcexports.globalLexicon = {
   "factored" : { "tk": 1, "name": "FACTORED", "cls": "function", "length": 0 , "arity": 0 },
   "sympy" : { "tk": 1, "name": "SYMPY", "cls": "function", "length": 1 , "arity": 1 },
   "symbolic" : { "tk": 1, "name": "SYMBOLIC", "cls": "function", "length": 1 , "arity": 1 },
+  "syntax" : { "tk": 1, "name": "SYNTAX", "cls": "function", "length": 1 , "arity": 1 },
   "expand" : { "tk": 1, "name": "EXPAND", "cls": "function", "length": 1 , "arity": 1 },
   "factor" : { "tk": 1, "name": "FACTOR", "cls": "function", "length": 1 , "arity": 1 },
   "eval" : { "tk": 1, "name": "EVAL", "cls": "function", "length": 1 , "arity": 1 },
@@ -34,6 +35,27 @@ window.gcexports.globalLexicon = {
   "decimal" : { "tk": 1, "name": "DECIMAL", "cls": "function", "length": 1 , "arity": 1 },
   "literal" : { "tk": 1, "name": "LITERAL", "cls": "function", "length": 1, "arity": 1 },
   "ignoreOrder" : { "tk": 1, "name": "IGNORE-ORDER", "cls": "function", "length": 1, "arity": 1 },
+  "inverseResult" : { "tk": 1, "name": "INVERSE-RESULT", "cls": "function", "length": 1 , "arity": 1 },
+  "not" : { "tk": 1, "name": "INVERSE-RESULT", "cls": "function", "length": 1 , "arity": 1 },
+
+  "field" : { "tk": 1, "name": "FIELD", "cls": "function", "length": 2, "arity": 2 },
+  "decimalPlaces" : { "tk": 1, "name": "DECIMAL-PLACES", "cls": "function", "length": 2, "arity": 2 },
+  "setThousandsSeparator" : { "tk": 1, "name": "SET-THOUSANDS-SEPARATOR", "cls": "function", "length": 2, "arity": 2 },
+  "setDecimalSeparator" : { "tk": 1, "name": "SET-DECIMAL-SEPARATOR", "cls": "function", "length": 2, "arity": 2 },
+
+
+  "allowDecimal" : { "tk": 1, "name": "ALLOW-DECIMAL", "cls": "function", "length": 1 , "arity": 1 },
+  "allowInterval" : { "tk": 1, "name": "ALLOW-INTERVAL", "cls": "function", "length": 1 , "arity": 1 },
+  "allowThousandsSeparator" : { "tk": 1, "name": "ALLOW-THOUSANDS-SEPARATOR", "cls": "function", "length": 1 , "arity": 1 },
+  "compareSides" : { "tk": 1, "name": "COMPARE-SIDES", "cls": "function", "length": 1 , "arity": 1 },
+  "compareGrouping" : { "tk": 1, "name": "COMPARE-GROUPING", "cls": "function", "length": 1 , "arity": 1 },
+  "ignoreText" : { "tk": 1, "name": "IGNORE-TEXT", "cls": "function", "length": 1 , "arity": 1 },
+  "ignoreTrailingZeros" : { "tk": 1, "name": "IGNORE-TRAILING-ZEROS", "cls": "function", "length": 1 , "arity": 1 },
+  "ignoreCoefficientOne" : { "tk": 1, "name": "IGNORE-COEFFICIENT-ONE", "cls": "function", "length": 1 , "arity": 1 },
+  "allowEulersNumber" : { "tk": 1, "name": "ALLOW-EULERS-NUMBER", "cls": "function", "length": 1 , "arity": 1 },
+
+
+
   "seed" : { "tk": 1, "name": "SEED", "cls": "function", "length": 1 , "arity": 1 },
   "stimulus" : { "tk": 1, "name": "STIMULUS", "cls": "function", "length": 1 , "arity": 1 },
   "solution" : { "tk": 1, "name": "SOLUTION", "cls": "function", "length": 1 , "arity": 1 },
@@ -59,7 +81,8 @@ window.gcexports.globalLexicon = {
   "mcq" : { "tk": 1, "name": "MCQ", "cls": "function", "length": 1 , "arity": 1 },
   "latex" : { "tk": 1, "name": "LATEX", "cls": "function", "length": 1 , "arity": 1 },
   "title" : { "tk": 1, "name": "TITLE", "cls": "function", "length": 2 , "arity": 2 },
-  "value" : { "tk": 1, "name": "VALUE", "cls": "function", "length": 2 , "arity": 2 },
+  "numeric" : { "tk": 1, "name": "NUMERIC", "cls": "function", "length": 1 , "arity": 1 },
+  "value" : { "tk": 1, "name": "NUMERIC", "cls": "function", "length": 1 , "arity": 1 },
   "context" : { "tk": 1, "name": "CONTEXT", "cls": "function", "length": 2 , "arity": 2 },
   "template" : { "tk": 1, "name": "TEMPLATE", "cls": "function", "length": 2 , "arity": 2 },
   "notes" : { "tk": 1, "name": "NOTES", "cls": "function", "length": 2 , "arity": 2 },

@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 0bf5ed9
+ * Mathcore unversioned - 11c4124
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4070,7 +4070,7 @@ var Model = function() {
       if(isDerivative(expr)) {
         expr = derivativeExpr(expr)
       }
-      if(expr.op === Model.MUL && !expr.isBinomial) {
+      if(expr.op === Model.MUL && (!expr.isBinomial && !Model.option("compareGrouping"))) {
         args = expr.args
       }else {
         args = [expr]
@@ -4392,7 +4392,8 @@ var Model = function() {
             expr = binaryNode(Model.SUB, [expr, expr2]);
             break;
           default:
-            expr = binaryNode(Model.ADD, [expr, expr2], true);
+            var flatten = !Model.option("compareGrouping");
+            expr = binaryNode(Model.ADD, [expr, expr2], flatten);
             break
         }
       }
@@ -5824,6 +5825,8 @@ var Model = function() {
           node = visit.unary(node, resume);
           break;
         case Model.EVALAT:
+          node = visit.unary(node, resume);
+        case Model.PAREN:
           node = visit.unary(node, resume);
           break;
         case Model.COMMA:
@@ -8410,17 +8413,24 @@ var Model = function() {
         return node
       }, additive:function(node) {
         var args = [];
+        var compareGrouping = node.lbrk && Model.option("compareGrouping");
         forEach(node.args, function(n) {
           args.push(normalizeLiteral(n))
         });
         if(Model.option("ignoreOrder") && node.op === Model.SUB) {
           assert(args.length === 2, "2000: Internal error.");
-          return addNode([args[0], negate(args[1], true)])
+          node = addNode([args[0], negate(args[1], true)])
+        }else {
+          node = binaryNode(node.op, args)
         }
-        return binaryNode(node.op, args)
+        if(compareGrouping) {
+          node = newNode(Model.PAREN, [node])
+        }
+        return node
       }, multiplicative:function(node) {
         var args = [];
-        var flatten = true;
+        var compareGrouping = node.lbrk && Model.option("compareGrouping");
+        var flatten = !compareGrouping;
         forEach(node.args, function(n) {
           if(Model.option("compatibility") === "v1.37") {
             args.push(normalizeLiteral(n))
@@ -8437,7 +8447,11 @@ var Model = function() {
           }
         });
         var op = node.op === Model.MUL ? Model.TIMES : node.op;
-        return binaryNode(op, args, true)
+        node = binaryNode(op, args, flatten);
+        if(compareGrouping) {
+          node = newNode(Model.PAREN, [node])
+        }
+        return node
       }, unary:function(node) {
         var args = [];
         forEach(node.args, function(n) {
@@ -12057,7 +12071,7 @@ var Model = function() {
               nid1 = ast.intern(n1);
               nid2 = ast.intern(n2);
               result = nid1 === nid2;
-              result = inverseResult && !result || result;
+              result = inverseResult ? !result : result;
               option("ignoreUnits", ignoreUnits);
               resume(null, result)
             }else {
@@ -12069,13 +12083,13 @@ var Model = function() {
                 nid1 = ast.intern(n1);
                 nid2 = ast.intern(n2);
                 result = nid1 === nid2;
-                result = inverseResult && !result || result;
+                result = inverseResult ? !result : result;
                 option("ignoreUnits", ignoreUnits);
                 resume(null, result)
               }
             }
           }else {
-            result = inverseResult && !result || result;
+            result = inverseResult ? !result : result;
             option("ignoreUnits", ignoreUnits);
             resume(null, result)
           }
@@ -12689,6 +12703,8 @@ var MathCore = function() {
       case "treatLettersAsVariables":
       ;
       case "ignoreUnits":
+      ;
+      case "compareGrouping":
         if(typeof v === "undefined" || typeof v === "boolean") {
           break
         }

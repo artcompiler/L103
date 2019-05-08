@@ -65,7 +65,7 @@ window.gcexports.viewer = (function () {
       let v = val.value;
       let r = val.result;
       let m = val.method;
-      let value = (m === "symbolic" || m === "literal") &&
+      let value = (m === "symbolic" || m === "literal" || m === "numeric" || m === "syntax") &&
         <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
       let method = <div key="1"><span key="1">{m}</span> {value}</div>;
       let rgb = color(r);

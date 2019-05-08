@@ -423,14 +423,6 @@ let transform = (function() {
       }
     });
   }
-  function value(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      visit(node.elts[1], options, function (err2, val2) {
-        val2.value = val1;
-        resume([].concat(err1).concat(err2), val2);
-      });
-    });
-  }
   function seed(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       if (typeof val === "string") {
@@ -535,12 +527,15 @@ let transform = (function() {
     return trans("SymPy", node, options, resume);
   }
   function simplified(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
     let input = options.input;
     let validations = options.validations;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isSimplified",
-        options: {},
+        options: options.settings,
       }, d, function (err, val) {
         resume(err, {
           method: "isSimplified",
@@ -554,7 +549,6 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "simplified",
-          value: value,
           result: val[i].result,
         });
       });
@@ -562,12 +556,15 @@ let transform = (function() {
     });
   }
   function expanded(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
     let input = options.input;
     let validations = options.validations;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isExpanded",
-        options: {},
+        options: options.settings,
       }, d, function (err, val) {
         resume(err, {
           method: "isExpanded",
@@ -581,7 +578,6 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "expanded",
-          value: value,
           result: val[i].result,
         });
       });
@@ -589,12 +585,15 @@ let transform = (function() {
     });
   }
   function factored(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
     let input = options.input;
     let validations = options.validations;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isFactorised",
-        options: {},
+        options: options.settings,
       }, d, function (err, val) {
         resume(err, {
           method: "isFactorised",
@@ -608,14 +607,61 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "factored",
-          value: value,
           result: val[i].result,
         });
       });
       resume(err, validations);
     });
   }
+  function field(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        options.settings.field = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function decimalPlaces(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        options.settings.decimalPlaces = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function setThousandsSeparator(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        options.settings.setDecimalSepartor = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+  function setDecimalSeparator(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, function (err1, val1) {
+      visit(node.elts[1], options, function (err2, val2) {
+        options.settings.setDecimalSeparator = val1;
+        resume([].concat(err1).concat(err2), val2);
+      });
+    });
+  }
+
   function ignoreOrder(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
     var errs = [];
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
@@ -623,15 +669,128 @@ let transform = (function() {
       resume(errs, val1);
     });
   }
+  function allowDecimal(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.allowDecimal = true;
+      resume(errs, val1);
+    });
+  }
+  function allowInterval(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.allowInterval = true;
+      resume(errs, val1);
+    });
+  }
+  function allowThousandsSeparator(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.allowThousandsSeparator = true;
+      resume(errs, val1);
+    });
+  }
+  function compareSides(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.compareSides = true;
+      resume(errs, val1);
+    });
+  }
+  function compareGrouping(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.compareGrouping = true;
+      resume(errs, val1);
+    });
+  }
+  function ignoreText(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.ignoreText = true;
+      resume(errs, val1);
+    });
+  }
+  function ignoreTrailingZeros(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.ignoreTrailingZeros = true;
+      resume(errs, val1);
+    });
+  }
+  function ignoreCoefficientOne(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.ignoreCoefficientOne = true;
+      resume(errs, val1);
+    });
+  }
+  function allowEulersNumber(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      options.settings.allowEulersNumber = true;
+      resume(errs, val1);
+    });
+  }
+  function inverseResult(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    options.settings.inverseResult = true;
+    var errs = [];
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      resume(errs, val1);
+    });
+  }
   function literal(node, options, resume) {
     var errs = [];
-    options.settings = {};
+    if (!options.settings) {
+      options.settings = {};
+    }
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
       let rating = options.rating;
       let value = val1;
       let validations = options.validations;
+      console.log("literal() options=" + JSON.stringify(options));
       mapList(input, (d, resume) => {
         MathCore.evaluateVerbose({
           method: "equivLiteral",
@@ -664,13 +823,16 @@ let transform = (function() {
   }
   function symbolic(node, options, resume) {
     var errs = [];
-    options.settings = {};
+    if (!options.settings) {
+      options.settings = {};
+    }
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
       let rating = options.rating;
       let value = val1;
       let validations = options.validations;
+      console.log("symbolic() options=" + JSON.stringify(options));
       mapList(input, (d, resume) => {
         MathCore.evaluateVerbose({
           method: "equivSymbolic",
@@ -693,6 +855,88 @@ let transform = (function() {
           validations[i].push({
             type: "method",
             method: "symbolic",
+            value: value,
+            result: val[i].result,
+          });
+        });
+        resume(err, validations);
+      });
+    });
+  }
+  function syntax(node, options, resume) {
+    var errs = [];
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      let input = options.input;
+      let rating = options.rating;
+      let value = val1;
+      let validations = options.validations;
+      mapList(input, (d, resume) => {
+        MathCore.evaluateVerbose({
+          method: "equivSyntax",
+          options: options.settings,
+          value: value,
+        }, d, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+            console.log("syntax() errs=" + JSON.stringify(errs));
+          }
+          resume(err, {
+            method: "equivSyntax",
+            value: value,
+            result: val.result,
+          });
+        });
+      }, (err, val) => {
+        input.forEach((v, i) => {
+          validations[i] = validations[i] || [];
+          validations[i].push({
+            type: "method",
+            method: "syntax",
+            value: value,
+            result: val[i].result,
+          });
+        });
+        resume(err, validations);
+      });
+    });
+  }
+  function numeric(node, options, resume) {
+    var errs = [];
+    if (!options.settings) {
+      options.settings = {};
+    }
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      let input = options.input;
+      let rating = options.rating;
+      let value = val1;
+      let validations = options.validations;
+      mapList(input, (d, resume) => {
+        MathCore.evaluateVerbose({
+          method: "equivValue",
+          options: options.settings,
+          value: value,
+        }, d, function (err, val) {
+          if (err && err.length) {
+            errs = errs.concat(error(err, node.elts[0]));
+            console.log("numeric() errs=" + JSON.stringify(errs));
+          }
+          resume(err, {
+            method: "equivValue",
+            value: value,
+            result: val.result,
+          });
+        });
+      }, (err, val) => {
+        input.forEach((v, i) => {
+          validations[i] = validations[i] || [];
+          validations[i].push({
+            type: "method",
+            method: "numeric",
             value: value,
             result: val[i].result,
           });
@@ -1435,6 +1679,7 @@ let transform = (function() {
     "DIV" : div,
     "POW" : pow,
     "IGNORE-ORDER" : ignoreOrder,
+    "INVERSE-RESULT" : inverseResult,
     "RUBRIC" : rubric,
     "STYLE" : style,
     "SYMPY": sympy,
@@ -1443,10 +1688,24 @@ let transform = (function() {
     "EXPANDED": expanded,
     "FACTORED": factored,
     "SYMBOLIC": symbolic,
+    "SYNTAX": syntax,
     "SIMPLIFY": simplify,
     "SOLVE": solve,
     "EXPAND": expand,
     "FACTOR": factor,
+    "DECIMAL-PLACES": decimalPlaces,
+    "ALLOW-DECIMAL": allowDecimal,
+    "IGNORE-ORDER": ignoreOrder,
+    "IGNORE-COEFFICIENT-ONE": ignoreCoefficientOne,
+    "COMPARE-SIDES": compareSides,
+    "COMPARE-GROUPING": compareGrouping,
+    "SET-DECIMAL-SEPARATOR": setDecimalSeparator,
+    "SET-THOUSANDS-SEPARATOR": setThousandsSeparator,
+    "FIELD": field,
+    "ALLOW-THOUSANDS-SEPARATOR": allowThousandsSeparator,
+    "ALLOW-INTERVAL": allowInterval,
+    "IGNORE-TEXT": ignoreText,
+    "IGNORE-TRAILING-ZEROS": ignoreTrailingZeros,
     "EVAL": evaluate,
     "CANCEL": cancel,
     "INTEGRATE": integrate,
@@ -1486,7 +1745,8 @@ let transform = (function() {
     "LATEX" : latex,
     "TITLE" : title,
     "INDEX" : index,
-    "VALUE" : value,
+    "NUMERIC" : numeric,
+    "VALUE" : numeric,
     "NOTES" : notes,
     "CONTEXT" : context,
     "TEMPLATE" : template,
