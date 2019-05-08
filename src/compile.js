@@ -526,6 +526,35 @@ let transform = (function() {
   function sympy(node, options, resume) {
     return trans("SymPy", node, options, resume);
   }
+  function isTrue(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    let input = options.input;
+    let validations = options.validations;
+    mapList(input, (d, resume) => {
+      MathCore.evaluateVerbose({
+        method: "isTrue",
+        options: options.settings,
+      }, d, function (err, val) {
+        resume(err, {
+          method: "isTrue",
+          input: d,
+          result: val.result,
+        });
+      });
+    }, (err, val) => {
+      input.forEach((v, i) => {
+        validations[i] = validations[i] || [];
+        validations[i].push({
+          type: "method",
+          method: "istrue",
+          result: val[i].result,
+        });
+      });
+      resume(err, validations);
+    });
+  }
   function simplified(node, options, resume) {
     if (!options.settings) {
       options.settings = {};
@@ -1686,6 +1715,7 @@ let transform = (function() {
     "CALCULATE": calculate,
     "SIMPLIFIED": simplified,
     "EXPANDED": expanded,
+    "IS-TRUE": isTrue,
     "FACTORED": factored,
     "SYMBOLIC": symbolic,
     "SYNTAX": syntax,
