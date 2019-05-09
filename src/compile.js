@@ -555,6 +555,35 @@ let transform = (function() {
       resume(err, validations);
     });
   }
+  function isValid(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    let input = options.input;
+    let validations = options.validations;
+    mapList(input, (d, resume) => {
+      MathCore.evaluateVerbose({
+        method: "validSyntax",
+        options: options.settings,
+      }, d, function (err, val) {
+        resume(err, {
+          method: "validSyntax",
+          input: d,
+          result: val.result,
+        });
+      });
+    }, (err, val) => {
+      input.forEach((v, i) => {
+        validations[i] = validations[i] || [];
+        validations[i].push({
+          type: "method",
+          method: "isvalid",
+          result: val[i].result,
+        });
+      });
+      resume(err, validations);
+    });
+  }
   function simplified(node, options, resume) {
     if (!options.settings) {
       options.settings = {};
@@ -861,7 +890,7 @@ let transform = (function() {
       let rating = options.rating;
       let value = val1;
       let validations = options.validations;
-      console.log("symbolic() options=" + JSON.stringify(options));
+      options.settings.strict = true;
       mapList(input, (d, resume) => {
         MathCore.evaluateVerbose({
           method: "equivSymbolic",
@@ -1757,6 +1786,7 @@ let transform = (function() {
     "SIMPLIFIED": simplified,
     "EXPANDED": expanded,
     "IS-TRUE": isTrue,
+    "IS-VALID": isValid,
     "IS-UNIT": isUnit,
     "FACTORED": factored,
     "SYMBOLIC": symbolic,

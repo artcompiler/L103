@@ -24,6 +24,7 @@ window.gcexports.globalLexicon = {
   "symbolic" : { "tk": 1, "name": "SYMBOLIC", "cls": "function", "length": 1 , "arity": 1 },
   "syntax" : { "tk": 1, "name": "SYNTAX", "cls": "function", "length": 1 , "arity": 1 },
   "istrue" : { "tk": 1, "name": "IS-TRUE", "cls": "function", "length": 0 , "arity": 0 },
+  "isvalid" : { "tk": 1, "name": "IS-VALID", "cls": "function", "length": 0 , "arity": 0 },
   "isunit" : { "tk": 1, "name": "IS-UNIT", "cls": "function", "length": 1 , "arity": 1 },
   "expand" : { "tk": 1, "name": "EXPAND", "cls": "function", "length": 1 , "arity": 1 },
   "factor" : { "tk": 1, "name": "FACTOR", "cls": "function", "length": 1 , "arity": 1 },

@@ -210,7 +210,7 @@ window.gcexports.viewer = function () {
       var v = val.value;
       var r = val.result;
       var m = val.method;
-      var value = (m === "symbolic" || m === "literal" || m === "numeric" || m === "syntax") && React.createElement(
+      var value = (m === "symbolic" || m === "literal" || m === "numeric" || m === "syntax" || m === "isunit") && React.createElement(
         "span",
         { key: "2", className: "mq" },
         v
