@@ -30,7 +30,7 @@ window.gcexports.viewer = (function () {
     let elts = [];
     let i = 0;
     let data = obj.rating || obj.score;
-    data.forEach(function (d) {
+    data && data.forEach(function (d) {
       // Each datum has a score, input and rubric
       let rgb, actual, expected = "";
       let input = <tspan>{d.input}</tspan>;

@@ -676,8 +676,8 @@ let transform = (function() {
       options.settings = {};
     }
     visit(node.elts[0], options, function (err1, val1) {
+      options.settings.field = val1;
       visit(node.elts[1], options, function (err2, val2) {
-        options.settings.field = val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -687,8 +687,8 @@ let transform = (function() {
       options.settings = {};
     }
     visit(node.elts[0], options, function (err1, val1) {
+      options.settings.decimalPlaces = val1;
       visit(node.elts[1], options, function (err2, val2) {
-        options.settings.decimalPlaces = val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -698,8 +698,8 @@ let transform = (function() {
       options.settings = {};
     }
     visit(node.elts[0], options, function (err1, val1) {
+      options.settings.setDecimalSepartor = val1;
       visit(node.elts[1], options, function (err2, val2) {
-        options.settings.setDecimalSepartor = val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -709,8 +709,8 @@ let transform = (function() {
       options.settings = {};
     }
     visit(node.elts[0], options, function (err1, val1) {
+      options.settings.setDecimalSeparator = val1;
       visit(node.elts[1], options, function (err2, val2) {
-        options.settings.setDecimalSeparator = val1;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -721,9 +721,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.ignoreOrder = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.ignoreOrder = true;
       resume(errs, val1);
     });
   }
@@ -732,9 +732,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.allowDecimal = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.allowDecimal = true;
       resume(errs, val1);
     });
   }
@@ -743,9 +743,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.allowInterval = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.allowInterval = true;
       resume(errs, val1);
     });
   }
@@ -754,9 +754,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.allowThousandsSeparator = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.allowThousandsSeparator = true;
       resume(errs, val1);
     });
   }
@@ -764,10 +764,10 @@ let transform = (function() {
     if (!options.settings) {
       options.settings = {};
     }
-    var errs = [];
+    var errs = []; 
+    options.settings.compareSides = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.compareSides = true;
       resume(errs, val1);
     });
   }
@@ -776,9 +776,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.compareGrouping = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.compareGrouping = true;
       resume(errs, val1);
     });
   }
@@ -787,9 +787,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.ignoreText = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.ignoreText = true;
       resume(errs, val1);
     });
   }
@@ -798,9 +798,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.ignoreTrailingZeros = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.ignoreTrailingZeros = true;
       resume(errs, val1);
     });
   }
@@ -809,9 +809,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.ignoreCoefficientOne = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.ignoreCoefficientOne = true;
       resume(errs, val1);
     });
   }
@@ -820,9 +820,9 @@ let transform = (function() {
       options.settings = {};
     }
     var errs = [];
+    options.settings.allowEulersNumber = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
-      options.settings.allowEulersNumber = true;
       resume(errs, val1);
     });
   }

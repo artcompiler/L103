@@ -95,7 +95,6 @@ function validate(token, resume) {
     });
   }
 }
-
 if (!module.parent) {
   process.on('uncaughtException', function (err) {
     console.log('Caught exception: ' + err);

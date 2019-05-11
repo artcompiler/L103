@@ -6,9 +6,10 @@ const url = require('url');
 const LOCAL_GATEWAY = 'http://localhost:3000/';
 const REMOTE_GATEWAY = 'https://www.graffiticode.com/';
 const LANG_ID = 107;
+const TIMEOUT_DURATION = 50000;
 getTests(function (err, testData) {
   describe('Compare compile', function() {
-    this.timeout(50000);
+    this.timeout(TIMEOUT_DURATION);
     function checkGateway(host, resume) {
       request.head(host, function (err, res) {
         if (err) {

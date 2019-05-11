@@ -4938,7 +4938,6 @@ var Model = function() {
           if(errs && errs.length) {
             val = null
           }
-          console.log("texToSympy() val=" + val);
           resume(errs, val)
         })
       }catch(e) {
@@ -12060,10 +12059,10 @@ var Model = function() {
               n1 = scale(expand(normalize(simplify(expand(normalize(n1))))));
               n2 = scale(expand(normalize(simplify(expand(normalize(n2))))))
             }
-            var nid1 = ast.intern(n1);
-            var nid2 = ast.intern(n2);
-            var result = nid1 === nid2
           }
+          var nid1 = ast.intern(n1);
+          var nid2 = ast.intern(n2);
+          var result = nid1 === nid2;
           if(!result) {
             if(isComparison(n1.op)) {
               n1 = scale(normalize(simplify(expand(normalize(n1)))));

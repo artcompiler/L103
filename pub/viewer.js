@@ -165,7 +165,7 @@ window.gcexports.viewer = function () {
     var elts = [];
     var i = 0;
     var data = obj.rating || obj.score;
-    data.forEach(function (d) {
+    data && data.forEach(function (d) {
       // Each datum has a score, input and rubric
       var rgb = void 0,
           actual = void 0,
