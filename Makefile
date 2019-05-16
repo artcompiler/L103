@@ -15,3 +15,6 @@ smoke: build
 
 test: build
 	npm run test
+
+test-bugs: build
+	npm run test-bugs

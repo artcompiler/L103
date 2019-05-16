@@ -95,9 +95,10 @@ getTests(function (err, testData) {
 });
 function getTests(resume) {
   console.log("Getting tests...");
+  let mark = process.argv.indexOf('--bugs') > 0 && -1 || 1;
   const hostUrl = new url.URL(LOCAL_GATEWAY);
   hostUrl.searchParams.set('table', 'items');
-  hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark=1');
+  hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark=' + mark);
   hostUrl.searchParams.set('fields', ['itemid']);
   hostUrl.pathname = '/items';
   request(hostUrl.toString(), function(err, res, body) {
@@ -108,9 +109,8 @@ function getTests(resume) {
       resume(new Error(`compile returned ${res.statusCode}`));
     }
     let data = [];
-    let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body);
-    if (smoke) {
+    if (process.argv.indexOf('--smoke') > 0) {
       tests = shuffle(tests).slice(0, 100);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.

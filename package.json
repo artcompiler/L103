@@ -9,6 +9,7 @@
     "build-dev": "./node_modules/babel-cli/bin/babel-node.js tools/build",
     "smoke": "mocha --reporter spec --recursive --delay --smoke",
     "test": "mocha --reporter spec --recursive --delay",
+    "test-bugs": "mocha --reporter spec --recursive --delay --bugs",
     "flow": "flow; test $? -eq 0 -o $? -eq 2"
   },
   "dependencies": {
