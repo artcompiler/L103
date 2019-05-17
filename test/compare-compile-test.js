@@ -8,7 +8,7 @@ const REMOTE_GATEWAY = 'https://www.graffiticode.com/';
 const LANG_ID = 107;
 const TIMEOUT_DURATION = 50000;
 getTests(function (err, testData) {
-  describe('Compare compile', function() {
+  describe('compiles', function() {
     this.timeout(TIMEOUT_DURATION);
     function checkGateway(host, resume) {
       request.head(host, function (err, res) {
@@ -64,9 +64,9 @@ getTests(function (err, testData) {
         });
       });
     }
-    describe('running ' + (testData && testData.length || 0) + ' tests', function () {
-      testData && testData.forEach(function (data) {
-        it(data, function (done) {
+    describe('compiling ' + (testData && testData.length || 0) + ' tests', function () {
+      testData && testData.forEach(function (data, i) {
+        it((i + 1) + ": " + data, function (done) {
           getLocalAndRemoteCompile(data, function (err, local, remote) {
             if (err) {
               done(err);
