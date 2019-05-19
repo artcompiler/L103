@@ -12181,6 +12181,7 @@ var Model = function() {
           var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
           console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
+            console.log("evalSympy() data=" + data);
             var node;
             if(err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
