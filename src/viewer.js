@@ -58,6 +58,22 @@ window.gcexports.viewer = (function () {
     });
     return elts;
   }
+  function getSettings(settings) {
+    var str = "";
+    var keys;
+    if (settings && (keys = Object.keys(settings)).length > 0) {
+      keys.forEach((k) => {
+        switch (k) {
+        case "inverseResult":
+          str += settings[k] && "not " || "";
+          break;
+        default:
+          break;
+        }
+      });
+    }
+    return str;
+  }
   function renderValidation(val, i) {
     if (!val) {
       // Do nothing.
@@ -65,13 +81,14 @@ window.gcexports.viewer = (function () {
       let v = val.value;
       let r = val.result;
       let m = val.method;
+      let s = getSettings(val.settings);
       let value = (m === "symbolic" ||
                    m === "literal" ||
                    m === "numeric" ||
                    m === "syntax" ||
                    m === "isunit") &&
         <span key="2" className="mq">{v}</span> || <div key="2">{JSON.stringify(v)}</div>;
-      let method = <div key="1"><span key="1">{m}</span> {value}</div>;
+      let method = <div key="1"><span key="1">{s + m}</span> {value}</div>;
       let rgb = color(r);
       return <div key={i} style={{
         borderLeft: "2px solid",

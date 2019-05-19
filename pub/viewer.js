@@ -203,6 +203,22 @@ window.gcexports.viewer = function () {
     });
     return elts;
   }
+  function getSettings(settings) {
+    var str = "";
+    var keys;
+    if (settings && (keys = Object.keys(settings)).length > 0) {
+      keys.forEach(function (k) {
+        switch (k) {
+          case "inverseResult":
+            str += settings[k] && "not " || "";
+            break;
+          default:
+            break;
+        }
+      });
+    }
+    return str;
+  }
   function renderValidation(val, i) {
     if (!val) {
       // Do nothing.
@@ -210,6 +226,7 @@ window.gcexports.viewer = function () {
       var v = val.value;
       var r = val.result;
       var m = val.method;
+      var s = getSettings(val.settings);
       var value = (m === "symbolic" || m === "literal" || m === "numeric" || m === "syntax" || m === "isunit") && React.createElement(
         "span",
         { key: "2", className: "mq" },
@@ -225,7 +242,7 @@ window.gcexports.viewer = function () {
         React.createElement(
           "span",
           { key: "1" },
-          m
+          s + m
         ),
         " ",
         value

@@ -549,6 +549,7 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "istrue",
+          settings: options.settings,
           result: val[i].result,
         });
       });
@@ -578,6 +579,7 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "isvalid",
+          settings: options.settings,
           result: val[i].result,
         });
       });
@@ -607,6 +609,7 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "simplified",
+          settings: options.settings,
           result: val[i].result,
         });
       });
@@ -665,6 +668,7 @@ let transform = (function() {
         validations[i].push({
           type: "method",
           method: "factored",
+          settings: options.settings,
           result: val[i].result,
         });
       });
@@ -871,6 +875,7 @@ let transform = (function() {
           validations[i].push({
             type: "method",
             method: "literal",
+            settings: options.settings,
             value: value,
             result: val[i].result,
           });
@@ -913,6 +918,7 @@ let transform = (function() {
           validations[i].push({
             type: "method",
             method: "symbolic",
+            settings: options.settings,
             value: value,
             result: val[i].result,
           });
@@ -954,6 +960,7 @@ let transform = (function() {
           validations[i].push({
             type: "method",
             method: "syntax",
+            settings: options.settings,
             value: value,
             result: val[i].result,
           });
@@ -995,6 +1002,7 @@ let transform = (function() {
           validations[i].push({
             type: "method",
             method: "isunit",
+            settings: options.settings,
             value: value,
             result: val[i].result,
           });
@@ -1036,6 +1044,7 @@ let transform = (function() {
           validations[i].push({
             type: "method",
             method: "numeric",
+            settings: options.settings,
             value: value,
             result: val[i].result,
           });
