@@ -40,7 +40,6 @@ function compile() {
   console.log("Compiling...");
   exec("cp ./mathcore/lib/mathcore.js ./src/mathcore.js");
   exec("cp ./latexsympy/build/spokenmath.js ./src/latexsympy.js");
-  exec("cp ./filbert/filbert.js ./src/filbert.js");
   exec("babel src --out-dir lib");
 }
 
