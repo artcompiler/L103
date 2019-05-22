@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 52b4b65
+ * Mathcore unversioned - d8f07b1
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12151,7 +12151,7 @@ var Model = function() {
             symbols += ",";
             params += ","
           }
-          symbols += "symbols('" + s + "')";
+          symbols += "symbols('" + s + "', real=True)";
           params += s
         });
         params = " " + params

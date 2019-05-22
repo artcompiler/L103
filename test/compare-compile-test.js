@@ -93,8 +93,9 @@ getTests(function (err, testData) {
   });
   run();
 });
+const SMOKE_COUNT = 100;
 function getTests(resume) {
-  console.log("Getting tests...");
+  //console.log("Getting tests...");
   let mark = process.argv.indexOf('--bugs') > 0 && -1 || 1;
   const hostUrl = new url.URL(LOCAL_GATEWAY);
   hostUrl.searchParams.set('table', 'items');
@@ -111,10 +112,12 @@ function getTests(resume) {
     let data = [];
     let tests = JSON.parse(body);
     if (process.argv.indexOf('--smoke') > 0) {
+      console.log("Smoking " + SMOKE_COUNT + " of " + (tests.length) + " tests")
       tests = shuffle(tests).slice(0, 100);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
+      console.log("Running " + (tests.length) + " tests")
     }
     tests.forEach(d => {
       data.push(d.itemid);
