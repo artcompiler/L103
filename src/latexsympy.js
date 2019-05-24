@@ -3081,7 +3081,6 @@ var Model = exports.Model = function () {
           break;
         case TK_LEFTBRACE:
           node = braceExpr();
-          node = newNode(Model.SET, [node]);
           break;
         case TK_BEGIN:
           next();
