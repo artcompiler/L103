@@ -1,5 +1,5 @@
-module.exports = function (compiler) {
-  return function handleCompile(req, res) {
+module.exports = (compiler) => {
+  return (req, res) => {
     let body = null;
     try {
       body = JSON.parse(req.body);
@@ -8,11 +8,11 @@ module.exports = function (compiler) {
     }
     let code = body.src;
     let data = body.data;
+    let config = body.config || {};
     if (!code || !data) {
       return res.sendStatus(400);
     }
-    data.REFRESH = body.refresh; // Stowaway flag.
-    compiler.compile(code, data, function (err, val) {
+    compiler.compile(code, data, config, function (err, val) {
       if (err && err.length) {
         res.status(500).json({error: err});
         return;

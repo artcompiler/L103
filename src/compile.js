@@ -900,6 +900,7 @@ let transform = (function() {
         MathCore.evaluateVerbose({
           method: "equivSymbolic",
           options: options.settings,
+          config: options.config,
           value: value,
         }, d, function (err, val) {
           if (err && err.length) {
@@ -1930,15 +1931,18 @@ let render = (function() {
   return render;
 })();
 export let compiler = (function () {
-  exports.compile = function compile(pool, data, resume) {
-//    console.log("compile() pool=" + JSON.stringify(pool));
-    // Compiler takes an AST in the form of a node pool and transforms it into
-    // an object to be rendered on the client by the viewer for this language.
+  exports.langID = '107';
+  exports.version = "v0.0.0";
+  exports.compile = function compile(code, data, config, resume) {
+    // Compiler takes an AST in the form of a node pool (code) and transforms it
+    // into an object to be rendered on the client by the viewer for this
+    // language.
     try {
       let options = {
-        data: data
+        data: data,
+        config: config,
       };
-      transform(pool, options, function (err, val) {
+      transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
           resume([].concat(err), val);

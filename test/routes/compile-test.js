@@ -3,7 +3,7 @@ const {expect} = require('chai');
 const express = require('express');
 const request = require('supertest');
 
-const routes = require('./../../src/routes');
+const routes = require('./../../routes');
 
 describe('routes', () => {
   describe('compile', () => {
@@ -12,7 +12,7 @@ describe('routes', () => {
     beforeEach('Setup app', () => {
       called = 0;
       const compiler = {
-        compile: function(code, data, resume) {
+        compile: function(code, data, config, resume) {
           called++;
           resume(null, null);
         }

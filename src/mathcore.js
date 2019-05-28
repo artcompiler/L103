@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 3715ff7
+ * Mathcore unversioned - 08311d7
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12503,7 +12503,7 @@ var Model = function() {
   };
   var option = Model.option = function option(p, v) {
     var options = Model.options;
-    var opt = options && options[p];
+    var val = options && options[p];
     if(arguments.length > 1) {
       Model.options = options = options || {};
       if(v === undefined) {
@@ -12512,13 +12512,13 @@ var Model = function() {
         options[p] = v
       }
     }
-    if(opt === undefined) {
+    if(val === undefined) {
       switch(p) {
         case "field":
-          opt = "integer";
+          val = "integer";
           break;
         case "decimalPlaces":
-          opt = 10;
+          val = 10;
           break;
         case "setThousandsSeparator":
         ;
@@ -12541,14 +12541,34 @@ var Model = function() {
         case "treatLettersAsVariables":
         ;
         case "ignoreUnits":
-          opt = undefined;
+          val = undefined;
           break;
         default:
-          opt = false;
+          val = false;
           break
       }
     }
-    return opt
+    return val
+  };
+  Model.config = function(p, v) {
+    var config = Model.configEnv;
+    var val = config && config[p];
+    if(arguments.length > 1) {
+      Model.configEnv = config = config || {};
+      if(v === undefined) {
+        delete config[p]
+      }else {
+        config[p] = v
+      }
+    }
+    if(val === undefined) {
+      switch(p) {
+        default:
+          val = false;
+          break
+      }
+    }
+    return val
   }
 })(Model.prototype);
 var MathCore = function() {
@@ -12751,6 +12771,7 @@ var MathCore = function() {
     var method = spec.method;
     var value = spec.value;
     var options = Model.options = spec.options;
+    Model.configEnv = spec.config;
     Assert.setLocation("spec");
     validateOptions(options);
     Model.pushEnv(env);
