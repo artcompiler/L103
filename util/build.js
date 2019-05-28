@@ -38,8 +38,10 @@ function clean() {
 
 function compile() {
   console.log("Compiling...");
-  exec("cp ./mathcore/lib/mathcore.js ./src/mathcore.js");
-  exec("cp ./latexsympy/build/spokenmath.js ./src/latexsympy.js");
+  if (process.argv.includes("--dev")) {
+    exec("cp ./mathcore/lib/mathcore.js ./src/mathcore.js");
+    exec("cp ./latexsympy/build/spokenmath.js ./src/latexsympy.js");
+  }
   exec("babel src --out-dir lib");
 }
 
