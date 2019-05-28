@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "build-dev": "./node_modules/babel-cli/bin/babel-node.js util/build",
+    "build-dev": "./node_modules/babel-cli/bin/babel-node.js util/build --dev",
     "build": "./node_modules/babel-cli/bin/babel-node.js util/build",
     "smoke": "mocha --reporter spec --recursive --delay --smoke",
     "test": "mocha --reporter spec --recursive --delay",

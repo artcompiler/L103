@@ -11919,6 +11919,7 @@ var Model = function() {
     return kind
   }
   Model.fn.equivSymbolic = function equivSymbolic(n1, n2, resume) {
+    console.log("equivSymbolic() messageToAlan=" + Model.config("messageToAlan"));
     var n1o = n1;
     var n2o = n2;
     var result;
@@ -12639,7 +12640,6 @@ var MathCore = function() {
       var msg = parseMessage(e.message);
       var stack = e.stack;
       var location = e.location;
-      console.log("ERROR spec=" + JSON.stringify(spec) + " solution=" + solution);
       console.log("ERROR evaluateVerbose stack=" + stack);
       resume([e.message], {errorCode:errorCode, msg:msg})
     }
