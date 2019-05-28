@@ -12639,6 +12639,7 @@ var MathCore = function() {
       var msg = parseMessage(e.message);
       var stack = e.stack;
       var location = e.location;
+      console.log("ERROR spec=" + JSON.stringify(spec) + " solution=" + solution);
       console.log("ERROR evaluateVerbose stack=" + stack);
       resume([e.message], {errorCode:errorCode, msg:msg})
     }
