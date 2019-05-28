@@ -11919,7 +11919,6 @@ var Model = function() {
     return kind
   }
   Model.fn.equivSymbolic = function equivSymbolic(n1, n2, resume) {
-    console.log("equivSymbolic() messageToAlan=" + Model.config("messageToAlan"));
     var n1o = n1;
     var n2o = n2;
     var result;
