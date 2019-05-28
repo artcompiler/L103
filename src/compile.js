@@ -852,7 +852,6 @@ let transform = (function() {
       let rating = options.rating;
       let value = val1;
       let validations = options.validations;
-      console.log("literal() options=" + JSON.stringify(options));
       mapList(input, (d, resume) => {
         MathCore.evaluateVerbose({
           method: "equivLiteral",

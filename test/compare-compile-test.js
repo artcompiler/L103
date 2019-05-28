@@ -73,10 +73,10 @@ getTests(function (err, testData) {
             } else {
               let expected, result;
               try {
-                if (jsonDiff.diffString(remote, local)) {
-                  console.log(jsonDiff.diffString(remote, local));
+                if (jsonDiff.diffString(local, remote)) {
+                  console.log(jsonDiff.diffString(local, remote));
                 }
-                result = jsonDiff.diffString(remote, local);
+                result = jsonDiff.diffString(local, remote);
                 expected = "";
                 expect(result).to.be.equal(expected);
                 done();
