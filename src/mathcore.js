@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 08311d7
+ * Mathcore unversioned - 1adf359
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12132,6 +12132,9 @@ var Model = function() {
     var symNode = Model.create(String(syms));
     texToSympy(symNode, function(err, val) {
       syms = val && val.split(",") || [];
+      if(syms.includes("I")) {
+        syms.push("i")
+      }
       var index;
       var excludes = ["E", "pi", "I"];
       excludes.forEach(function(sym) {
