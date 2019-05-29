@@ -28,7 +28,9 @@ const PORT = process.env.PORT || `5${compiler.langID}`;
 const app = module.exports = createApp(compiler);
 module.exports.compiler = app;
 if (!module.parent) {
-  process.on('uncaughtException', (err) => console.log('Caught exception: ' + err));
+  process.on('uncaughtException', (err) => {
+    console.log('Caught exception: ' + err.stack);
+  });
   app.listen(PORT, () => console.log(`Node app is running at localhost: ${PORT}`));
 }
 
