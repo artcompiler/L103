@@ -1806,6 +1806,7 @@ let transform = (function() {
     "FACTOR": factor,
     "DECIMAL-PLACES": decimalPlaces,
     "ALLOW-DECIMAL": allowDecimal,
+    "ALLOW-EULERS-NUMBER": allowEulersNumber,
     "IGNORE-ORDER": ignoreOrder,
     "IGNORE-COEFFICIENT-ONE": ignoreCoefficientOne,
     "COMPARE-SIDES": compareSides,
