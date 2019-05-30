@@ -11924,7 +11924,7 @@ var Model = function() {
     var result;
     var inverseResult = option("inverseResult");
     var strict = option("strict");
-    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1), stripMetadata(n2)])]);
+    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(normalize(n1)), stripMetadata(normalize(n2))])]);
     node.lbrk = 40;
     node.rbrk = 41;
     var options = {};
@@ -12128,7 +12128,7 @@ var Model = function() {
   function evalSympy(fn, expr, options, resume) {
     var errs = [];
     var result;
-    var syms = variables(normalize(expr));
+    var syms = variables(expr);
     var symNode = Model.create(String(syms));
     texToSympy(symNode, function(err, val) {
       syms = val && val.split(",") || [];
