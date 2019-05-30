@@ -1460,9 +1460,8 @@ var _rules2 = require("./rules.js");
           var env = {};
           if (node.numberFormat === "decimal") {
             var parts = node.args[0].split(".");
-            (0, _assert.assert)(parts.length === 2);
             env.ip = parts[0];
-            env.fp = parts[1];
+            env.fp = parts[1] || "0"; // 7.
           }
           var matches = match(patterns, node);
           if (matches.length === 0) {
