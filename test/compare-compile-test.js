@@ -67,18 +67,12 @@ getTests(function (err, testData) {
     describe('compiling ' + (testData && testData.length || 0) + ' tests', function () {
       testData && testData.forEach(function (data, i) {
         it((i + 1) + ": " + data, function (done) {
-          getLocalAndRemoteCompile(data, function (err, local, remote) {
+          getCompile(LOCAL_GATEWAY, data, function (err, local) {
             if (err) {
               done(err);
             } else {
-              let expected, result;
               try {
-                if (jsonDiff.diffString(local, remote)) {
-                  console.log(jsonDiff.diffString(local, remote));
-                }
-                result = jsonDiff.diffString(local, remote);
-                expected = "";
-                expect(result).to.be.equal(expected);
+                expect(local.score[0].result).to.be.equal(true);
                 done();
               } catch (e) {
                 console.log("ERROR " + e);
@@ -113,7 +107,7 @@ function getTests(resume) {
     let tests = JSON.parse(body);
     if (process.argv.indexOf('--smoke') > 0) {
       console.log("Smoking " + SMOKE_COUNT + " of " + (tests.length) + " tests")
-      tests = shuffle(tests).slice(0, 100);
+      tests = shuffle(tests).slice(0, SMOKE_COUNT);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
