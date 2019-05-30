@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 1adf359
+ * Mathcore unversioned - cc01f2f
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3891,6 +3891,9 @@ var Model = function() {
       }
       return expr
     }
+    function isEndOfExpression(tk) {
+      return tk === TK_COMMA || (tk === TK_RIGHTBRACE || (tk === TK_RIGHTPAREN || (tk === TK_RIGHTBRACKET || (tk === TK_RIGHTCMD || tk === TK_NONE))))
+    }
     function unaryExpr() {
       var t;
       var expr;
@@ -3946,8 +3949,9 @@ var Model = function() {
         default:
           if(t === TK_VAR && lexeme() === "$") {
             next();
-            if((t = hd()) && (t !== TK_RIGHTBRACE && t !== TK_SLASH)) {
-              expr = multiplyNode([newNode(Model.VAR, ["$"]), postfixExpr()])
+            if(!isEndOfExpression(hd())) {
+              expr = multiplyNode([newNode(Model.VAR, ["$"]), postfixExpr()]);
+              expr.args[1].isPolynomialTerm = true
             }else {
               expr = newNode(Model.VAR, ["$"])
             }
