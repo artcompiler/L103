@@ -114,7 +114,9 @@ function getTests(resume) {
       console.log("Running " + (tests.length) + " tests")
     }
     tests.forEach(d => {
-      data.push(d.itemid);
+      if (!data.includes(d.itemid)) {
+        data.push(d.itemid);
+      }
     });
     resume(null, data);
   });
