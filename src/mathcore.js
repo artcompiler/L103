@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - cc01f2f
+ * Mathcore unversioned - e7ac38d
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7807,6 +7807,76 @@ var Model = function() {
       normalizedNodes[rootNid] = node;
       return node
     }
+    var normalizedSympyNodes = [];
+    function normalizeSympy(root) {
+      assert(root && root.args, "2000: Internal error.");
+      var nid = ast.intern(root);
+      if(root.normalizeSympyNid === nid) {
+        return root
+      }
+      var cachedNode;
+      if((cachedNode = normalizedSympyNodes[nid]) !== undefined) {
+        return cachedNode
+      }
+      var rootNid = nid;
+      var node = Model.create(visit(root, {name:"normalize", numeric:function(node) {
+        if(!option("dontConvertDecimalToFraction") && (isRepeating(node) || isDecimal(node))) {
+          node = decimalToFraction(node)
+        }
+        return node
+      }, additive:function(node) {
+        var args = [];
+        forEach(node.args, function(n) {
+          args = args.concat(normalizeSympy(n))
+        });
+        var node = newNode(node.op, args);
+        return node
+      }, multiplicative:function(node) {
+        var args = [];
+        forEach(node.args, function(n) {
+          args = args.concat(normalizeSympy(n))
+        });
+        var node = newNode(node.op, args);
+        return node
+      }, unary:function(node) {
+        var args = [];
+        forEach(node.args, function(n) {
+          args = args.concat(normalizeSympy(n))
+        });
+        var node = newNode(node.op, args);
+        return node
+      }, variable:function(node) {
+        return node
+      }, exponential:function(node) {
+        var args = [];
+        forEach(node.args, function(n) {
+          args = args.concat(normalizeSympy(n))
+        });
+        var node = newNode(node.op, args);
+        return node
+      }, comma:function(node) {
+        var args = [];
+        forEach(node.args, function(n) {
+          args = args.concat(normalizeSympy(n))
+        });
+        var node = newNode(node.op, args);
+        return node
+      }, equals:function(node) {
+        var args = [];
+        forEach(node.args, function(n) {
+          args = args.concat(normalizeSympy(n))
+        });
+        var node = newNode(node.op, args);
+        return node
+      }}), root.location);
+      while(nid !== ast.intern(node)) {
+        nid = ast.intern(node);
+        node = normalizeSympy(node)
+      }
+      node.normalizeSympyNid = nid;
+      normalizedSympyNodes[rootNid] = node;
+      return node
+    }
     function normalizeCalculate(root) {
       assert(root && root.args, "2000: Internal error.");
       var nid = ast.intern(root);
@@ -11312,6 +11382,7 @@ var Model = function() {
       }
     }
     this.normalize = normalize;
+    this.normalizeSympy = normalizeSympy;
     this.normalizeExpanded = normalizeExpanded;
     this.normalizeLiteral = normalizeLiteral;
     this.normalizeSyntax = normalizeSyntax;
@@ -11381,6 +11452,16 @@ var Model = function() {
       Assert.setLocation(node.location)
     }
     var result = visitor.normalize(node);
+    Assert.setLocation(prevLocation);
+    return result
+  }
+  function normalizeSympy(node) {
+    var visitor = new Visitor(ast);
+    var prevLocation = Assert.location;
+    if(node.location) {
+      Assert.setLocation(node.location)
+    }
+    var result = visitor.normalizeSympy(node);
     Assert.setLocation(prevLocation);
     return result
   }
@@ -11928,7 +12009,7 @@ var Model = function() {
     var result;
     var inverseResult = option("inverseResult");
     var strict = option("strict");
-    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(n1), stripMetadata(n2)])]);
+    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(normalizeSympy(n1)), stripMetadata(normalizeSympy(n2))])]);
     node.lbrk = 40;
     node.rbrk = 41;
     var options = {};
