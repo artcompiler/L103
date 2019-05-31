@@ -4,10 +4,13 @@ PUB = $(LIB:lib/%.js=pub/%.js)
 
 default: build run
 
-build:
+build-dev:
 	npm run build-dev
 
-run: build
+build:
+	npm run build
+
+run: build-dev
 	npm start
 
 smoke: build
