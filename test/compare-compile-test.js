@@ -74,7 +74,6 @@ getTests(function (err, testData) {
               try {
                 let result = true;
                 local.score.forEach(s => {
-                  console.log("s=" + JSON.stringify(s));
                   result = result && s.result;
                 });
                 expect(result).to.be.equal(true);
