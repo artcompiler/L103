@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - e7ac38d
+ * Mathcore unversioned - 8463496
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12231,16 +12231,19 @@ var Model = function() {
           }(syms)
         }
       });
-      var symbols = "";
       var params = "";
+      var symbols = "";
       if(syms && syms.length) {
         syms.forEach(function(s) {
           if(symbols) {
-            symbols += ",";
-            params += ","
+            params += ",";
+            symbols += ","
           }
-          symbols += "symbols('" + s + "', real=True)";
-          params += s
+          params += s;
+          if(s === "_dollar") {
+            s = "\\$"
+          }
+          symbols += "symbols('" + s + "', real=True)"
         });
         params = " " + params
       }
