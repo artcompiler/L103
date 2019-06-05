@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 8463496
+ * Mathcore unversioned - 8a91053
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -5210,11 +5210,15 @@ var Model = function() {
         mv = bigMinusOne.multiply(mv)
       }
     }
+    var numberFormat = isInteger(mv) && "integer" || "decimal";
     if(minusOne) {
-      node = multiplyNode([newNode(Model.NUM, [String(minusOne)]), newNode(Model.NUM, [String(mv)])])
+      node = multiplyNode([newNode(Model.NUM, [String(minusOne)]), newNode(Model.NUM, [String(mv)])]);
+      node.args[0].numberFormat = "integer";
+      node.args[1].numberFormat = numberFormat
     }else {
       if(mv) {
-        node = newNode(Model.NUM, [String(mv)])
+        node = newNode(Model.NUM, [String(mv)]);
+        node.numberFormat = numberFormat
       }else {
         node = newNode(Model.NUM, [String(val)])
       }
@@ -7811,14 +7815,6 @@ var Model = function() {
     function normalizeSympy(root) {
       assert(root && root.args, "2000: Internal error.");
       var nid = ast.intern(root);
-      if(root.normalizeSympyNid === nid) {
-        return root
-      }
-      var cachedNode;
-      if((cachedNode = normalizedSympyNodes[nid]) !== undefined) {
-        return cachedNode
-      }
-      var rootNid = nid;
       var node = Model.create(visit(root, {name:"normalize", numeric:function(node) {
         if(!option("dontConvertDecimalToFraction") && (isRepeating(node) || isDecimal(node))) {
           node = decimalToFraction(node)
@@ -7829,22 +7825,19 @@ var Model = function() {
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
-        var node = newNode(node.op, args);
-        return node
+        return Object.assign({}, node, newNode(node.op, args))
       }, multiplicative:function(node) {
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
-        var node = newNode(node.op, args);
-        return node
+        return Object.assign({}, node, newNode(node.op, args))
       }, unary:function(node) {
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
-        var node = newNode(node.op, args);
-        return node
+        return Object.assign({}, node, newNode(node.op, args))
       }, variable:function(node) {
         return node
       }, exponential:function(node) {
@@ -7852,29 +7845,24 @@ var Model = function() {
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
-        var node = newNode(node.op, args);
-        return node
+        return Object.assign({}, node, newNode(node.op, args))
       }, comma:function(node) {
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
-        var node = newNode(node.op, args);
-        return node
+        return Object.assign({}, node, newNode(node.op, args))
       }, equals:function(node) {
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
-        var node = newNode(node.op, args);
-        return node
+        return Object.assign({}, node, newNode(node.op, args))
       }}), root.location);
       while(nid !== ast.intern(node)) {
         nid = ast.intern(node);
         node = normalizeSympy(node)
       }
-      node.normalizeSympyNid = nid;
-      normalizedSympyNodes[rootNid] = node;
       return node
     }
     function normalizeCalculate(root) {
