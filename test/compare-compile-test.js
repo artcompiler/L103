@@ -72,7 +72,12 @@ getTests(function (err, testData) {
               done(err);
             } else {
               try {
-                expect(local.score[0].result).to.be.equal(true);
+                let result = true;
+                local.score.forEach(s => {
+                  console.log("s=" + JSON.stringify(s));
+                  result = result && s.result;
+                });
+                expect(result).to.be.equal(true);
                 done();
               } catch (e) {
                 console.log("ERROR " + e);
