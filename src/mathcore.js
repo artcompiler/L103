@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 8a91053
+ * Mathcore unversioned - 2ec5c21
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3891,8 +3891,8 @@ var Model = function() {
       }
       return expr
     }
-    function isEndOfExpression(tk) {
-      return tk === TK_COMMA || (tk === TK_RIGHTBRACE || (tk === TK_RIGHTPAREN || (tk === TK_RIGHTBRACKET || (tk === TK_RIGHTCMD || tk === TK_NONE))))
+    function isEndOfMultiplicativeExpression(tk) {
+      return tk === TK_ADD || (tk === TK_SUB || (tk === TK_COMMA || (tk === TK_RIGHTBRACE || (tk === TK_RIGHTPAREN || (tk === TK_RIGHTBRACKET || (tk === TK_RIGHTCMD || tk === TK_NONE))))))
     }
     function unaryExpr() {
       var t;
@@ -3949,7 +3949,7 @@ var Model = function() {
         default:
           if(t === TK_VAR && lexeme() === "$") {
             next();
-            if(!isEndOfExpression(hd())) {
+            if(!isEndOfMultiplicativeExpression(hd())) {
               expr = multiplyNode([newNode(Model.VAR, ["$"]), postfixExpr()]);
               expr.args[1].isPolynomialTerm = true
             }else {
@@ -4043,6 +4043,9 @@ var Model = function() {
     }
     function isMinusOne(node) {
       return node.op === Model.SUB && (node.args.length === 1 && isOne(node.args[0]))
+    }
+    function isMultiplicative(t) {
+      return t === TK_MUL || (t === TK_DIV || t === TK_SLASH)
     }
     function isDerivative(n) {
       if(n.op !== Model.FRAC) {
@@ -4196,9 +4199,6 @@ var Model = function() {
         return trimEmptyBraces(multiplyNode(args))
       }else {
         return args[0]
-      }
-      function isMultiplicative(t) {
-        return t === TK_MUL || (t === TK_DIV || t === TK_SLASH)
       }
     }
     function trimEmptyBraces(node) {
