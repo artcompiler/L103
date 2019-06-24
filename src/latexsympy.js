@@ -792,6 +792,7 @@ var _rules2 = require("./rules.js");
         case _model.Model.MATHFIELD:
         case _model.Model.SET:
         case _model.Model.NOT:
+        case _model.Model.OPERATORNAME:
           node = visit.unary(node, resume);
           break;
         case _model.Model.COMMA:
@@ -2437,6 +2438,7 @@ var Model = exports.Model = function () {
     DOT: "dot",
     MATHFIELD: "mathfield",
     DELTA: "delta",
+    OPERATORNAME: "operatorname",
     NONE: "none"
   };
 
@@ -3139,6 +3141,11 @@ var Model = exports.Model = function () {
           var name = braceExpr();
           node = newNode(Model.VEC, [name]);
           break;
+        case TK_OPERATORNAME:
+          var lex = lexeme();
+          next();
+          node = newNode(Model.OPERATORNAME, [newNode(Model.VAR, [lex]), primaryExpr()]);
+          break;
         case TK_SIN:
         case TK_COS:
         case TK_TAN:
@@ -3293,7 +3300,7 @@ var Model = exports.Model = function () {
           }
           break;
         default:
-          (0, _assert.assert)(!Model.option("strict"), message(1006, [tokenToOperator[tk]]));
+          (0, _assert.assert)(!Model.option("strict"), message(1006, [tk]));
           node = nodeEmpty;
           break;
       }
@@ -4784,7 +4791,7 @@ var Model = exports.Model = function () {
           }
           tk = lexemeToToken["\\" + _lexeme];
           if (tk === void 0) {
-            tk = TK_VAR; // e.g. \\theta
+            tk = TK_OPERATORNAME;
           }
         } else if (tk === TK_TEXT || tk === TK_TYPE) {
           c = src.charCodeAt(curIndex++);

@@ -1,17 +1,18 @@
-SRC = $(wildcard src/*.js)
-LIB = $(SRC:src/%.js=lib/%.js)
-PUB = $(LIB:lib/%.js=pub/%.js)
+default: build start
 
-default: build run
-
-build-dev:
-	npm run build-dev
+dev: build-dev start
 
 build:
 	npm run build
 
-run: build-dev
+start: build
 	npm start
+
+watch: build
+	npm run watch
+
+build-dev:
+	npm run build-dev
 
 smoke: build
 	npm run smoke
