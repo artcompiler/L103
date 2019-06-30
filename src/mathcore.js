@@ -4952,54 +4952,6 @@ var Model = function() {
       resume([], "")
     }
   }
-  function putCode(lang, src, resume) {
-    var path = "/code";
-    var data = {language:lang, src:src};
-    var encodedData = JSON.stringify(data);
-    var options = {method:"PUT", host:LOCAL && "localhost" || "www.graffiticode.com", port:LOCAL && "3000" || "443", path:path, headers:{"Content-Type":"text/plain", "Content-Length":encodedData.length}};
-    var req = http.request(options, function(res) {
-      var data = "";
-      res.on("data", function(chunk) {
-        data += chunk
-      }).on("end", function() {
-        try {
-          resume([], JSON.parse(data))
-        }catch(e) {
-          resume(["ERROR putCode(): " + encodedData], {})
-        }
-      }).on("error", function() {
-        console.log("error() status=" + res.statusCode + " data=" + data);
-        resume([], {})
-      })
-    });
-    req.write(encodedData);
-    req.end();
-    req.on("error", function(e) {
-      console.log("ERROR: " + e);
-      resume([].concat(e), [])
-    })
-  }
-  function putComp(auth, data, resume) {
-    var encodedData = JSON.stringify(data);
-    var options = {host:LOCAL && "localhost" || "www.graffiticode.com", port:LOCAL && "3000" || "443", path:"/comp", method:"PUT", headers:{"Content-Type":"text/plain", "Content-Length":Buffer.byteLength(encodedData), "Authorization":auth}};
-    var req = http.request(options);
-    req.on("response", function(res) {
-      var data = "";
-      res.on("data", function(chunk) {
-        data += chunk
-      }).on("end", function() {
-        resume(null, JSON.parse(data))
-      }).on("error", function(err) {
-        console.log("[13] ERROR " + err);
-        resume(err)
-      })
-    });
-    req.end(encodedData);
-    req.on("error", function(err) {
-      console.log("[14] ERROR " + err);
-      resume(err)
-    })
-  }
   var messages = Assert.messages;
   Assert.reserveCodeRange(2E3, 2999, "mathmodel");
   messages[2E3] = "Internal error. %1";
@@ -12169,11 +12121,12 @@ var Model = function() {
       }
     }
   };
+  var config = require("../config.json");
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
-    var options = {method:"GET", host:LOCAL && "localhost" || "sympy-artcompiler.herokuapp.com", port:LOCAL && "8000" || "80", path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
-    var protocol = http;
+    var options = {method:"GET", host:config.useLocalSymPy && "localhost" || (config.sympyHost || "sympy-service.herokuapp.com"), port:config.useLocalSymPy && "8000" || (config.sympyPort || "443"), path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
+    var protocol = config.useLocalSymPy && http || https;
     var req = protocol.request(options, function(res) {
       var data = "";
       res.on("data", function(chunk) {

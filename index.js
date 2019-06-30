@@ -26,6 +26,7 @@ const createApp = function createApp(compiler) {
 }
 const PORT = process.env.PORT || `5${compiler.langID}`;
 const app = module.exports = createApp(compiler);
+global.config = require("./config.json");
 module.exports.compiler = app;
 if (!module.parent) {
   process.on('uncaughtException', (err) => {
@@ -33,4 +34,3 @@ if (!module.parent) {
   });
   app.listen(PORT, () => console.log(`Node app is running at localhost: ${PORT}`));
 }
-

@@ -1,0 +1,5 @@
+{
+  "useLocalSymPy": false,
+  "sympyHost": "sympy-service.artcompiler.com",
+  "sympyPort": "443"
+}
