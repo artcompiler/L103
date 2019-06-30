@@ -10,9 +10,9 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
   * `$ cd L107`
   * `$ npm install`
 * Build L107
-  * `$ make`
+  * `$ npm run build`
 * Start the compiler as a local service to make sure that all is well.
-  * `$ make`
+  * `$ npm start`
   * Visit your local GC server (e.g. http://localhost:3000/lang?id=107) to test.
   * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`
   * See https://www.graffiticode.com/form?id=y5vHZqdQc0 in the form view.
@@ -32,10 +32,8 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
   * `$ npm install`
   * `$ make`
   * `$ cd ..`
-* Build L107
-  * `$ make dev`
-* Start the compiler as a local service to make sure that all is well.
-  * `$ make dev`
+* Build and start the compiler as a local service to make sure that all is well.
+  * `$ make`
   * Visit your local GC server (e.g. http://localhost:3000/lang?id=107) to test.
   * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`
   * See https://www.graffiticode.com/form?id=y5vHZqdQc0 in the form view.
