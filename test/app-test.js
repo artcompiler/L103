@@ -1,26 +1,31 @@
+const express = require('express');
 const request = require('supertest');
-const app = require('./../index.js');
+const {expect} = require('chai');
+const {app} = require('./../app');
 describe('app', () => {
   it('GET /', (done) => {
     request(app)
       .get('/')
       .expect(200, 'Hello, L107!', done);
   });
+  it('global.config.unused should be true', () => {
+    expect(global.config.unused).to.equal(true);
+  });
   it('GET /version', (done) => {
     request(app)
       .get('/version')
       .expect(200, 'v0.0.0', done);
   });
-  it('GET /compile', (done) => {
+  it('POST /compile', (done) => {
     const body = {
-      src: {},
+      code: {},
       data: {},
     };
     const encodedBody = JSON.stringify(body);
     request(app)
-      .get('/compile')
-      .set('Content-type', 'text/plain')
+      .post('/compile')
+      .set('Content-type', 'application/json')
       .send(encodedBody)
-      .expect(200, 'null', done);
+      .expect(200, null, done);
   });
 });

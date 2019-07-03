@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "description": "Compiler as a service.",
   "author": "Art Compiler LLC",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node app.js",
     "build-dev": "./node_modules/babel-cli/bin/babel-node.js util/build --dev",
     "build": "./node_modules/babel-cli/bin/babel-node.js util/build",
     "smoke": "mocha --reporter spec --recursive --delay --smoke",

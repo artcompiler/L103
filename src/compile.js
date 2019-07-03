@@ -77,7 +77,7 @@ function getSympy(path, data, resume) {
   req.write(encodedData);
   req.end();
   req.on('error', function(e) {
-    console.log("ERROR: " + e);
+    console.log("ERROR: " + e.stack);
     resume([].concat(e), []);
   });
 }

@@ -1,12 +1,7 @@
 module.exports = (compiler) => {
   return (req, res) => {
-    let body = null;
-    try {
-      body = JSON.parse(req.body);
-    } catch(err) {
-      return res.sendStatus(400);
-    }
-    let code = body.src;
+    let body = req.body;
+    let code = body.code;
     let data = body.data;
     let config = body.config || {};
     if (!code || !data) {

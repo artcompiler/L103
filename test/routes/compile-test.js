@@ -19,55 +19,30 @@ describe('routes', () => {
       };
 
       app = express();
-      app.use(bodyParser.urlencoded({ extended: false, limit: 100000000 }));
-      app.use(bodyParser.text({limit: '50mb'}));
-      app.use(bodyParser.raw({limit: '50mb'}));
-      app.use(bodyParser.json({limit: '50mb' }));
-      app.get('/compile', routes.compile(compiler));
+      app.use(bodyParser.json({type: "application/json", limit: '50mb' }));
+      app.post('/compile', routes.compile(compiler));
     });
 
-    it('Call compile function', (done) => {
+    it('should return 400 for bad body', (done) => {
       request(app)
-        .get('/compile')
-        .set('Content-type', 'text/plain')
-        .send(JSON.stringify({src: {}, data: {}}))
-        .expect(200, 'null')
-        .end((err, res) => {
-          if (err) {
-            return done(err);
-          }
-          expect(called).to.equal(1);
-          done();
-        });
-    });
-
-    it('Return 400 for bad body', (done) => {
-      request(app)
-        .get('/compile')
+        .post('/compile')
         .set('Content-type', 'text/plain')
         .send('bad body')
         .expect(400, 'Bad Request', done);
     });
 
-    it('Return 400 for json body', (done) => {
+    it('should return 400 for no data', (done) => {
       request(app)
-        .get('/compile')
-        .send({src: {}, data: {}})
+        .post('/compile')
+        .set('Content-type', 'application/json')
+        .send({})
         .expect(400, 'Bad Request', done);
     });
 
-    it('Return 400 for no data', (done) => {
+    it('should return 400 for no code', (done) => {
       request(app)
-        .get('/compile')
-        .set('Content-type', 'text/plain')
-        .send(JSON.stringify({src: {}}))
-        .expect(400, 'Bad Request', done);
-    });
-
-    it('Return 400 for no code', (done) => {
-      request(app)
-        .get('/compile')
-        .set('Content-type', 'text/plain')
+        .post('/compile')
+        .set('Content-type', 'application/json')
         .send(JSON.stringify({data: {}}))
         .expect(400, 'Bad Request', done);
     });
