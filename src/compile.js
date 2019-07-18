@@ -375,17 +375,19 @@ let transform = (function() {
         let symbols = "";
         let params = "";
         if (syms && syms.length) {
-          // Construct a list a symbols and parameters.
-          syms.forEach(s => {
+          // Construct a list of parameters and symbols.
+          syms.forEach(function (s) {
             if (symbols) {
-              symbols += " ";
               params += ",";
+              symbols += ",";
             }
-            symbols += s;
             params += s;
+            if (s === "_dollar") {
+              s = "\\$";
+            }
+            symbols += "symbols('" + s + "', real=True)";
           });
-          symbols = "symbols('" + symbols + "')";
-          params = "(" + params + ")";
+          params = " " + params;
         }
         let opts = "";
         Object.keys(options).forEach(k => {
@@ -1053,38 +1055,65 @@ let transform = (function() {
       });
     });
   }
-  function solve(node, options, resume) {
-    evalSympy("solveset", node, options, resume);
+  function solve(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("solveset", expr, options, resume);
   }
-  function cancel(node, options, resume) {
-    evalSympy("cancel", node, options, resume);
+  function cancel(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("cancel", expr, options, resume);
   }
-  function apart(node, options, resume) {
-    evalSympy("apart", node, options, resume);
+  function apart(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("apart", expr, options, resume);
   }
-  function collect(node, options, resume) {
-    evalSympy("collect", node, options, resume);
+  function collect(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("collect", expr, options, resume);
   }
-  function evaluate(node, options, resume) {
-    evalSympy("", node, options, resume);
+  function evaluate(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("", expr, options, resume);
   }
-  function factor(node, options, resume) {
-    evalSympy("factor", node, options, resume);
+  function factor(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("factor", expr, options, resume);
   }
-  function expand(node, options, resume) {
-    evalSympy("expand", node, options, resume);
+  function expand(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("expand", expr, options, resume);
   }
-  function simplify(node, options, resume) {
-    evalSympy("simplify", node, options, resume);
+  function simplify(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("simplify", expr, options, resume);
   }
-  function integrate(node, options, resume) {
-    evalSympy("integrate", node, options, resume);
+  function trigsimp(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("trigsimp", expr, options, resume);
   }
-  function diff(node, options, resume) {
-    evalSympy("diff", node, options, resume);
+  function integrate(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("integrate", expr, options, resume);
   }
-  function decimal(node, options, resume) {
-    evalSympy("N", node, options, resume);
+  function diff(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("diff", expr, options, resume);
+  }
+  function decimal(n, options, resume) {
+    let strNode = node(n.elts[0]);
+    let expr = strNode.elts[0];
+    evalSympy("N", expr, options, resume);
   }
   function title(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
@@ -1801,6 +1830,7 @@ let transform = (function() {
     "SYMBOLIC": symbolic,
     "SYNTAX": syntax,
     "SIMPLIFY": simplify,
+    "TRIGSIMP": trigsimp,
     "SOLVE": solve,
     "EXPAND": expand,
     "FACTOR": factor,
