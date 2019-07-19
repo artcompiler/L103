@@ -115,7 +115,9 @@ function getTests(resume) {
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
-      console.log("Running " + (tests.length) + " tests")
+      let count = tests.length;
+      tests = tests.slice(200, 2000);
+      console.log("Running " + (tests.length) + " of " + count + " tests")
     }
     tests.forEach(d => {
       if (!data.includes(d.itemid)) {

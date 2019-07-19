@@ -1364,14 +1364,18 @@ let transform = (function() {
       visit(n0, options, function (err1, val1) {
         //val1 = val1[0];
         let vals = [];
-        val1.forEach((vv, i) => {
-          vv = vv instanceof Array && vv[0] || vv;
-          options.rating[i].scorer = vals[i] = vals[i] || {
-            input: val2.input[i],
-            result: vv.result,
-            validation: vv instanceof Array && [0] || vv,  // FIXME alway pass an object here.
-          };
-        });
+        if (val1 instanceof Array && val2) {
+          val1.forEach((vv, i) => {
+            vv = vv instanceof Array && vv[0] || vv;
+            options.rating[i].scorer = vals[i] = vals[i] || {
+              input: val2.input[i],
+              result: vv.result,
+              validation: vv instanceof Array && [0] || vv,  // FIXME alway pass an object here.
+            };
+          });
+        } else {
+          err1 = [].concat("ERROR rubric val1=" + JSON.stringify(val1) + " val2=" + JSON.stringify(val2));
+        }
         resume([].concat(err1).concat(err2), {
           input: val2.input,
           score: vals,

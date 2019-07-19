@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 02db279
+ * Mathcore unversioned - 4d632d9
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12647,6 +12647,8 @@ var MathCore = function() {
     }
   }
   function evaluateVerbose(spec, solution, resume) {
+    console.log("evaluateVerbose() spec=" + JSON.stringify(spec));
+    console.log("evaluateVerbose() solution=" + JSON.stringify(solution));
     var model, result;
     try {
       assert(spec, message(3001, [spec]));
