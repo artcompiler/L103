@@ -12211,9 +12211,7 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
-          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
-            console.log("evalSympy() data=" + data);
             var node;
             if(err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
@@ -12647,8 +12645,6 @@ var MathCore = function() {
     }
   }
   function evaluateVerbose(spec, solution, resume) {
-    console.log("evaluateVerbose() spec=" + JSON.stringify(spec));
-    console.log("evaluateVerbose() solution=" + JSON.stringify(solution));
     var model, result;
     try {
       assert(spec, message(3001, [spec]));
