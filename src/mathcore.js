@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 4d632d9
+ * Mathcore unversioned - a68a41f
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -2623,6 +2623,14 @@ var Model = function() {
   Assert.messages[1010] = "Expecting an operator between numbers.";
   Assert.messages[1011] = "Invalid grouping bracket.";
   var message = Assert.message;
+  Model.parsePython = function(src) {
+    console.log("parsePython() src=" + src);
+    Model.env = {"sin":{type:"var"}, "pi":{type:"var"}, "trigsimp":{type:"var"}};
+    var parser = parse(src, Model.env);
+    var node = parser.pythonExpr();
+    console.log("parsePython() node=" + JSON.stringify(node, null, 2));
+    return node
+  };
   Model.create = Mp.create = function create(node, location) {
     assert(node != undefined, message(1011));
     if(node instanceof Model) {
@@ -2683,7 +2691,7 @@ var Model = function() {
   };
   var OpStr = {ADD:"+", SUB:"-", MUL:"mul", TIMES:"times", COEFF:"coeff", DIV:"div", FRAC:"frac", EQL:"=", ATAN2:"atan2", SQRT:"sqrt", VEC:"vec", PM:"pm", SIN:"sin", COS:"cos", TAN:"tan", SEC:"sec", COT:"cot", CSC:"csc", ARCSIN:"arcsin", ARCCOS:"arccos", ARCTAN:"arctan", ARCSEC:"arcsec", ARCCSC:"arccsc", ARCCOT:"arccot", SINH:"sinh", COSH:"cosh", TANH:"tanh", SECH:"sech", COTH:"coth", CSCH:"csch", ARCSINH:"arcsinh", ARCCOSH:"arccosh", ARCTANH:"arctanh", ARCSECH:"arcsech", ARCCSCH:"arccsch", ARCCOTH:"arccoth", 
   LOG:"log", LN:"ln", LG:"lg", VAR:"var", NUM:"num", CST:"cst", COMMA:",", POW:"^", SUBSCRIPT:"_", ABS:"abs", PAREN:"()", HIGHLIGHT:"hi", LT:"lt", LE:"le", GT:"gt", GE:"ge", NE:"ne", NGTR:"ngtr", NLESS:"nless", APPROX:"approx", INTERVAL:"interval", EVALAT:"eval-at", LIST:"list", EXISTS:"exists", IN:"in", FORALL:"forall", LIM:"lim", EXP:"exp", TO:"to", SUM:"sum", DERIV:"deriv", PIPE:"pipe", INTEGRAL:"integral", PROD:"prod", PERCENT:"%", M:"M", RIGHTARROW:"rightarrow", FACT:"fact", BINOM:"binom", ROW:"row", 
-  COL:"col", COLON:"colon", MATRIX:"matrix", FORMAT:"format", OVERSET:"overset", UNDERSET:"underset", OVERLINE:"overline", DEGREE:"degree", BACKSLASH:"backslash", MATHBF:"mathbf", DOT:"dot", MATHFIELD:"mathfield", DELTA:"delta", NONE:"none"};
+  COL:"col", COLON:"colon", MATRIX:"matrix", FORMAT:"format", OVERSET:"overset", UNDERSET:"underset", OVERLINE:"overline", DEGREE:"degree", BACKSLASH:"backslash", MATHBF:"mathbf", DOT:"dot", MATHFIELD:"mathfield", DELTA:"delta", OPERATORNAME:"operatorname", NONE:"none"};
   forEach(keys(OpStr), function(v, i) {
     Model[v] = OpStr[v]
   });
@@ -3516,6 +3524,11 @@ var Model = function() {
           var name = braceExpr();
           node = newNode(Model.VEC, [name]);
           break;
+        case TK_OPERATORNAME:
+          var lex = lexeme();
+          next();
+          node = newNode(Model.OPERATORNAME, [newNode(Model.VAR, [lex]), primaryExpr()]);
+          break;
         case TK_SIN:
         ;
         case TK_COS:
@@ -3674,7 +3687,7 @@ var Model = function() {
           next();
           return nodeEmpty;
         default:
-          assert(!Model.option("strict"), message(1006, [tokenToOperator[tk]]));
+          assert(!Model.option("strict"), message(1006, [tk]));
           node = nodeEmpty;
           break
       }
@@ -4585,7 +4598,19 @@ var Model = function() {
       }
       return nodeNone
     }
-    return{expr:expr, tokenize:tokenize};
+    function pythonExpr() {
+      start();
+      return commaExpr();
+      var args = [];
+      while(hd()) {
+        var lex = lexeme();
+        args.push(newNode(hd(), lex && [lex] || []));
+        next()
+      }
+      var node = newNode(Model.COMMA, args);
+      return node
+    }
+    return{expr:expr, tokenize:tokenize, pythonExpr:pythonExpr};
     function isInvisibleCharCode(c) {
       return isControlCharCode(c)
     }
@@ -4632,10 +4657,10 @@ var Model = function() {
     function scanner(src) {
       var curIndex = 0;
       var lexeme = "";
-      var lexemeToToken = {"\\Delta":TK_DELTA, "\\cdot":TK_MUL, "\\times":TK_MUL, "\\div":TK_DIV, "\\dfrac":TK_FRAC, "\\frac":TK_FRAC, "\\sqrt":TK_SQRT, "\\vec":TK_VEC, "\\pm":TK_PM, "\\sin":TK_SIN, "\\cos":TK_COS, "\\tan":TK_TAN, "\\sec":TK_SEC, "\\cot":TK_COT, "\\csc":TK_CSC, "\\arcsin":TK_ARCSIN, "\\arccos":TK_ARCCOS, "\\arctan":TK_ARCTAN, "\\arcsec":TK_ARCSEC, "\\arccsc":TK_ARCCSC, "\\arccot":TK_ARCCOT, "\\sinh":TK_SINH, "\\cosh":TK_COSH, "\\tanh":TK_TANH, "\\sech":TK_SECH, "\\coth":TK_COTH, 
-      "\\csch":TK_CSCH, "\\arcsinh":TK_ARCSINH, "\\arccosh":TK_ARCCOSH, "\\arctanh":TK_ARCTANH, "\\arcsech":TK_ARCSECH, "\\arccsch":TK_ARCCSCH, "\\arccoth":TK_ARCCOTH, "\\ln":TK_LN, "\\lg":TK_LG, "\\log":TK_LOG, "\\left":TK_LEFTCMD, "\\right":TK_RIGHTCMD, "\\big":null, "\\Big":null, "\\bigg":null, "\\Bigg":null, "\\ ":null, "\\quad":null, "\\qquad":null, "\\text":TK_TEXT, "\\textrm":TK_TEXT, "\\textit":TK_TEXT, "\\textbf":TK_TEXT, "\\operatorname":TK_OPERATORNAME, "\\lt":TK_LT, "\\le":TK_LE, "\\leq":TK_LE, 
-      "\\gt":TK_GT, "\\ge":TK_GE, "\\geq":TK_GE, "\\ne":TK_NE, "\\neq":TK_NE, "\\ngtr":TK_NGTR, "\\nless":TK_NLESS, "\\approx":TK_APPROX, "\\exists":TK_EXISTS, "\\in":TK_IN, "\\forall":TK_FORALL, "\\lim":TK_LIM, "\\exp":TK_EXP, "\\to":TK_TO, "\\sum":TK_SUM, "\\int":TK_INT, "\\prod":TK_PROD, "\\%":TK_PERCENT, "\\rightarrow":TK_RIGHTARROW, "\\longrightarrow":TK_RIGHTARROW, "\\binom":TK_BINOM, "\\begin":TK_BEGIN, "\\end":TK_END, "\\colon":TK_COLON, "\\vert":TK_VERTICALBAR, "\\lvert":TK_VERTICALBAR, 
-      "\\rvert":TK_VERTICALBAR, "\\mid":TK_VERTICALBAR, "\\format":TK_FORMAT, "\\overline":TK_OVERLINE, "\\overset":TK_OVERSET, "\\underset":TK_UNDERSET, "\\backslash":TK_BACKSLASH, "\\mathbf":TK_MATHBF, "\\abs":TK_ABS, "\\dot":TK_DOT};
+      var lexemeToToken = {"\\Delta":TK_DELTA, "\\cdot":TK_MUL, "\\times":TK_MUL, "\\div":TK_DIV, "\\dfrac":TK_FRAC, "\\frac":TK_FRAC, "\\sqrt":TK_SQRT, "\\vec":TK_VEC, "\\pm":TK_PM, "\\sin":TK_SIN, "\\cos":TK_COS, "\\tan":TK_TAN, "\\sec":TK_SEC, "\\cot":TK_COT, "\\csc":TK_CSC, "\\arcsin":TK_ARCSIN, "\\arccos":TK_ARCCOS, "\\arctan":TK_ARCTAN, "\\arcsec":TK_ARCSEC, "\\arccsc":TK_ARCCSC, "\\arccot":TK_ARCCOT, "\\asin":TK_ARCSIN, "\\acos":TK_ARCCOS, "\\atan":TK_ARCTAN, "\\asec":TK_ARCSEC, "\\acsc":TK_ARCCSC, 
+      "\\acot":TK_ARCCOT, "\\sinh":TK_SINH, "\\cosh":TK_COSH, "\\tanh":TK_TANH, "\\sech":TK_SECH, "\\coth":TK_COTH, "\\csch":TK_CSCH, "\\arcsinh":TK_ARCSINH, "\\arccosh":TK_ARCCOSH, "\\arctanh":TK_ARCTANH, "\\arcsech":TK_ARCSECH, "\\arccsch":TK_ARCCSCH, "\\arccoth":TK_ARCCOTH, "\\ln":TK_LN, "\\lg":TK_LG, "\\log":TK_LOG, "\\left":TK_LEFTCMD, "\\right":TK_RIGHTCMD, "\\big":null, "\\Big":null, "\\bigg":null, "\\Bigg":null, "\\ ":null, "\\quad":null, "\\qquad":null, "\\text":TK_TEXT, "\\textrm":TK_TEXT, 
+      "\\textit":TK_TEXT, "\\textbf":TK_TEXT, "\\operatorname":TK_OPERATORNAME, "\\lt":TK_LT, "\\le":TK_LE, "\\leq":TK_LE, "\\gt":TK_GT, "\\ge":TK_GE, "\\geq":TK_GE, "\\ne":TK_NE, "\\neq":TK_NE, "\\ngtr":TK_NGTR, "\\nless":TK_NLESS, "\\approx":TK_APPROX, "\\exists":TK_EXISTS, "\\in":TK_IN, "\\forall":TK_FORALL, "\\lim":TK_LIM, "\\exp":TK_EXP, "\\to":TK_TO, "\\sum":TK_SUM, "\\int":TK_INT, "\\prod":TK_PROD, "\\%":TK_PERCENT, "\\rightarrow":TK_RIGHTARROW, "\\longrightarrow":TK_RIGHTARROW, "\\binom":TK_BINOM, 
+      "\\begin":TK_BEGIN, "\\end":TK_END, "\\colon":TK_COLON, "\\vert":TK_VERTICALBAR, "\\lvert":TK_VERTICALBAR, "\\rvert":TK_VERTICALBAR, "\\mid":TK_VERTICALBAR, "\\format":TK_FORMAT, "\\overline":TK_OVERLINE, "\\overset":TK_OVERSET, "\\underset":TK_UNDERSET, "\\backslash":TK_BACKSLASH, "\\mathbf":TK_MATHBF, "\\abs":TK_ABS, "\\dot":TK_DOT};
       var unicodeToLaTeX = {176:"\\degree", 8704:"\\forall", 8705:"\\complement", 8706:"\\partial", 8707:"\\exists", 8708:"\\nexists", 8709:"\\varnothing", 8710:"\\triangle", 8711:"\\nabla", 8712:"\\in", 8713:"\\notin", 8714:"\\in", 8715:"\\ni", 8716:"\\notni", 8717:"\\ni", 8718:"\\blacksquare", 8719:"\\sqcap", 8720:"\\amalg", 8721:"\\sigma", 8722:"-", 8723:"\\mp", 8724:"\\dotplus", 8725:"/", 8726:"\\setminus", 8727:"*", 8728:"\\circ", 8729:"\\bullet", 8730:"\\sqrt", 8731:null, 8732:null, 8733:"\\propto", 
       8734:"\\infty", 8735:"\\llcorner", 8736:"\\angle", 8737:"\\measuredangle", 8738:"\\sphericalangle", 8739:"\\divides", 8740:"\\notdivides", 8741:"\\parallel", 8742:"\\nparallel", 8743:"\\wedge", 8744:"\\vee", 8745:"\\cap", 8746:"\\cup", 8747:"\\int", 8748:"\\iint", 8749:"\\iiint", 8750:"\\oint", 8751:"\\oiint", 8752:"\\oiiint", 8753:null, 8754:null, 8755:null, 8756:"\\therefore", 8757:"\\because", 8758:"\\colon", 8759:null, 8760:null, 8761:null, 8762:null, 8763:null, 8764:"\\sim", 8765:"\\backsim", 
       8766:null, 8767:null, 8768:"\\wr", 8769:"\\nsim", 8770:"\\eqsim", 8771:"\\simeq", 8772:null, 8773:"\\cong", 8774:null, 8775:"\\ncong", 8776:"\\approx", 8777:null, 8778:"\\approxeq", 8779:null, 8780:null, 8781:"\\asymp", 8782:"\\Bumpeq", 8783:"\\bumpeq", 8784:"\\doteq", 8785:"\\doteqdot", 8786:"\\fallingdotseq", 8787:"\\risingdotseq", 8788:null, 8789:null, 8790:"\\eqcirc", 8791:"\\circeq", 8792:null, 8793:null, 8794:null, 8795:null, 8796:"\\triangleq", 8797:null, 8798:null, 8799:null, 8800:"\\ne", 
@@ -4696,6 +4721,10 @@ var Model = function() {
             case 42:
             ;
             case 8727:
+              if(src.charCodeAt(curIndex) === 42) {
+                curIndex++;
+                return TK_CARET
+              }
               return TK_MUL;
             case 45:
             ;
@@ -4886,7 +4915,7 @@ var Model = function() {
             }
             var tk = lexemeToToken["\\" + lexeme];
             if(tk === void 0) {
-              tk = TK_VAR
+              tk = TK_OPERATORNAME
             }
           }else {
             if(tk === TK_TEXT) {
@@ -4994,6 +5023,9 @@ var Model = function() {
   var nodeE = variableNode("e");
   var nodePI = variableNode("\\pi");
   function stripNids(node) {
+    if(!node.op) {
+      return node
+    }
     forEach(keys(node), function(k) {
       if(indexOf(k, "Nid") > 0) {
         delete node[k]
@@ -5007,6 +5039,9 @@ var Model = function() {
     return node
   }
   function stripMetadata(node) {
+    if(!node.op) {
+      return node
+    }
     forEach(keys(node), function(k) {
       if(k !== "op" && k !== "args") {
         delete node[k]
@@ -5014,7 +5049,7 @@ var Model = function() {
     });
     if(node.args) {
       forEach(node.args, function(n) {
-        stripNids(n)
+        stripMetadata(n)
       })
     }
     return node
@@ -5781,11 +5816,8 @@ var Model = function() {
         case Model.DOT:
         ;
         case Model.PAREN:
-          node = visit.unary(node, resume);
-          break;
-        case Model.EVALAT:
-          node = visit.unary(node, resume);
-        case Model.PAREN:
+        ;
+        case Model.OPERATORNAME:
           node = visit.unary(node, resume);
           break;
         case Model.COMMA:
@@ -6090,6 +6122,9 @@ var Model = function() {
         });
         return val
       }, unary:function(node) {
+        if(node.op === Model.OPERATORNAME) {
+          return variables(node.args[1])
+        }
         var args = node.args;
         var val = [];
         forEach(args, function(n) {
@@ -7763,10 +7798,31 @@ var Model = function() {
       normalizedNodes[rootNid] = node;
       return node
     }
-    var normalizedSympyNodes = [];
+    function markSympy(node) {
+      var flags = Model.flags;
+      if(flags.hasNone) {
+      }else {
+        if(flags.hasTrig || (flags.hasLog || flags.hasHyperTrig)) {
+          if(flags.hasTrig) {
+            node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+          }
+          if(flags.hasHyperTrig) {
+            node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+          }
+          if(flags.hasLog) {
+            node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+          }
+        }else {
+          node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+        }
+      }
+      return node
+    }
+    var normalizeSympyLevel = 0;
     function normalizeSympy(root) {
       assert(root && root.args, "2000: Internal error.");
       var nid = ast.intern(root);
+      normalizeSympyLevel++;
       var node = Model.create(visit(root, {name:"normalize", numeric:function(node) {
         if(!option("dontConvertDecimalToFraction") && (isRepeating(node) || isDecimal(node))) {
           node = decimalToFraction(node)
@@ -7785,6 +7841,8 @@ var Model = function() {
         });
         return Object.assign({}, node, newNode(node.op, args))
       }, unary:function(node) {
+        Model.flags.hasTrig = Model.flags.hasTrig || (node.op === Model.SIN || (node.op === Model.COS || (node.op === Model.TAN || (node.op === Model.SEC || (node.op === Model.COT || (node.op === Model.CSC || (node.op === Model.ARCSIN || (node.op === Model.ARCCOS || (node.op === Model.ARCTAN || (node.op === Model.ARCSEC || (node.op === Model.ARCCSC || node.op === Model.ARCCOT)))))))))));
+        Model.flags.hasHyperTrig = Model.flags.hasHyperTrig || (node.op === Model.SINH || (node.op === Model.COSH || (node.op === Model.TANH || (node.op === Model.SECH || (node.op === Model.COTH || (node.op === Model.CSCH || (node.op === Model.ARCSINH || (node.op === Model.ARCCOSH || (node.op === Model.ARCTANH || (node.op === Model.ARCSECH || (node.op === Model.ARCCSCH || node.op === Model.ARCCOTH)))))))))));
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
@@ -7797,23 +7855,27 @@ var Model = function() {
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
+        Model.flags.hasLog = Model.flags.hasLog || (node.op === Model.LOG || node.op === Model.LN);
         return Object.assign({}, node, newNode(node.op, args))
       }, comma:function(node) {
         var args = [];
         forEach(node.args, function(n) {
-          args = args.concat(normalizeSympy(n))
+          Model.flags = {};
+          args = args.concat(markSympy(normalizeSympy(n)))
         });
+        Model.flags = {hasNone:true};
         return Object.assign({}, node, newNode(node.op, args))
       }, equals:function(node) {
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(n))
         });
+        Model.flags.hasNone = true;
         return Object.assign({}, node, newNode(node.op, args))
       }}), root.location);
-      while(nid !== ast.intern(node)) {
-        nid = ast.intern(node);
-        node = normalizeSympy(node)
+      normalizeSympyLevel--;
+      if(normalizeSympyLevel === 0) {
+        node = markSympy(node)
       }
       return node
     }
@@ -11401,9 +11463,10 @@ var Model = function() {
     if(node.location) {
       Assert.setLocation(node.location)
     }
-    var result = visitor.normalizeSympy(node);
+    Model.flags = {};
+    node = visitor.normalizeSympy(node);
     Assert.setLocation(prevLocation);
-    return result
+    return node
   }
   function normalizeLiteral(node) {
     var prevLocation = Assert.location;
@@ -11949,11 +12012,14 @@ var Model = function() {
     var result;
     var inverseResult = option("inverseResult");
     var strict = option("strict");
-    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [stripMetadata(normalizeSympy(n1)), stripMetadata(normalizeSympy(n2))])]);
+    delete n1.env;
+    n1 = normalizeSympy(n1);
+    n2 = normalizeSympy(n2);
+    var node = newNode(Model.PAREN, [newNode(Model.COMMA, [n1, n2])]);
     node.lbrk = 40;
     node.rbrk = 41;
     var options = {};
-    evalSympy("simplify", node, options, function(err, val) {
+    evalSympy(node, options, function(err, val) {
       var n = val;
       if(n.op === Model.PAREN && n.args[0].op === Model.LIST) {
         var result;
@@ -12151,7 +12217,7 @@ var Model = function() {
       resume([].concat(e), [])
     })
   }
-  function evalSympy(fn, expr, options, resume) {
+  function evalSympy(expr, options, resume) {
     var errs = [];
     var result;
     var syms = variables(normalize(expr));
@@ -12210,8 +12276,10 @@ var Model = function() {
           resume(errs, null)
         }else {
           var args = v + opts;
-          var obj = {func:"eval", expr:"(lambda" + params + ":" + fn + "(" + args + "))(" + symbols + ")"};
+          var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
+          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
+            console.log("evalSympy() data=" + data);
             var node;
             if(err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
