@@ -108,7 +108,7 @@ function getTests(resume) {
       tests = shuffle(tests).slice(0, SMOKE_COUNT);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
-      tests = tests.slice(12100, 12200);
+      // tests = tests.slice(12100, 12200);
       let count = tests.length;
       console.log("Running " + (tests.length) + " of " + count + " tests")
     }
