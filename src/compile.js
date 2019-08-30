@@ -1282,10 +1282,11 @@ let transform = (function() {
     };
     getSympy("/api/v1/eval", obj, (err, data) => {
       if (err && err.length) {
-        console.log("ERROR sympyToLaTeX() val=" + val);
+        console.log("ERROR sympyToLaTeX() err=" + err + " val=" + val);
         errs = errs.concat(error(err));
+      } else {
+        data = data.replace(/log/g, "ln");
       }
-      data = data.replace(/log/g, "ln");
       resume(errs, data);
     });
   }

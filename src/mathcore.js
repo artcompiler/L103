@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - a68a41f
+ * Mathcore unversioned - 1e44c94
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -2686,7 +2686,7 @@ var Model = function() {
     }
     return this.create(src)
   };
-  Mp.toLaTex = function toLaTex(node) {
+  Mp.toLaTeX = function toLaTeX(node) {
     return render(node)
   };
   var OpStr = {ADD:"+", SUB:"-", MUL:"mul", TIMES:"times", COEFF:"coeff", DIV:"div", FRAC:"frac", EQL:"=", ATAN2:"atan2", SQRT:"sqrt", VEC:"vec", PM:"pm", SIN:"sin", COS:"cos", TAN:"tan", SEC:"sec", COT:"cot", CSC:"csc", ARCSIN:"arcsin", ARCCOS:"arccos", ARCTAN:"arctan", ARCSEC:"arcsec", ARCCSC:"arccsc", ARCCOT:"arccot", SINH:"sinh", COSH:"cosh", TANH:"tanh", SECH:"sech", COTH:"coth", CSCH:"csch", ARCSINH:"arcsinh", ARCCOSH:"arccosh", ARCTANH:"arctanh", ARCSECH:"arcsech", ARCCSCH:"arccsch", ARCCOTH:"arccoth", 
@@ -12277,9 +12277,7 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
-          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
-            console.log("evalSympy() data=" + data);
             var node;
             if(err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));

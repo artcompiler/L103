@@ -74,13 +74,12 @@ getTests(function (err, testData) {
               try {
                 let result = true;
                 local.score.forEach(s => {
-                  result = result && s.result;
+                  result = result && s && s.result;
                 });
                 expect(result).to.be.equal(true);
                 done();
               } catch (e) {
-                console.log("ERROR " + e);
-                expect(false).to.be.true();
+                console.log("ERROR " + e.stack);
                 done();
               }
             }
@@ -114,7 +113,7 @@ function getTests(resume) {
       tests = shuffle(tests).slice(0, SMOKE_COUNT);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
-      // tests = tests.slice(200, 250);
+      // tests = tests.slice(0, 25);
       let count = tests.length;
       console.log("Running " + (tests.length) + " of " + count + " tests")
     }
