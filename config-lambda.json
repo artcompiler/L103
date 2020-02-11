@@ -1,0 +1,7 @@
+{
+  "sympyHost": "e2r3izczp3.execute-api.us-east-2.amazonaws.com",
+  "sympyPort": "443",
+  "sympyProtocol": "https",
+  "sympyPath": "/sympy-service",
+  "unused": true
+}
