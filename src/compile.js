@@ -45,30 +45,36 @@ function get(path, resume) {
     });
   });
 }
+var config = require(process.env.ARTCOMPILER_CONFIG || "../config.json");
 function getSympy(path, data, resume) {
   path = path.trim().replace(/ /g, "+");
   var encodedData = JSON.stringify(data);
   var options = {
-    method: "GET",
-    host: "sympy-artcompiler.herokuapp.com",
-    port: "80",
-    path: path,
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': encodedData.length
-    },
+    method:"GET",
+    host: config.sympyHost,
+    port: config.sympyPort,
+    path: config.sympyPath || path,
+    headers:{
+      "Content-Type":"application/json",
+      "Content-Length":encodedData.length
+    }
   };
-  let protocol = http; //https;
+  console.log("getSympy() config=" + JSON.stringify(config, null, 2));
+  var protocol = config.sympyProtocol === 'http' && http || https;
   var req = protocol.request(options, function(res) {
     var data = "";
     res.on('data', function (chunk) {
       data += chunk;
     }).on('end', function () {
+      console.log("getSympy()) data=" + data);
+      var val;
       try {
-        resume([], JSON.parse(data));
-      } catch (e) {
-        resume(["ERROR Sympy: " + encodedData], {});
+        val = JSON.parse(data);
+      } catch (x) {
+        console.log(e.stack);
+        val = data;
       }
+      resume([], val);
     }).on("error", function () {
       console.log("error() status=" + res.statusCode + " data=" + data);
       resume([], {});
@@ -77,7 +83,7 @@ function getSympy(path, data, resume) {
   req.write(encodedData);
   req.end();
   req.on('error', function(e) {
-    console.log("ERROR: " + e.stack);
+    console.log("ERROR: " + e);
     resume([].concat(e), []);
   });
 }

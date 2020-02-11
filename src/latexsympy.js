@@ -972,7 +972,7 @@ var _rules2 = require("./rules.js");
             }
             break;
           case "fraction":
-            if (node.isFraction || node.isMixedFraction) {
+            if (node.isFraction || node.isMixedNumber) {
               return true;
             }
             break;
@@ -983,13 +983,14 @@ var _rules2 = require("./rules.js");
               return true;
             }
             break;
-          case "mixedFraction":
-            if (node.isMixedFraction) {
+          case "mixedFraction": // deprecated
+          case "mixedNumber":
+            if (node.isMixedNumber) {
               return true;
             }
             break;
           case "fractionOrDecimal":
-            if (node.isFraction || node.isMixedFraction || node.numberFormat === "decimal") {
+            if (node.isFraction || node.isMixedNumber || node.numberFormat === "decimal") {
               return true;
             }
             break;
@@ -1071,7 +1072,8 @@ var _rules2 = require("./rules.js");
           case "scientific":
           case "fraction":
           case "simpleFraction":
-          case "mixedFraction":
+          case "mixedFraction": // deprecated
+          case "mixedNumber":
           case "fractionOrDecimal":
             return checkNumberType(pattern.args[0], node);
           case "variable":
@@ -1183,12 +1185,19 @@ var _rules2 = require("./rules.js");
         }
         if (str.indexOf("%*") >= 0) {
           var s = "";
-          (0, _backward.forEach)(args, function (arg) {
+          (0, _backward.forEach)(args, function (arg, i) {
             if (s !== "") {
               s += " ";
             }
             // Replicate template for each argument.
-            s += str.replace(new RegExp("%\*", "g"), arg.args[0]).replace(new RegExp("%M", "g"), arg.m).replace(new RegExp("%N", "g"), arg.n);
+            if (i === args.length - 1) {
+              // If this is the last element in the sequence, lop off the
+              // trailing separator. Times two because what comes before the
+              // "%*", if anything, is a bracket so need to include the close
+              // bracket.
+              str = str.slice(0, 2 * str.indexOf("%*") + "%*".length);
+            }
+            s += str.replace("%*", arg.args[0]).replace("%M", arg.m).replace("%N", arg.n);
           });
           str = s; // Overwrite str.
         }
@@ -1209,7 +1218,7 @@ var _rules2 = require("./rules.js");
           (0, _assert.assert)(env.n);
           str = str.replace(new RegExp("%N", "g"), env.n);
         }
-        if (count === 2 && args.length > 2) {
+        if (template.isBinary && args.length > 2) {
           str = expandBinary(str, args);
         } else {
           (0, _backward.forEach)(args, function (arg, i) {
@@ -1315,7 +1324,7 @@ var _rules2 = require("./rules.js");
           var op = node.op === _model.Model.MUL ? _model.Model.TIMES : node.op;
           var n = binaryNode(op, args, true);
           n.isScientific = node.isScientific;
-          n.isMixedFraction = node.isMixedFraction;
+          n.isMixedNumber = node.isMixedNumber;
           n.isBinomial = node.isBinomial;
           n.isPolynomial = node.isPolynomial;
           n.isPolynomialTerm = node.isPolynomialTerm;
@@ -1346,8 +1355,8 @@ var _rules2 = require("./rules.js");
           (0, _backward.forEach)(node.args, function (n) {
             args.push(normalizeLiteral(n));
           });
-          node.args = args;
-          return node;
+          var op = node.op === _model.Model.LIST && _model.Model.COMMA || node.op; // Normalize LIST.
+          return newNode(op, args);
         },
         paren: function paren(node) {
           var args = [];
@@ -1484,6 +1493,7 @@ var _rules2 = require("./rules.js");
           (0, _backward.forEach)(nodeArgs, function (n, i) {
             args = args.concat(translate(n, [globalRules, argRules]));
           });
+          template.isBinary = true;
           return expand(template, args);
         },
         multiplicative: function multiplicative(node) {
@@ -1499,6 +1509,7 @@ var _rules2 = require("./rules.js");
           (0, _backward.forEach)(nodeArgs, function (n, i) {
             args = args.concat(translate(n, [globalRules, argRules]));
           });
+          template.isBinary = true;
           return expand(template, args);
         },
         unary: function unary(node) {
@@ -1620,6 +1631,7 @@ var _rules2 = require("./rules.js");
             (0, _backward.forEach)(_nodeArgs, function (n, i) {
               _args = _args.concat(translate(n, [globalRules, _argRules]));
             });
+            _template.isBinary = true;
             return expand(_template, _args);
           }
         },
@@ -1636,6 +1648,7 @@ var _rules2 = require("./rules.js");
           (0, _backward.forEach)(nodeArgs, function (n, i) {
             args = args.concat(translate(n, [globalRules, argRules]));
           });
+          template.isBinary = true;
           return expand(template, args, node);
         },
         paren: function paren(node) {
@@ -2195,6 +2208,13 @@ if (typeof window !== "undefined") {
   // Make a browser hook.
   window.Core = Core;
 }
+/*
+ * Latexsympy commit cef7056
+ * Copyright 2019 Learnosity Ltd. All Rights Reserved.
+ *
+ */
+
+
 },{"./assert.js":1,"./ast.js":2,"./backward.js":3,"./model.js":5,"./rules.js":6,"./version.js":7}],5:[function(require,module,exports){
 "use strict";
 
@@ -3674,11 +3694,11 @@ var Model = exports.Model = function () {
           args.pop();
           expr = unaryNode(Model.M, [expr]);
         } else if (!explicitOperator) {
-          if (args.length > 0 && isMixedFraction(args[args.length - 1], expr)) {
+          if (args.length > 0 && isMixedNumber(args[args.length - 1], expr)) {
             // 3 \frac{1}{2} -> 3 + \frac{1}{2}
             t = args.pop();
             expr = binaryNode(Model.ADD, [t, expr]);
-            expr.isMixedFraction = true;
+            expr.isMixedNumber = true;
           } else if (args.length > 0 && args[args.length - 1].op === Model.VAR && expr.op === Model.VAR && expr.args[0].indexOf("'") === 0) {
             // Merge previous var with current '.
             expr = binaryNode(Model.POW, [args.pop(), expr]);
@@ -3764,12 +3784,12 @@ var Model = exports.Model = function () {
       return n.op === Model.NUM;
     }
 
-    function isMixedFraction(n0, n1) {
+    function isMixedNumber(n0, n1) {
       // 3\frac{1}{2} but not 3(\frac{1}{2}) or 3 1.0/2
       if (n0.op === Model.SUB && n0.args.length === 1) {
         n0 = n0.args[0];
       }
-      if (!n0.lbrk && !n1.lbrk && n0.op === Model.NUM && isSimpleFraction(n1)) {
+      if (n0.lbrk !== TK_LEFTPAREN && n1.lbrk !== TK_LEFTPAREN && n0.lbrk !== TK_LEFTBRACKET && n1.lbrk !== TK_LEFTBRACKET && n0.op === Model.NUM && isSimpleFraction(n1)) {
         return true;
       }
       return false;
@@ -4030,13 +4050,13 @@ var Model = exports.Model = function () {
       } else {
         expr = flattenNestedNodes(multiplicativeExpr());
         var t;
-        var dx = hasDX(expr);
-        expr = dx && stripDX(expr) || expr;
-        while (isAdditive(t = hd()) && !dx) {
+        var foundDX = hasDX(expr);
+        expr = foundDX && stripDX(expr) || expr;
+        while (isAdditive(t = hd()) && !foundDX) {
           next();
-          var expr2 = multiplicativeExpr();
-          dx = hasDX(expr2);
-          expr2 = dx && stripDX(expr2) || expr2;
+          var expr2 = flattenNestedNodes(multiplicativeExpr());
+          foundDX = hasDX(expr2);
+          expr2 = foundDX && stripDX(expr2) || expr2;
           switch (t) {
             case TK_SUB:
               expr = binaryNode(Model.SUB, [expr, expr2]);
@@ -4048,7 +4068,7 @@ var Model = exports.Model = function () {
         }
       }
       args.push(expr);
-      args.push(dx || nodeEmpty);
+      args.push(foundDX || nodeEmpty);
       // [sub, sup,  expr, var], [expr, var]
       return newNode(Model.INTEGRAL, args);
     }
@@ -4580,8 +4600,10 @@ var Model = exports.Model = function () {
             case 32: // space
             case 9: // tab
             case 10: // new line
-            case 13:
-              // carriage return
+            case 13: // carriage return
+            case 0x00A0: // non-breaking space (&nbsp;)
+            case 0x200B:
+              // zero width space
               continue;
             case 38:
               // ampersand (new column or entity)

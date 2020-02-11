@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - a68a41f
+ * Mathcore unversioned - 1e44c94
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -2686,7 +2686,7 @@ var Model = function() {
     }
     return this.create(src)
   };
-  Mp.toLaTex = function toLaTex(node) {
+  Mp.toLaTeX = function toLaTeX(node) {
     return render(node)
   };
   var OpStr = {ADD:"+", SUB:"-", MUL:"mul", TIMES:"times", COEFF:"coeff", DIV:"div", FRAC:"frac", EQL:"=", ATAN2:"atan2", SQRT:"sqrt", VEC:"vec", PM:"pm", SIN:"sin", COS:"cos", TAN:"tan", SEC:"sec", COT:"cot", CSC:"csc", ARCSIN:"arcsin", ARCCOS:"arccos", ARCTAN:"arctan", ARCSEC:"arcsec", ARCCSC:"arccsc", ARCCOT:"arccot", SINH:"sinh", COSH:"cosh", TANH:"tanh", SECH:"sech", COTH:"coth", CSCH:"csch", ARCSINH:"arcsinh", ARCCOSH:"arccosh", ARCTANH:"arctanh", ARCSECH:"arcsech", ARCCSCH:"arccsch", ARCCOTH:"arccoth", 
@@ -12191,7 +12191,7 @@ var Model = function() {
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
-    var options = {method:"GET", host:config.useLocalSymPy && "localhost" || (config.sympyHost || "sympy-service.herokuapp.com"), port:config.useLocalSymPy && "8000" || (config.sympyPort || "443"), path:path, headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
+    var options = {method:"GET", host:config.useLocalSymPy && "localhost" || (config.sympyHost || "e2r3izczp3.execute-api.us-east-2.amazonaws.com"), port:config.useLocalSymPy && "8000" || (config.sympyPort || "443"), path:"/sympy-service", headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
     var protocol = config.useLocalSymPy && http || https;
     var req = protocol.request(options, function(res) {
       var data = "";
@@ -12277,7 +12277,9 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
+          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
+            console.log("evalSympy() data=" + JSON.stringify(data));
             var node;
             if(err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
