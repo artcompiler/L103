@@ -9,7 +9,7 @@ module.exports = (compiler) => {
     }
     compiler.compile(code, data, config, function (err, val) {
       if (err && err.length) {
-        res.status(500).json({error: err});
+        res.status(err[0].statusCode || 500).json({error: err});
         return;
       }
       res.status(200).json(val);

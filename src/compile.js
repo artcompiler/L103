@@ -1986,7 +1986,10 @@ export let compiler = (function () {
       transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
-          resume([].concat(err), val);
+          resume([{
+            statusCode: 400,
+            error: err
+          }], val);
         } else {
           render(val, options, function (err, val) {
             resume([].concat(err), val);
@@ -1996,9 +1999,10 @@ export let compiler = (function () {
     } catch (x) {
       console.log("ERROR with code");
       console.log(x.stack);
-      resume(["Compiler error"], {
-        rating: 0
-      });
+      resume([{
+        statusCode: 500,
+        error: "Compiler error"
+      }]);
     }
-  }
+  };
 })();
