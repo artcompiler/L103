@@ -59,14 +59,12 @@ function getSympy(path, data, resume) {
       "Content-Length":encodedData.length
     }
   };
-  console.log("getSympy() config=" + JSON.stringify(config, null, 2));
   var protocol = config.sympyProtocol === 'http' && http || https;
   var req = protocol.request(options, function(res) {
     var data = "";
     res.on('data', function (chunk) {
       data += chunk;
     }).on('end', function () {
-      console.log("getSympy()) data=" + data);
       var val;
       try {
         val = JSON.parse(data);
@@ -110,7 +108,7 @@ function mapList(lst, fn, resume) {
     resume([], []);
   }
 }
-let transform = (function() {
+let transformer = (function() {
   let nodePool;
   let version;
   function node(nid) {
@@ -1358,6 +1356,7 @@ let transform = (function() {
       options.input = val2.input;
       options.rating = val2.rating;
       let n0 = node.elts[0];
+      assert(n0 && nodePool[n0], "ERROR rubric() n0=" + n0 + " nodePool=" + JSON.stringify(nodePool, null, 2));
       if (nodePool[n0].tag === "LIST") {
         if (nodePool[n0].elts.length > 1) {
           n0 = {
@@ -1371,7 +1370,8 @@ let transform = (function() {
       visit(n0, options, function (err1, val1) {
         //val1 = val1[0];
         let vals = [];
-        if (val1 instanceof Array && val2) {
+        if (val1 && val2) {
+          val1 = [].concat(val1);
           val1.forEach((vv, i) => {
             vv = vv instanceof Array && vv[0] || vv;
             options.rating[i].scorer = vals[i] = vals[i] || {
@@ -1906,7 +1906,7 @@ let transform = (function() {
     "PARAMS" : params,
   }
   return transform;
-})();
+});
 let render = (function() {
   if (MATHJAX) {
     mjAPI.config({
@@ -1978,11 +1978,12 @@ export let compiler = (function () {
     // Compiler takes an AST in the form of a node pool (code) and transforms it
     // into an object to be rendered on the client by the viewer for this
     // language.
+    const transform = transformer();
     try {
       let options = {
         data: data,
         config: config,
-      };
+      };      
       transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));

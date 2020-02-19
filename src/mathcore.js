@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 1e44c94
+ * Mathcore unversioned - f77b70c
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -2623,14 +2623,6 @@ var Model = function() {
   Assert.messages[1010] = "Expecting an operator between numbers.";
   Assert.messages[1011] = "Invalid grouping bracket.";
   var message = Assert.message;
-  Model.parsePython = function(src) {
-    console.log("parsePython() src=" + src);
-    Model.env = {"sin":{type:"var"}, "pi":{type:"var"}, "trigsimp":{type:"var"}};
-    var parser = parse(src, Model.env);
-    var node = parser.pythonExpr();
-    console.log("parsePython() node=" + JSON.stringify(node, null, 2));
-    return node
-  };
   Model.create = Mp.create = function create(node, location) {
     assert(node != undefined, message(1011));
     if(node instanceof Model) {
@@ -4590,11 +4582,15 @@ var Model = function() {
       return node
     }
     function expr() {
-      start();
-      if(hd()) {
-        var n = commaExpr();
-        assert(!hd(), message(1003, [scan.pos(), scan.lexeme(), "'" + src.substring(scan.pos() - 1) + "'"]));
-        return n
+      try {
+        start();
+        if(hd()) {
+          var n = commaExpr();
+          assert(!hd(), message(1003, [scan.pos(), scan.lexeme(), "'" + src.substring(scan.pos() - 1) + "'"]));
+          return n
+        }
+      }catch(x) {
+        console.log("SYNTAX ERROR " + x.stack)
       }
       return nodeNone
     }
@@ -12020,18 +12016,23 @@ var Model = function() {
     node.rbrk = 41;
     var options = {};
     evalSympy(node, options, function(err, val) {
-      var n = val;
-      if(n.op === Model.PAREN && n.args[0].op === Model.LIST) {
-        var result;
-        var n1 = n.args[0].args[0];
-        var n2 = n.args[0].args[1];
-        compare(n1, n2, function(err, val) {
-          resume(err, val)
-        })
+      if(err && err.length) {
+        resume(err)
       }else {
-        compare(n1o, n2o, function(err, val) {
-          resume(err, val)
-        })
+        var n = val;
+        assert(n && (n.op && (n.args && n.args.length)));
+        if(n.op === Model.PAREN && n.args[0].op === Model.LIST) {
+          var result;
+          var n1 = n.args[0].args[0];
+          var n2 = n.args[0].args[1];
+          compare(n1, n2, function(err, val) {
+            resume(err, val)
+          })
+        }else {
+          compare(n1o, n2o, function(err, val) {
+            resume(err, val)
+          })
+        }
       }
     });
     function compare(n1, n2, resume) {
@@ -12204,17 +12205,21 @@ var Model = function() {
         }catch(x) {
           val = ""
         }
-        resume([], val)
+        if(res.statusCode !== 200) {
+          resume([{statusCode:res.statusCode, error:data}])
+        }else {
+          resume(null, val)
+        }
       }).on("error", function() {
         console.log("error() status=" + res.statusCode + " data=" + data);
-        resume([], {})
+        resume([{statusCode:res.statusCode, error:data}])
       })
     });
     req.write(encodedData);
     req.end();
     req.on("error", function(e) {
       console.log("ERROR: " + e);
-      resume([].concat(e), [])
+      resume([].concat(e))
     })
   }
   function evalSympy(expr, options, resume) {
@@ -12277,9 +12282,7 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
-          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
-            console.log("evalSympy() data=" + JSON.stringify(data));
             var node;
             if(err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
@@ -12302,7 +12305,7 @@ var Model = function() {
     node.args.forEach(function(n) {
       args.push(sympyToMathcore(n))
     });
-    if(node.op === Model.LOG) {
+    if(node.op === Model.LOG && (args[0].op === Model.NUM && args[0].args[0] === "10")) {
       assert(args[0].op === Model.NUM && args[0].args[0] === "10");
       args[0] = variableNode("e")
     }
