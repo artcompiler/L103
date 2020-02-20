@@ -11,9 +11,10 @@ const TIMEOUT_DURATION = 30000;
 
 let pending = 0;
 let scraped = {};
-let RETRIES = 3;
+let RETRIES = 1;
 let passed = 0;
 let failed = 0;
+let failures = [];
 function batchScrape(scale, force, ids, index, resume) {
   try {
     index = index || 0;
@@ -29,7 +30,7 @@ function batchScrape(scale, force, ids, index, resume) {
         pending--;
         if (err) {
           // Try re-scraping three times.
-          if (scraped[id] < RETRIES) {
+          if (scraped[id] < RETRIES + 1) {
             batchScrape(scale, force, ids, index, resume);
             console.log("ERROR batchScrape retry " + scraped[id] + ", " + (index + 1) + "/" + ids.length + ", " + id);
           } else {
@@ -38,6 +39,7 @@ function batchScrape(scale, force, ids, index, resume) {
                         " in " + (new Date() - t0) + "ms [" + err + "]");
             index++;
             failed++;
+            failures.push(id);
             batchScrape(scale, force, ids, index, resume);
           }
         } else {
@@ -54,6 +56,7 @@ function batchScrape(scale, force, ids, index, resume) {
               passed++;
             } else {
               failed++
+              failures.push(id);
             }
             console.log((result && "PASS " || "FAIL ") +
                         (index + 1) + "/" + ids.length + ", " + id +
@@ -116,7 +119,7 @@ function getTimeStr(ms) {
 const REGRESSION = 1;
 const PERF = 0;
 const BUG = -1;
-const SCALE = 10;
+const SCALE = 5;
 
 getTests(REGRESSION, function (err, testData) {
   testData = testData.slice(0);
@@ -124,7 +127,10 @@ getTests(REGRESSION, function (err, testData) {
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
   batchScrape(SCALE, true, testData, 0, () => {
-    console.log(failed + " FAILED, " + passed + " PASSED in " + getTimeStr(new Date - t0));
+    if (failures.length > 0) {
+      console.log("FAILED CASES: " + failures.join(" "));
+    }
+    console.log(failed + " FAILED, " + (testData.length - failed) + " PASSED in " + getTimeStr(new Date - t0));
   });
 });
 
