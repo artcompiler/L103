@@ -3,6 +3,7 @@ const jsonDiff = require('json-diff');
 const path = require('path');
 const request = require('request');
 const url = require('url');
+const readline = require('readline');
 const DATA_GATEWAY = 'https://gc.acx.ac/';
 const TEST_GATEWAY = 'https://gc.acx.ac/';
 //const TEST_GATEWAY = 'http://localhost:3000/';
@@ -14,7 +15,11 @@ let scraped = {};
 let RETRIES = 1;
 let passed = 0;
 let failed = 0;
-let failures = [];
+function updateLine(str) {
+  readline.clearLine(process.stdout);
+  readline.cursorTo(process.stdout, 0);
+  process.stdout.write(str);
+}
 function batchScrape(scale, force, ids, index, resume) {
   try {
     index = index || 0;
@@ -32,14 +37,12 @@ function batchScrape(scale, force, ids, index, resume) {
           // Try re-scraping three times.
           if (scraped[id] < RETRIES + 1) {
             batchScrape(scale, force, ids, index, resume);
-            console.log("ERROR batchScrape retry " + scraped[id] + ", " + (index + 1) + "/" + ids.length + ", " + id);
+            updateLine("RETRY " + scraped[id] + ", " + (index + 1) + "/" + ids.length + ", " + id);
           } else {
-            console.log("ERROR batchScrape skipping " + (index + 1) + "/" + ids.length + ", " + id);
-            console.log("FAIL " + (index + 1) + "/" + ids.length + ", " + id +
-                        " in " + (new Date() - t0) + "ms [" + err + "]");
+            updateLine("FAIL " + (index + 1) + "/" + ids.length + ", " + id +
+                        " in " + (new Date() - t0) + "ms [" + err + "]\n");
             index++;
             failed++;
-            failures.push(id);
             batchScrape(scale, force, ids, index, resume);
           }
         } else {
@@ -55,12 +58,17 @@ function batchScrape(scale, force, ids, index, resume) {
             if (result) {
               passed++;
             } else {
-              failed++
-              failures.push(id);
+              failed++;
             }
-            console.log((result && "PASS " || "FAIL ") +
-                        (index + 1) + "/" + ids.length + ", " + id +
-                        " in " + (new Date() - t0) + "ms");
+            if (result) {
+              updateLine("PASS " +
+                          (index + 1) + "/" + ids.length + ", " + id +
+                          " in " + (new Date() - t0) + "ms");
+            } else {
+              updateLine("FAIL " +
+                          (index + 1) + "/" + ids.length + ", " + id +
+                          " in " + (new Date() - t0) + "ms\n");
+            }
           } catch (e) {
             console.log("ERROR " + e);
           }
@@ -94,17 +102,14 @@ function getCompile(host, id, resume) {
   hostUrl.pathname = '/data';
   request(hostUrl.toString(), function(err, res, body) {
     if (err) {
-      console.log("ERROR getCompile() err=" + err);
       return resume(err);
     } else if (res.statusCode !== 200) {
-      console.log("ERROR getCompile() statusCode=" + res.statusCode);
       resume(new Error(`compile ${host} returned ${res.statusCode}`));
     } else {
       try {
         body = JSON.parse(body);
         resume(null, body);
       } catch (e) {
-	      console.log("ERROR getCompile() e=" + e.stack);
         resume("ERROR not JSON: " + body);
       }
     }
@@ -127,10 +132,7 @@ getTests(REGRESSION, function (err, testData) {
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
   batchScrape(SCALE, true, testData, 0, () => {
-    if (failures.length > 0) {
-      console.log("FAILED CASES: " + failures.join(" "));
-    }
-    console.log(failed + " FAILED, " + (testData.length - failed) + " PASSED in " + getTimeStr(new Date - t0));
+    updateLine(failed + " FAILED, " + (testData.length - failed) + " PASSED in " + getTimeStr(new Date - t0) + "\n");
   });
 });
 
