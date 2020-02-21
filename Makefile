@@ -1,3 +1,5 @@
+SUBPROJ := ./mathcore ./latexsympy
+
 default: build-dev start
 
 build:
@@ -12,11 +14,13 @@ watch: build
 build-dev:
 	npm run build-dev
 
-smoke: build
+smoke:
 	npm run smoke
 
-test: build
+test:
 	npm run test
 
 test-bugs: build
 	npm run test-bugs
+
+.PHONY: $(SUBPROJ) init clean test
