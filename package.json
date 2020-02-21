@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "build-dev": "./node_modules/babel-cli/bin/babel-node.js tools/build --dev",
+    "build-dev": "make -C mathcore; make -C latexsympy; ./node_modules/babel-cli/bin/babel-node.js tools/build --dev",
     "build": "./node_modules/babel-cli/bin/babel-node.js tools/build",
     "smoke": "node tools/test.js --smoke",
     "test": "node tools/test.js",
