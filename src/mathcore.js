@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - a28bc2a
+ * Mathcore unversioned - a8526c6
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -2654,7 +2654,7 @@ var Model = function() {
       if(!Mp.hasOwnProperty(v)) {
         Mp[v] = function() {
           var fn = Model.fn[v];
-          if(arguments.length > 1 && arguments[1] instanceof Model) {
+          if(arguments.length > 2 && arguments[2] instanceof Model) {
             return fn.apply(this, arguments)
           }else {
             var args = [this];
@@ -5098,12 +5098,6 @@ var Model = function() {
     }
     return false
   }
-  function isAdditive(node) {
-    return node.op === Model.ADD || (node.op === Model.SUB || (node.op === Model.PM || node.op === Model.BACKSLASH))
-  }
-  function isMultiplicative(node) {
-    return node.op === Model.MUL || (node.op === Model.TIMES || (node.op === Model.COEFF || node.op === Model.DIV))
-  }
   function newNode(op, args) {
     return{op:op, args:args}
   }
@@ -6636,6 +6630,7 @@ var Model = function() {
       return str
     }
     function formatMath(options, root, ref) {
+      assert(options);
       options = options || {};
       if(!ref || !ref.args) {
         ref = {args:[]}
@@ -6781,6 +6776,7 @@ var Model = function() {
       return multiplyNode(args, true)
     }
     function normalizeSyntax(options, root, ref) {
+      assert(options);
       options = options || {};
       if(!ref || !ref.args) {
         ref = {args:[]}
@@ -7399,7 +7395,8 @@ var Model = function() {
     }
     var normalizedNodes = [];
     function normalize(options, root) {
-      assert(root && root.args, "2000: Internal error.");
+      assert(options);
+      assert(root && root.args, "2000: Internal error. root=" + JSON.stringify(root) + " options=" + JSON.stringify(options));
       var nid = ast.intern(root);
       if(root.normalizeNid === nid) {
         return root
@@ -7435,7 +7432,7 @@ var Model = function() {
         }
         var mv = bigZero;
         var args = [];
-        forEach(node.args, function(n) {
+        node.args.forEach(function(n) {
           if(n.op === Model.NUM && (mathValue(options, n, true) && !option(options, "dontConvertDecimalToFraction"))) {
             mv = mv.add(mathValue(options, n, true))
           }else {
@@ -11175,7 +11172,7 @@ var Model = function() {
       return node
     }
     function isExpanded(options, root) {
-      return Model.create(options, root).isExpanded(options)
+      return Model.fn.isExpanded(Model.create(options, root), options)
     }
     function isFactorised(options, root, env) {
       assert(root && root.args, "2000: Internal error.");
@@ -11696,6 +11693,7 @@ var Model = function() {
     return[n1new, n2new]
   }
   Model.fn.equivValue = function equivValue(n1, n2, options, op) {
+    assert(options);
     var options = options || {};
     var env = Model.env;
     var inverseResult = option(options, "inverseResult");
@@ -11932,6 +11930,7 @@ var Model = function() {
   function compareTrees(actual, expected) {
   }
   Model.fn.equivSyntax = function(n1, n2, options) {
+    assert(options);
     reset();
     var ignoreOrder = option(options, "ignoreOrder");
     var inverseResult = option(options, "inverseResult");
@@ -12408,19 +12407,19 @@ var Model = function() {
     var dontConvertDecimalToFraction = option(options, "dontConvertDecimalToFraction", true);
     if(node.op === Model.COMMA) {
       result = every(node.args, function(n) {
-        return isExpanded(options, n)
+        return isExpanded(n, options)
       })
     }else {
       if(isComparison(node.op)) {
         var inverseResult = option(options, "inverseResult", false);
-        result = isExpanded(options, node.args[0]) && isExpanded(options, node.args[1]);
+        result = isExpanded(node.args[0], options) && isExpanded(node.args[1], options);
         option(options, "inverseResult", inverseResult)
       }else {
         if(isAdditive(node)) {
           node = flattenNestedNodes(normalize(options, node));
           var inverseResult = option(options, "inverseResult", false);
           result = every(node.args, function(n) {
-            return isExpanded(options, n)
+            return isExpanded(n, options)
           }) && !hasLikeFactorsOrTerms(normalize(options, node))
         }else {
           var dontExpandPowers = option(options, "dontExpandPowers", true);
@@ -12478,14 +12477,14 @@ var Model = function() {
     var inverseResult = option(options, "inverseResult");
     if(node.op === Model.COMMA) {
       result = every(node.args, function(n) {
-        return isSimplified(options, n)
+        return isSimplified(n, options)
       })
     }else {
       if(isComparison(node.op) && (!isZero(node.args[0]) && !isZero(node.args[1]))) {
         n1 = normalize(options, addNode([node.args[0], node.args[1]]));
         result = true;
         var inverseResult = option(options, "inverseResult", false);
-        if(!isSimplified(options, n1)) {
+        if(!isSimplified(n1, options)) {
           result = false
         }
         option(options, "inverseResult", inverseResult);
@@ -12564,7 +12563,7 @@ var Model = function() {
     }
     return re
   }
-  Model.fn.variables = function(n1, pattern, options) {
+  Model.fn.variables = function(n1, options, pattern) {
     var names = variables(n1);
     var filtered = [];
     var re = getRE(pattern);
@@ -12575,7 +12574,7 @@ var Model = function() {
     });
     return filtered
   };
-  Model.fn.known = function(n1, pattern, options) {
+  Model.fn.known = function(n1, options, pattern) {
     var env = n1.env ? n1.env : [];
     var names = variables(n1);
     var re = getRE(pattern);
@@ -12587,7 +12586,7 @@ var Model = function() {
     });
     return filtered
   };
-  Model.fn.unknown = function(n1, pattern) {
+  Model.fn.unknown = function(n1, options, pattern) {
     var env = n1.env ? n1.env : [];
     var names = variables(n1);
     var re = getRE(pattern);
@@ -12603,8 +12602,9 @@ var Model = function() {
     return hint(n1)
   };
   var option = Model.option = function option(options, p, v) {
+    assert(options);
     var val = options && options[p];
-    if(arguments.length > 1) {
+    if(arguments.length > 2) {
       options = options || {};
       if(v === undefined) {
         delete options[p]

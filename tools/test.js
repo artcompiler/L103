@@ -122,9 +122,9 @@ function getTimeStr(ms) {
 }
 
 const REGRESSION = 1;
-const PERF = 0;
+const TRIAGE = 0;
 const BUG = -1;
-const SCALE = 5;
+const SCALE = 10;
 
 getTests(REGRESSION, function (err, testData) {
   testData = testData.slice(0);
