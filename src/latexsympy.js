@@ -2209,7 +2209,7 @@ if (typeof window !== "undefined") {
   window.Core = Core;
 }
 /*
- * Latexsympy commit 7dd655d
+ * Latexsympy commit cef7056
  * Copyright 2019 Learnosity Ltd. All Rights Reserved.
  *
  */

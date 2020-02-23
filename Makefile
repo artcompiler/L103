@@ -20,7 +20,7 @@ smoke:
 test:
 	npm run test
 
-test-bugs: build
+test-bugs:
 	npm run test-bugs
 
 .PHONY: $(SUBPROJ) init clean test

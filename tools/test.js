@@ -5,14 +5,14 @@ const request = require('request');
 const url = require('url');
 const readline = require('readline');
 const DATA_GATEWAY = 'https://gc.acx.ac/';
-//const TEST_GATEWAY = 'https://gc.acx.ac/';
-const TEST_GATEWAY = 'http://localhost:3000/';
+const TEST_GATEWAY = 'https://gc.acx.ac/';
+//const TEST_GATEWAY = 'http://localhost:3000/';
 const LANG_ID = 107;
 const TIMEOUT_DURATION = 30000;
 
 let pending = 0;
 let scraped = {};
-let RETRIES = 1;
+let RETRIES = 3;
 let passed = 0;
 let failed = 0;
 function updateLine(str) {
@@ -122,7 +122,7 @@ function getTimeStr(ms) {
 }
 
 const REGRESSION = 1;
-const PERF = 0;
+const TRIAGE = 0;
 const BUG = -1;
 const SCALE = 10;
 
