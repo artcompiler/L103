@@ -154,7 +154,7 @@ function getTests(mark, resume) {
     let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body).data;
     if (smoke) {
-      tests = shuffle(tests).slice(0, 100);
+      tests = shuffle(tests).slice(0, tests.length / 10);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
