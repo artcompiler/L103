@@ -12118,8 +12118,8 @@ var Model = function() {
           n2r = nn[1];
           option(options, "inverseResult", false);
           option(options, "strict", true);
-          equivSymbolic(options, Model.create(options, n1l), Model.create(options, n2l), function(err, result1) {
-            equivSymbolic(options, Model.create(options, n1r), Model.create(options, n2r), function(err, result2) {
+          equivSymbolic(Model.create(options, n1l), Model.create(options, n2l), options, function(err, result1) {
+            equivSymbolic(Model.create(options, n1r), Model.create(options, n2r), options, function(err, result2) {
               option(options, "strict", strict);
               option(options, "inverseResult", inverseResult);
               option(options, "ignoreUnits", ignoreUnits);
