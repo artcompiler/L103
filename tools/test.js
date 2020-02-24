@@ -5,14 +5,14 @@ const request = require('request');
 const url = require('url');
 const readline = require('readline');
 const DATA_GATEWAY = 'https://gc.acx.ac/';
-const TEST_GATEWAY = 'https://gc.acx.ac/';
-//const TEST_GATEWAY = 'http://localhost:3000/';
+//const TEST_GATEWAY = 'https://gc.acx.ac/';
+const TEST_GATEWAY = 'http://localhost:3000/';
 const LANG_ID = 107;
 const TIMEOUT_DURATION = 30000;
 
 let pending = 0;
 let scraped = {};
-let RETRIES = 0;
+let RETRIES = 1;
 let passed = 0;
 let failed = 0;
 function updateLine(str) {
@@ -33,55 +33,42 @@ function batchScrape(scale, force, ids, index, resume) {
       getCompile(TEST_GATEWAY, id, function(err, val) {
         scraped[id]++;
         pending--;
-        if (err) {
-          // Try re-scraping three times.
-          if (scraped[id] < RETRIES + 1) {
-            batchScrape(scale, force, ids, index, resume);
-            updateLine("RETRY " + scraped[id] + ", " + (index + 1) + "/" + ids.length + ", " + id);
+        try {
+          let result = true;
+          if (err) {
+            result = false;
           } else {
-            updateLine("FAIL " + (index + 1) + "/" + ids.length + ", " + id +
-                        " in " + (new Date() - t0) + "ms [" + err + "]\n");
-            index++;
+            val.score.forEach(s => {
+              result = result && s && s.result;
+            });
+          }
+          if (result) {
+            passed++;
+          } else {
+            failed++;
+          }
+          if (result) {
+            updateLine("PASS " +
+                       (index + 1) + "/" + ids.length + ", " + id +
+                       " in " + (new Date() - t0) + "ms\n");
+          } else {
+            updateLine("FAIL " +
+                       (index + 1) + "/" + ids.length + ", " + id +
+                       " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || "") + "\n");
+          }
+        } catch (e) {
+          console.log("ERROR " + e);
+        }
+        if (index === ids.length) {
+          // We're done.
+          console.log("[1] DONE");
+          resume && resume();
+        }
+        while (pending < scale && index < ids.length) {
+          index = index + 1;
+          id = ids[index];
+          if (scraped[id] === undefined) {
             batchScrape(scale, force, ids, index, resume);
-          }
-        } else {
-          try {
-            let result = true;
-            if (err) {
-              result = false;
-            } else {
-              val.score.forEach(s => {
-                result = result && s && s.result;
-              });
-            }
-            if (result) {
-              passed++;
-            } else {
-              failed++;
-            }
-            if (result) {
-              updateLine("PASS " +
-                          (index + 1) + "/" + ids.length + ", " + id +
-                          " in " + (new Date() - t0) + "ms");
-            } else {
-              updateLine("FAIL " +
-                          (index + 1) + "/" + ids.length + ", " + id +
-                          " in " + (new Date() - t0) + "ms\n");
-            }
-          } catch (e) {
-            console.log("ERROR " + e);
-          }
-          if (index === ids.length) {
-            // We're done.
-            console.log("[1] DONE");
-            resume && resume();
-          }
-          while (pending < scale && index < ids.length) {
-            index = index + 1;
-            id = ids[index];
-            if (scraped[id] === undefined) {
-              batchScrape(scale, force, ids, index, resume);
-            }
           }
         }
       });
@@ -123,9 +110,9 @@ function getTimeStr(ms) {
 const REGRESSION = 1;
 const TRIAGE = 0;
 const BUG = -1;
-const SCALE = 5;
+const SCALE = 1;
 
-getTests(REGRESSION, function (err, testData) {
+getTests(TRIAGE, function (err, testData) {
   testData = testData.slice(0);
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
