@@ -49,7 +49,7 @@ function batchScrape(scale, force, ids, index, resume) {
         if (result) {
           updateLine("PASS " +
                      (index + 1) + "/" + ids.length + ", " + id +
-                     " in " + (new Date() - t0) + "ms\n");
+                     " in " + (new Date() - t0) + "ms");
         } else {
           updateLine("FAIL " +
                      (index + 1) + "/" + ids.length + ", " + id +
