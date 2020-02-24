@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - a8526c6
+ * Mathcore unversioned - 56fe5e0
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -6883,7 +6883,7 @@ var Model = function() {
       }}), root.location);
       return node
     }
-    function cancelFactors(node) {
+    function cancelFactors(options, node) {
       if(node.op !== Model.MUL) {
         return node
       }
@@ -7297,11 +7297,11 @@ var Model = function() {
       }
       return multiplyNode(args.concat(addNode(addArgs)))
     }
-    function eraseCommonExpressions(n1, n2) {
+    function eraseCommonExpressions(options, n1, n2) {
       n1 = factorCommonExpressions(n1);
       n2 = factorCommonExpressions(n2);
-      n1 = cancelFactors(n1);
-      n2 = cancelFactors(n2);
+      n1 = cancelFactors(options, n1);
+      n2 = cancelFactors(options, n2);
       if(n1.op === n2.op && (n1.op === Model.POW && (n1.args.length === 2 && (n2.args.length === 2 && (ast.intern(n1.args[1]) === ast.intern(n2.args[1]) && mathValue(options, n1.args[1], true) === null))))) {
         n1 = n1.args[0];
         n2 = n2.args[0]
@@ -7361,7 +7361,7 @@ var Model = function() {
         }
       });
       if(!changed) {
-        return[cancelFactors(n1), cancelFactors(n2)]
+        return[cancelFactors(options, n1), cancelFactors(options, n2)]
       }
       var args = [];
       forEach(nKeys, function(k) {
@@ -7391,7 +7391,7 @@ var Model = function() {
           n2 = newNode(n2.op, args)
         }
       }
-      return[cancelFactors(n1), cancelFactors(n2)]
+      return[cancelFactors(options, n1), cancelFactors(options, n2)]
     }
     var normalizedNodes = [];
     function normalize(options, root) {
@@ -8763,7 +8763,7 @@ var Model = function() {
       if(isNaN(n)) {
         return null
       }
-      return toDecimal(Math.sqrt(n)).setScale(option(optins, "decimalPlaces"), BigDecimal.ROUND_HALF_UP)
+      return toDecimal(Math.sqrt(n)).setScale(option(options, "decimalPlaces"), BigDecimal.ROUND_HALF_UP)
     }
     function trig(n, op) {
       if(n === null) {
@@ -9602,7 +9602,7 @@ var Model = function() {
                     if(ast.intern(lnode) === ast.intern(rnode)) {
                       return multiplyNode([nodeTwo, lnode])
                     }else {
-                      if((!env || !env.dontGroup) && (!option(options, "dontFactorTerms") && commonFactors(lnode, rnode).length > 0)) {
+                      if((!env || !env.dontGroup) && (!option(options, "dontFactorTerms") && commonFactors(options, lnode, rnode).length > 0)) {
                         return[factorTerms(lnode, rnode)]
                       }else {
                         return[lnode, rnode]
@@ -9631,7 +9631,7 @@ var Model = function() {
                 return lnode
               }else {
                 if(!option(options, "dontFactorTerms") && (!isOne(mathValue(options, lcoeff)) && !isOne(mathValue(options, rcoeff)))) {
-                  if(commonFactors(lnode, rnode).length > 0) {
+                  if(commonFactors(options, lnode, rnode).length > 0) {
                     var node = [factorTerms(lnode, rnode)];
                     return node
                   }
@@ -9643,7 +9643,7 @@ var Model = function() {
         }
       }, multiplicative:function(node) {
         assert(node.op === Model.MUL, "2000: simplify() multiplicative node not normalized: " + JSON.stringify(node));
-        node = cancelFactors(node);
+        node = cancelFactors(options, node);
         if(!env || !env.dontGroup) {
           node = groupLikes(node)
         }
@@ -10826,7 +10826,7 @@ var Model = function() {
         forEach(args, function(n1, i) {
           n1 = multiplyNode(factors(options, n1, {}, true, true));
           var n;
-          if(commonFactors(n = n0.pop(), n1).length > 0) {
+          if(commonFactors(options, n = n0.pop(), n1).length > 0) {
             n0 = n0.concat(factorTerms(n, n1))
           }else {
             n0 = n0.concat([n, n1])
@@ -10892,7 +10892,7 @@ var Model = function() {
         return[node]
       }})
     }
-    function commonFactors(lnode, rnode) {
+    function commonFactors(options, lnode, rnode) {
       var t1 = [lnode, rnode];
       var t;
       var t2 = [];
@@ -10918,7 +10918,7 @@ var Model = function() {
       return intersect
     }
     function factorTerms(lnode, rnode) {
-      var cfacts = commonFactors(lnode, rnode);
+      var cfacts = commonFactors(options, lnode, rnode);
       var lfacts = factors(options, lnode, null, false, true);
       var rfacts = factors(options, rnode, null, false, true);
       var lfacts2 = [], rfacts2 = [];
@@ -10980,7 +10980,7 @@ var Model = function() {
     function isHyperbolicCosecant(node) {
       return node.op === Model.POW && (node.args.length > 1 && (node.args[0].op === Model.SINH && isMinusOne(node.args[1])))
     }
-    function scale(root) {
+    function scale(options, root) {
       assert(root && root.args, "2000: Internal error.");
       var node = Model.create(options, visit(options, root, {name:"scale", exponential:function(node) {
         var mv, nd;
@@ -10994,7 +10994,7 @@ var Model = function() {
           var numer = nodeTwo;
           var denom = addNode([epx, emx]);
           node = fractionNode(numer, denom);
-          node = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))))
+          node = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))))
         }else {
           if(isHyperbolicCosecant(node)) {
             var arg = node.args[0].args[0];
@@ -11003,12 +11003,12 @@ var Model = function() {
             var numer = nodeTwo;
             var denom = addNode([epx, negate(emx)]);
             node = fractionNode(numer, denom);
-            node = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))))
+            node = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))))
           }
         }
         var args = [];
         forEach(node.args, function(n) {
-          args.push(scale(n))
+          args.push(scale(options, n))
         });
         return newNode(node.op, args)
       }, multiplicative:function(node) {
@@ -11023,7 +11023,7 @@ var Model = function() {
           var numer = addNode([epx, negate(emx)]);
           var denom = addNode([epx, emx]);
           node = fractionNode(numer, denom);
-          node = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
+          node = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
           return node
         }else {
           if(isHyperbolicCotangent(node)) {
@@ -11033,7 +11033,7 @@ var Model = function() {
             var numer = addNode([epx, emx]);
             var denom = addNode([epx, negate(emx)]);
             node = fractionNode(numer, denom);
-            node = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
+            node = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
             return node
           }
         }
@@ -11045,7 +11045,7 @@ var Model = function() {
           }else {
             if(isEmptyNode(n)) {
             }else {
-              args.push(scale(n))
+              args.push(scale(options, n))
             }
           }
         });
@@ -11069,7 +11069,7 @@ var Model = function() {
           if(mv = mathValue(options, addNode([numberNode(options, mv2), n]), true)) {
             mv2 = mv
           }else {
-            args.push(scale(n))
+            args.push(scale(options, n))
           }
         });
         if(!isZero(mv2)) {
@@ -11091,18 +11091,18 @@ var Model = function() {
         }
         var args = [];
         forEach(node.args, function(n) {
-          args.push(scale(n))
+          args.push(scale(options, n))
         });
         switch(node.op) {
           case Model.SINH:
             var arg = args[0];
             node = addNode([fractionNode(binaryNode(Model.POW, [nodeE, arg]), nodeTwo), fractionNode(negate(binaryNode(Model.POW, [nodeE, negate(arg)])), nodeTwo)]);
-            node = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
+            node = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
             break;
           case Model.COSH:
             var arg = args[0];
             node = addNode([fractionNode(binaryNode(Model.POW, [nodeE, arg]), nodeTwo), fractionNode(binaryNode(Model.POW, [nodeE, negate(arg)]), nodeTwo)]);
-            node = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
+            node = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, node))))));
             break;
           default:
             node = newNode(node.op, args);
@@ -11135,7 +11135,7 @@ var Model = function() {
       }, comma:function(node) {
         var args = [];
         forEach(node.args, function(n) {
-          args.push(scale(n))
+          args.push(scale(options, n))
         });
         return newNode(node.op, args)
       }, equals:function(node) {
@@ -11165,7 +11165,7 @@ var Model = function() {
         }
         args = [];
         forEach(node.args, function(n) {
-          args.push(scale(n))
+          args.push(scale(options, n))
         });
         return newNode(node.op, args)
       }}), root.location);
@@ -11613,17 +11613,17 @@ var Model = function() {
     Assert.setLocation(prevLocation);
     return result
   }
-  function scale(node) {
+  function scale(options, node) {
     var prevLocation = Assert.location;
     if(node.location) {
       Assert.setLocation(node.location)
     }
-    var result = visitor.scale(node);
+    var result = visitor.scale(options, node);
     Assert.setLocation(prevLocation);
     return result
   }
-  function eraseCommonExpressions(n1, n2) {
-    return visitor.eraseCommonExpressions(n1, n2)
+  function eraseCommonExpressions(options, n1, n2) {
+    return visitor.eraseCommonExpressions(options, n1, n2)
   }
   var env = Model.env;
   function precision(bd) {
@@ -11694,7 +11694,7 @@ var Model = function() {
   }
   Model.fn.equivValue = function equivValue(n1, n2, options, op) {
     assert(options);
-    var options = options || {};
+    options = options || {};
     var env = Model.env;
     var inverseResult = option(options, "inverseResult");
     var result;
@@ -11738,7 +11738,7 @@ var Model = function() {
     }else {
       n1 = normalize(options, n1);
       if(v1 = mathValue(options, n1, true)) {
-        n1b = scale(n1)
+        n1b = scale(options, n1)
       }else {
         n1b = simplify(options, expand(options, n1));
         v1 = mathValue(options, n1b, true, true)
@@ -11752,7 +11752,7 @@ var Model = function() {
     }else {
       n2 = normalize(options, n2);
       if(v2 = mathValue(options, n2, true)) {
-        n2b = scale(n2)
+        n2b = scale(options, n2)
       }else {
         n2b = simplify(options, expand(options, n2));
         v2 = mathValue(options, n2b, true, true)
@@ -11931,10 +11931,10 @@ var Model = function() {
   }
   Model.fn.equivSyntax = function(n1, n2, options) {
     assert(options);
+    options = options || {};
     reset();
     var ignoreOrder = option(options, "ignoreOrder");
     var inverseResult = option(options, "inverseResult");
-    options = options || {};
     var result = false;
     if(!(n1 instanceof Array)) {
       n1 = [n1]
@@ -12002,6 +12002,7 @@ var Model = function() {
     return kind
   }
   Model.fn.equivSymbolic = function equivSymbolic(n1, n2, options, resume) {
+    assert(options);
     var n1o = n1;
     var n2o = n2;
     var result;
@@ -12013,7 +12014,6 @@ var Model = function() {
     var node = newNode(Model.PAREN, [newNode(Model.COMMA, [n1, n2])]);
     node.lbrk = 40;
     node.rbrk = 41;
-    var options = {};
     evalSympy(node, options, function(err, val) {
       if(err && err.length) {
         resume(err)
@@ -12110,10 +12110,10 @@ var Model = function() {
           var n1r = n1.args[1];
           var n2l = n2.args[0];
           var n2r = n2.args[1];
-          var nn = eraseCommonExpressions(normalize(options, n1l), normalize(options, n2l));
+          var nn = eraseCommonExpressions(options, normalize(options, n1l), normalize(options, n2l));
           n1l = nn[0];
           n2l = nn[1];
-          var nn = eraseCommonExpressions(normalize(options, n1r), normalize(options, n2r));
+          var nn = eraseCommonExpressions(options, normalize(options, n1r), normalize(options, n2r));
           n1r = nn[0];
           n2r = nn[1];
           option(options, "inverseResult", false);
@@ -12127,28 +12127,28 @@ var Model = function() {
             })
           })
         }else {
-          var nn = eraseCommonExpressions(normalize(options, n1), normalize(options, n2));
+          var nn = eraseCommonExpressions(options, normalize(options, n1), normalize(options, n2));
           n1 = nn[0];
           n2 = nn[1];
           var n1o = n1;
           var n2o = n2;
           var mv1, mv2;
           if((mv1 = mathValue(options, n1, true)) && (mv2 = mathValue(options, n2, true))) {
-            n1 = scale(n1);
-            n2 = scale(n2)
+            n1 = scale(options, n1);
+            n2 = scale(options, n2)
           }else {
-            var nn = eraseCommonExpressions(normalize(options, n1), normalize(options, n2));
+            var nn = eraseCommonExpressions(options, normalize(options, n1), normalize(options, n2));
             n1 = nn[0];
             n2 = nn[1];
             var n1o = stripMetadata(n1o);
             var n2o = stripMetadata(n2o);
             var mv1, mv2;
             if((mv1 = mathValue(options, n1, true)) && (mv2 = mathValue(options, n2, true))) {
-              n1 = scale(n1);
-              n2 = scale(n2)
+              n1 = scale(options, n1);
+              n2 = scale(options, n2)
             }else {
-              n1 = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, n1))))));
-              n2 = scale(expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))))
+              n1 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n1))))));
+              n2 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))))
             }
           }
           var nid1 = ast.intern(n1);
@@ -12156,8 +12156,8 @@ var Model = function() {
           var result = nid1 === nid2;
           if(!result) {
             if(isComparison(n1.op)) {
-              n1 = scale(normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-              n2 = scale(normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
               nid1 = ast.intern(n1);
               nid2 = ast.intern(n2);
               result = nid1 === nid2;
@@ -12168,8 +12168,8 @@ var Model = function() {
               if(!isComparison(n2.op) && (!isAggregate(n1) && !isAggregate(n2))) {
                 n1 = addNode([n1o, negate(n2o)]);
                 n2 = nodeZero;
-                n1 = scale(normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-                n2 = scale(normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+                n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+                n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
                 nid1 = ast.intern(n1);
                 nid2 = ast.intern(n2);
                 result = nid1 === nid2;
@@ -12370,14 +12370,14 @@ var Model = function() {
     n1 = normalize(options, n1);
     var mv, node;
     if(mv = mathValue(options, n1, true, true)) {
-      node = scale(n1)
+      node = scale(options, n1)
     }else {
       var decimalPlaces = Model.option(options, "decimalPlaces", 20);
-      node = normalizeCalculate(options, scale(expand(options, normalize(options, simplify(options, expand(options, n1))))));
+      node = normalizeCalculate(options, scale(options, expand(options, normalize(options, simplify(options, expand(options, n1))))));
       Model.option(options, "decimalPlaces", decimalPlaces);
-      node = scale(node)
+      node = scale(options, node)
     }
-    var result = stripTrailingZeros(scale(numberNode(options, mathValue(options, node, Model.env, true, true))));
+    var result = stripTrailingZeros(scale(options, numberNode(options, mathValue(options, node, Model.env, true, true))));
     Assert.setLocation(prevLocation);
     return result
   };
@@ -12603,9 +12603,9 @@ var Model = function() {
   };
   var option = Model.option = function option(options, p, v) {
     assert(options);
+    options = options || {};
     var val = options && options[p];
     if(arguments.length > 2) {
-      options = options || {};
       if(v === undefined) {
         delete options[p]
       }else {

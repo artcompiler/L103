@@ -40,7 +40,7 @@ function batchScrape(scale, force, ids, index, resume) {
             updateLine("RETRY " + scraped[id] + ", " + (index + 1) + "/" + ids.length + ", " + id);
           } else {
             updateLine("FAIL " + (index + 1) + "/" + ids.length + ", " + id +
-                        " in " + (new Date() - t0) + "ms [" + err + "]\n");
+                        " in " + (new Date() - t0) + "ms [" + err + "]");
             index++;
             failed++;
             batchScrape(scale, force, ids, index, resume);
@@ -63,11 +63,11 @@ function batchScrape(scale, force, ids, index, resume) {
             if (result) {
               updateLine("PASS " +
                           (index + 1) + "/" + ids.length + ", " + id +
-                          " in " + (new Date() - t0) + "ms");
+                          " in " + (new Date() - t0) + "ms\n");
             } else {
               updateLine("FAIL " +
                           (index + 1) + "/" + ids.length + ", " + id +
-                          " in " + (new Date() - t0) + "ms\n");
+                          " in " + (new Date() - t0) + "ms");
             }
           } catch (e) {
             console.log("ERROR " + e);
@@ -126,7 +126,7 @@ const TRIAGE = 0;
 const BUG = -1;
 const SCALE = 10;
 
-getTests(REGRESSION, function (err, testData) {
+getTests(TRIAGE, function (err, testData) {
   testData = testData.slice(0);
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
