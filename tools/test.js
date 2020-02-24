@@ -5,8 +5,8 @@ const request = require('request');
 const url = require('url');
 const readline = require('readline');
 const DATA_GATEWAY = 'https://gc.acx.ac/';
-//const TEST_GATEWAY = 'https://gc.acx.ac/';
-const TEST_GATEWAY = 'http://localhost:3000/';
+const TEST_GATEWAY = 'https://gc.acx.ac/';
+//const TEST_GATEWAY = 'http://localhost:3000/';
 const LANG_ID = 107;
 const TIMEOUT_DURATION = 30000;
 
@@ -40,7 +40,7 @@ function batchScrape(scale, force, ids, index, resume) {
             updateLine("RETRY " + scraped[id] + ", " + (index + 1) + "/" + ids.length + ", " + id);
           } else {
             updateLine("FAIL " + (index + 1) + "/" + ids.length + ", " + id +
-                        " in " + (new Date() - t0) + "ms [" + err + "]");
+                        " in " + (new Date() - t0) + "ms [" + err + "]\n");
             index++;
             batchScrape(scale, force, ids, index, resume);
           }
@@ -62,11 +62,11 @@ function batchScrape(scale, force, ids, index, resume) {
             if (result) {
               updateLine("PASS " +
                           (index + 1) + "/" + ids.length + ", " + id +
-                          " in " + (new Date() - t0) + "ms\n");
+                          " in " + (new Date() - t0) + "ms");
             } else {
               updateLine("FAIL " +
                           (index + 1) + "/" + ids.length + ", " + id +
-                          " in " + (new Date() - t0) + "ms");
+                          " in " + (new Date() - t0) + "ms\n");
             }
           } catch (e) {
             console.log("ERROR " + e);
@@ -123,9 +123,9 @@ function getTimeStr(ms) {
 const REGRESSION = 1;
 const TRIAGE = 0;
 const BUG = -1;
-const SCALE = 10;
+const SCALE = 5;
 
-getTests(TRIAGE, function (err, testData) {
+getTests(REGRESSION, function (err, testData) {
   testData = testData.slice(0);
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
