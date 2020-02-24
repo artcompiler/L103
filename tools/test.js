@@ -5,14 +5,14 @@ const request = require('request');
 const url = require('url');
 const readline = require('readline');
 const DATA_GATEWAY = 'https://gc.acx.ac/';
-const TEST_GATEWAY = 'https://gc.acx.ac/';
-//const TEST_GATEWAY = 'http://localhost:3000/';
+//const TEST_GATEWAY = 'https://gc.acx.ac/';
+const TEST_GATEWAY = 'http://localhost:3000/';
 const LANG_ID = 107;
 const TIMEOUT_DURATION = 30000;
 
 let pending = 0;
 let scraped = {};
-let RETRIES = 3;
+let RETRIES = 0;
 let passed = 0;
 let failed = 0;
 function updateLine(str) {
@@ -42,7 +42,6 @@ function batchScrape(scale, force, ids, index, resume) {
             updateLine("FAIL " + (index + 1) + "/" + ids.length + ", " + id +
                         " in " + (new Date() - t0) + "ms [" + err + "]");
             index++;
-            failed++;
             batchScrape(scale, force, ids, index, resume);
           }
         } else {
@@ -132,7 +131,7 @@ getTests(TRIAGE, function (err, testData) {
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
   batchScrape(SCALE, true, testData, 0, () => {
-    updateLine(failed + " FAILED, " + (testData.length - failed) + " PASSED in " + getTimeStr(new Date - t0) + "\n");
+    updateLine(failed + " FAILED, " + passed + " PASSED in " + getTimeStr(new Date - t0) + "\n");
   });
 });
 
@@ -154,7 +153,7 @@ function getTests(mark, resume) {
     let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body).data;
     if (smoke) {
-      tests = shuffle(tests).slice(0, tests.length / 10);
+      tests = shuffle(tests).slice(0, 100);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
