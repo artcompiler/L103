@@ -125,7 +125,7 @@ const TRIAGE = 0;
 const BUG = -1;
 const SCALE = 10;
 
-getTests(TRIAGE, function (err, testData) {
+getTests(REGRESSION, function (err, testData) {
   testData = testData.slice(0);
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
