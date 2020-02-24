@@ -26,48 +26,39 @@ function batchScrape(scale, force, ids, index, resume) {
     if (index < ids.length) {
       let id = ids[index];
       let t0 = new Date;
-      if (!scraped[id]) {
-        scraped[id] = 0;
+      if (scraped[index] === undefined) {
+        scraped[index] = 0;
       }
       pending++;
       getCompile(TEST_GATEWAY, id, function(err, val) {
-        scraped[id]++;
+        scraped[index]++;
         pending--;
-        try {
-          let result = true;
-          if (err) {
-            result = false;
-          } else {
-            val.score.forEach(s => {
-              result = result && s && s.result;
-            });
-          }
-          if (result) {
-            passed++;
-          } else {
-            failed++;
-          }
-          if (result) {
-            updateLine("PASS " +
-                       (index + 1) + "/" + ids.length + ", " + id +
-                       " in " + (new Date() - t0) + "ms");
-          } else {
-            updateLine("FAIL " +
-                       (index + 1) + "/" + ids.length + ", " + id +
-                       " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || "") + "\n");
-          }
-        } catch (e) {
-          console.log("ERROR " + e);
+        let result = true;
+        if (err) {
+          result = false;
+        } else {
+          val.score.forEach(s => {
+            result = result && s && s.result;
+          });
         }
-        if (index === ids.length) {
-          // We're done.
-          console.log("[1] DONE");
-          resume && resume();
+        if (result) {
+          passed++;
+        } else {
+          failed++;
+        }
+        if (result) {
+          updateLine("PASS " +
+                     (index + 1) + "/" + ids.length + ", " + id +
+                     " in " + (new Date() - t0) + "ms\n");
+        } else {
+          updateLine("FAIL " +
+                     (index + 1) + "/" + ids.length + ", " + id +
+                     " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || "") + "\n");
         }
         while (pending < scale && index < ids.length) {
           index = index + 1;
           id = ids[index];
-          if (scraped[id] === undefined) {
+          if (scraped[index] === undefined) {
             batchScrape(scale, force, ids, index, resume);
           }
         }
