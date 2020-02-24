@@ -5,14 +5,14 @@ const request = require('request');
 const url = require('url');
 const readline = require('readline');
 const DATA_GATEWAY = 'https://gc.acx.ac/';
-//const TEST_GATEWAY = 'https://gc.acx.ac/';
-const TEST_GATEWAY = 'http://localhost:3000/';
+const TEST_GATEWAY = 'https://gc.acx.ac/';
+//const TEST_GATEWAY = 'http://localhost:3000/';
 const LANG_ID = 107;
 const TIMEOUT_DURATION = 30000;
 
 let pending = 0;
 let scraped = {};
-let RETRIES = 1;
+let RETRIES = 3;
 let passed = 0;
 let failed = 0;
 function updateLine(str) {
@@ -154,7 +154,7 @@ function getTests(mark, resume) {
     let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body).data;
     if (smoke) {
-      tests = shuffle(tests).slice(0, 100);
+      tests = shuffle(tests).slice(0, tests.length / 10);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
