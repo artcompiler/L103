@@ -129,15 +129,20 @@ let transformer = (function() {
 
     };
   }
-  function texToSympy(val, resume) {
+  const latexSympy = require("./latexsympy.js").Core;
+  const sympyRules = require("./sympyRules.js").sympyRules;
+  function texToSympy(tex, resume) {
     var errs = [];
-    var source = val;
-    if (source) {
+    if (tex) {
       try {
-        Core.translate({}, source, function (err, val) {
-          if (err && err.length) {
-            errs = errs.concat(err);
-            val = "";
+        latexSympy.translate(sympyRules, tex, function (err, val) {
+          // val = "(expr, expr)" => "(simplify(expr), simplify(expr))"
+          // val = "(TRIG expr, LOG expr)" => "(trig_simp(expr), log_simp(expr))"
+          // var ast = filbert.parse(val);
+          // console.log("texToSympy() ast=" + JSON.stringify(ast, null, 2));
+          errs = errs.concat(err);
+          if (errs && errs.length) {
+            val = null;
           }
           resume(errs, val);
         });
@@ -145,6 +150,8 @@ let transformer = (function() {
         errs = errs.concat(e.message);
         resume(errs, "");
       }
+    } else {
+      resume([], "");
     }
   }
   function trans(dialect, node, options, resume) {
@@ -910,7 +917,7 @@ let transformer = (function() {
         }, d, function (err, val) {
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
-            console.log("symbolic() errs=" + JSON.stringify(errs));
+            console.log("symbolic() errs=" + JSON.stringify(errs, null, 2));
           }
           resume(err, {
             method: "equivSymbolic",
@@ -1971,6 +1978,25 @@ let render = (function() {
   }
   return render;
 })();
+
+
+function statusCodeFromErrors(errs) {
+  let statusCode;
+  return errs.some(
+    err => statusCode =
+      err.statusCode
+  ) && statusCode || 500;
+}
+
+function messageFromErrors(errs) {
+  let message;
+  return errs.some(
+    err => message =
+      err.data && err.data.error ||
+      err.data
+  ) && message || "Internal error";
+}
+
 export let compiler = (function () {
   exports.langID = '107';
   exports.version = "v0.0.0";
@@ -1988,12 +2014,12 @@ export let compiler = (function () {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
           resume([{
-            statusCode: 400,
-            error: err
+            statusCode: statusCodeFromErrors(err),
+            error: messageFromErrors(err),
           }], val);
         } else {
           render(val, options, function (err, val) {
-            resume([].concat(err), val);
+            resume(err, val);
           });
         }
       });

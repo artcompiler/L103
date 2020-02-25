@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 77c1b95
+ * Mathcore unversioned - e8a098f
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4958,13 +4958,14 @@ var Model = function() {
   var latexSympy = require("./latexsympy.js").Core;
   var http = require("http");
   var https = require("https");
+  var sympyRules = require("./sympyRules.js").sympyRules;
   function texToSympy(tex, resume) {
     var errs = [];
     if(tex && tex.op !== Model.NONE) {
       try {
-        latexSympy.translate({}, tex, function(err, val) {
-          errs = errs.concat(err);
+        latexSympy.translate(sympyRules, tex, function(err, val) {
           if(errs && errs.length) {
+            errs = errs.concat(err);
             val = null
           }
           resume(errs, val)
@@ -7142,6 +7143,9 @@ var Model = function() {
     function combineLikeFactors(ff) {
       if(!ff || ff.length === 0) {
         return[]
+      }
+      if(ff.length === 1) {
+        return ff
       }
       var base;
       var expo = bigZero;
@@ -12035,139 +12039,128 @@ var Model = function() {
       }
     });
     function compare(n1, n2, resume) {
-      if(!strict) {
-        var n1o = JSON.parse(JSON.stringify(n1));
-        var n2o = JSON.parse(JSON.stringify(n2));
-        var ignoreOrder = option(options, "ignoreOrder", false);
-        try {
-          var result = Model.fn.equivLiteral(n1, n2, options);
-          option(options, "ignoreOrder", ignoreOrder)
-        }catch(e) {
-          option(options, "ignoreOrder", ignoreOrder);
-          throw e;
+      try {
+        if(!strict) {
+          var n1o = JSON.parse(JSON.stringify(n1));
+          var n2o = JSON.parse(JSON.stringify(n2));
+          var ignoreOrder = option(options, "ignoreOrder", false);
+          try {
+            var result = Model.fn.equivLiteral(n1, n2, options);
+            option(options, "ignoreOrder", ignoreOrder)
+          }catch(e) {
+            option(options, "ignoreOrder", ignoreOrder);
+            throw e;
+          }
+          if(result) {
+            if(resume) {
+              resume([], inverseResult ? false : true)
+            }
+            return true
+          }
+          n1 = n1o;
+          n2 = n2o
         }
-        if(result) {
-          if(resume) {
-            resume(null, inverseResult ? false : true)
-          }
-          return true
-        }
-        n1 = n1o;
-        n2 = n2o
-      }
-      if(isComparison(n1.op) && n1.op === n2.op) {
-        var n1a0 = n1.args[0];
-        var n1a1 = n1.args[1];
-        var n2a0 = n2.args[0];
-        var n2a1 = n2.args[1];
-        var n1a0id = ast.intern(n1a0);
-        var n1a1id = ast.intern(n1a1);
-        var n2a0id = ast.intern(n2a0);
-        var n2a1id = ast.intern(n2a1);
-        var mv;
-        if(n1a0.op === Model.VAR && (n2a0.op === Model.VAR && n1a0id === n2a0id)) {
-          if(n1a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n1a1), true))) {
-            n1 = newNode(n1.op, [n1a0, numberNode(options, mv, true)])
-          }
-          if(n2a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a1), true))) {
-            n2 = newNode(n2.op, [n2a0, numberNode(options, mv, true)])
-          }
-        }else {
-          if(n1a0.op === Model.VAR && (n2a1.op === Model.VAR && n1a0id === n2a1id)) {
+        if(isComparison(n1.op) && n1.op === n2.op) {
+          var n1a0 = n1.args[0];
+          var n1a1 = n1.args[1];
+          var n2a0 = n2.args[0];
+          var n2a1 = n2.args[1];
+          var n1a0id = ast.intern(n1a0);
+          var n1a1id = ast.intern(n1a1);
+          var n2a0id = ast.intern(n2a0);
+          var n2a1id = ast.intern(n2a1);
+          var mv;
+          if(n1a0.op === Model.VAR && (n2a0.op === Model.VAR && n1a0id === n2a0id)) {
             if(n1a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n1a1), true))) {
               n1 = newNode(n1.op, [n1a0, numberNode(options, mv, true)])
             }
-            if(n2a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a0), true))) {
-              n2 = newNode(n2.op, [numberNode(options, mv, true), n2a1])
+            if(n2a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a1), true))) {
+              n2 = newNode(n2.op, [n2a0, numberNode(options, mv, true)])
             }
           }else {
-            if(n1a1.op === Model.VAR && (n2a0.op === Model.VAR && n1a1id === n2a0id)) {
-              if(n1a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n1a0), true))) {
-                n1 = newNode(n1.op, [numberNode(options, mv, true), n1a1])
+            if(n1a0.op === Model.VAR && (n2a1.op === Model.VAR && n1a0id === n2a1id)) {
+              if(n1a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n1a1), true))) {
+                n1 = newNode(n1.op, [n1a0, numberNode(options, mv, true)])
               }
-              if(n2a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a1), true))) {
-                n2 = newNode(n2.op, [n2a0, numberNode(options, mv, true)])
+              if(n2a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a0), true))) {
+                n2 = newNode(n2.op, [numberNode(options, mv, true), n2a1])
               }
             }else {
-              if(n1a1.op === Model.VAR && (n2a1.op === Model.VAR && n1a1id === n2a1id)) {
+              if(n1a1.op === Model.VAR && (n2a0.op === Model.VAR && n1a1id === n2a0id)) {
                 if(n1a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n1a0), true))) {
                   n1 = newNode(n1.op, [numberNode(options, mv, true), n1a1])
                 }
-                if(n2a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a0), true))) {
-                  n2 = newNode(n2.op, [numberNode(options, mv, true), n2a1])
+                if(n2a1.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a1), true))) {
+                  n2 = newNode(n2.op, [n2a0, numberNode(options, mv, true)])
+                }
+              }else {
+                if(n1a1.op === Model.VAR && (n2a1.op === Model.VAR && n1a1id === n2a1id)) {
+                  if(n1a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n1a0), true))) {
+                    n1 = newNode(n1.op, [numberNode(options, mv, true), n1a1])
+                  }
+                  if(n2a0.op !== Model.NUM && (mv = mathValue(options, normalize(options, n2a0), true))) {
+                    n2 = newNode(n2.op, [numberNode(options, mv, true), n2a1])
+                  }
                 }
               }
             }
           }
         }
-      }
-      var ignoreUnits = option(options, "ignoreUnits", true);
-      if(formulaKind(n1) !== formulaKind(n2)) {
-        resume(null, inverseResult)
-      }else {
-        if(option(options, "compareSides") && (isComparison(n1.op) && n1.op === n2.op)) {
-          var n1l = n1.args[0];
-          var n1r = n1.args[1];
-          var n2l = n2.args[0];
-          var n2r = n2.args[1];
-          var nn = eraseCommonExpressions(options, normalize(options, n1l), normalize(options, n2l));
-          n1l = nn[0];
-          n2l = nn[1];
-          var nn = eraseCommonExpressions(options, normalize(options, n1r), normalize(options, n2r));
-          n1r = nn[0];
-          n2r = nn[1];
-          option(options, "inverseResult", false);
-          option(options, "strict", true);
-          equivSymbolic(Model.create(options, n1l), Model.create(options, n2l), options, function(err, result1) {
-            equivSymbolic(Model.create(options, n1r), Model.create(options, n2r), options, function(err, result2) {
-              option(options, "strict", strict);
-              option(options, "inverseResult", inverseResult);
-              option(options, "ignoreUnits", ignoreUnits);
-              resume(null, result1 && result2)
-            })
-          })
+        var ignoreUnits = option(options, "ignoreUnits", true);
+        if(formulaKind(n1) !== formulaKind(n2)) {
+          resume([], inverseResult)
         }else {
-          var nn = eraseCommonExpressions(options, normalize(options, n1), normalize(options, n2));
-          n1 = nn[0];
-          n2 = nn[1];
-          var n1o = n1;
-          var n2o = n2;
-          var mv1, mv2;
-          if((mv1 = mathValue(options, n1, true)) && (mv2 = mathValue(options, n2, true))) {
-            n1 = scale(options, n1);
-            n2 = scale(options, n2)
+          if(option(options, "compareSides") && (isComparison(n1.op) && n1.op === n2.op)) {
+            var n1l = n1.args[0];
+            var n1r = n1.args[1];
+            var n2l = n2.args[0];
+            var n2r = n2.args[1];
+            var nn = eraseCommonExpressions(options, normalize(options, n1l), normalize(options, n2l));
+            n1l = nn[0];
+            n2l = nn[1];
+            var nn = eraseCommonExpressions(options, normalize(options, n1r), normalize(options, n2r));
+            n1r = nn[0];
+            n2r = nn[1];
+            option(options, "inverseResult", false);
+            option(options, "strict", true);
+            equivSymbolic(Model.create(options, n1l), Model.create(options, n2l), options, function(err, result1) {
+              equivSymbolic(Model.create(options, n1r), Model.create(options, n2r), options, function(err, result2) {
+                option(options, "strict", strict);
+                option(options, "inverseResult", inverseResult);
+                option(options, "ignoreUnits", ignoreUnits);
+                resume([], result1 && result2)
+              })
+            })
           }else {
             var nn = eraseCommonExpressions(options, normalize(options, n1), normalize(options, n2));
             n1 = nn[0];
             n2 = nn[1];
-            var n1o = stripMetadata(n1o);
-            var n2o = stripMetadata(n2o);
+            var n1o = n1;
+            var n2o = n2;
             var mv1, mv2;
             if((mv1 = mathValue(options, n1, true)) && (mv2 = mathValue(options, n2, true))) {
               n1 = scale(options, n1);
               n2 = scale(options, n2)
             }else {
-              n1 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n1))))));
-              n2 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))))
+              var nn = eraseCommonExpressions(options, normalize(options, n1), normalize(options, n2));
+              n1 = nn[0];
+              n2 = nn[1];
+              var n1o = stripMetadata(n1o);
+              var n2o = stripMetadata(n2o);
+              var mv1, mv2;
+              if((mv1 = mathValue(options, n1, true)) && (mv2 = mathValue(options, n2, true))) {
+                n1 = scale(options, n1);
+                n2 = scale(options, n2)
+              }else {
+                n1 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n1))))));
+                n2 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))))
+              }
             }
-          }
-          var nid1 = ast.intern(n1);
-          var nid2 = ast.intern(n2);
-          var result = nid1 === nid2;
-          if(!result) {
-            if(isComparison(n1.op)) {
-              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
-              nid1 = ast.intern(n1);
-              nid2 = ast.intern(n2);
-              result = nid1 === nid2;
-              result = inverseResult ? !result : result;
-              option(options, "ignoreUnits", ignoreUnits);
-              resume(null, result)
-            }else {
-              if(!isComparison(n2.op) && (!isAggregate(n1) && !isAggregate(n2))) {
-                n1 = addNode([n1o, negate(n2o)]);
-                n2 = nodeZero;
+            var nid1 = ast.intern(n1);
+            var nid2 = ast.intern(n2);
+            var result = nid1 === nid2;
+            if(!result) {
+              if(isComparison(n1.op)) {
                 n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
                 n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
                 nid1 = ast.intern(n1);
@@ -12175,15 +12168,30 @@ var Model = function() {
                 result = nid1 === nid2;
                 result = inverseResult ? !result : result;
                 option(options, "ignoreUnits", ignoreUnits);
-                resume(null, result)
+                resume([], result)
+              }else {
+                if(!isComparison(n2.op) && (!isAggregate(n1) && !isAggregate(n2))) {
+                  n1 = addNode([n1o, negate(n2o)]);
+                  n2 = nodeZero;
+                  n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+                  n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+                  nid1 = ast.intern(n1);
+                  nid2 = ast.intern(n2);
+                  result = nid1 === nid2;
+                  result = inverseResult ? !result : result;
+                  option(options, "ignoreUnits", ignoreUnits);
+                  resume([], result)
+                }
               }
+            }else {
+              result = inverseResult ? !result : result;
+              option(options, "ignoreUnits", ignoreUnits);
+              resume([], result)
             }
-          }else {
-            result = inverseResult ? !result : result;
-            option(options, "ignoreUnits", ignoreUnits);
-            resume(null, result)
           }
         }
+      }catch(x) {
+        resume([{statusCode:500, error:x.stack}])
       }
     }
   };
@@ -12207,7 +12215,7 @@ var Model = function() {
         if(res.statusCode !== 200) {
           resume([{statusCode:res.statusCode, error:data}])
         }else {
-          resume(null, val)
+          resume([], val)
         }
       }).on("error", function() {
         console.log("error() status=" + res.statusCode + " data=" + data);
@@ -12706,7 +12714,7 @@ var MathCore = function() {
         if(err && err.length) {
           resume(err)
         }else {
-          resume(null, val)
+          resume([], val)
         }
       })
     }catch(e) {
@@ -12723,7 +12731,7 @@ var MathCore = function() {
       var errorCode = 0, msg = "Normal completion", stack, location;
       evaluator.evaluate(solution, function(err, val) {
         model = evaluator.model;
-        resume([], {result:val, errorCode:errorCode, message:msg, stack:stack, location:location, toString:function() {
+        resume(err, {result:val, errorCode:errorCode, message:msg, stack:stack, location:location, toString:function() {
           return this.errorCode + ": (" + location + ") " + msg + "\n" + this.stack
         }})
       })
@@ -12966,7 +12974,7 @@ var MathCore = function() {
         Model.popEnv(options.env)
       }
       Model.popEnv();
-      resume(null, result)
+      resume([], result)
     };
     var outerResult = {evaluate:evaluate, model:valueNode};
     return outerResult
