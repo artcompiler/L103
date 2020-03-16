@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - c12ae62
+ * Mathcore unversioned - c1790b8
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12180,6 +12180,8 @@ var Model = function() {
                   result = nid1 === nid2;
                   result = inverseResult ? !result : result;
                   option(options, "ignoreUnits", ignoreUnits);
+                  resume([], result)
+                }else {
                   resume([], result)
                 }
               }
