@@ -1998,8 +1998,8 @@ function messageFromErrors(errs) {
 }
 
 export let compiler = (function () {
-  exports.langID = '107';
-  exports.version = "v0.0.0";
+  exports.langID = 107;
+  exports.version = "v0.3.0";
   exports.compile = function compile(code, data, config, resume) {
     // Compiler takes an AST in the form of a node pool (code) and transforms it
     // into an object to be rendered on the client by the viewer for this
