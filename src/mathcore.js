@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - c1790b8
+ * Mathcore unversioned - 539e6d4
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7800,18 +7800,25 @@ var Model = function() {
       var flags = Model.flags;
       if(flags.hasNone) {
       }else {
-        if(flags.hasTrig || (flags.hasLog || flags.hasHyperTrig)) {
-          if(flags.hasTrig) {
-            node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
-          }
-          if(flags.hasHyperTrig) {
-            node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
-          }
-          if(flags.hasLog) {
-            node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
-          }
+        if(flags.hasRel) {
+          node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
         }else {
-          node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+          if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || flags.hasPower))) {
+            if(flags.hasTrig) {
+              node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+            }
+            if(flags.hasHyperTrig) {
+              node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+            }
+            if(flags.hasLog) {
+              node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+            }
+            if(flags.hasPower) {
+              node = newNode(Model.OPERATORNAME, [variableNode("POWER"), node])
+            }
+          }else {
+            node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+          }
         }
       }
       return node
@@ -7839,6 +7846,7 @@ var Model = function() {
         });
         return Object.assign({}, node, newNode(node.op, args))
       }, unary:function(node) {
+        Model.flags.hasPower = Model.flags.hasPower || node.op === Model.SQRT && variablePart(node.args[0]) !== null;
         Model.flags.hasTrig = Model.flags.hasTrig || (node.op === Model.SIN || (node.op === Model.COS || (node.op === Model.TAN || (node.op === Model.SEC || (node.op === Model.COT || (node.op === Model.CSC || (node.op === Model.ARCSIN || (node.op === Model.ARCCOS || (node.op === Model.ARCTAN || (node.op === Model.ARCSEC || (node.op === Model.ARCCSC || node.op === Model.ARCCOT)))))))))));
         Model.flags.hasHyperTrig = Model.flags.hasHyperTrig || (node.op === Model.SINH || (node.op === Model.COSH || (node.op === Model.TANH || (node.op === Model.SECH || (node.op === Model.COTH || (node.op === Model.CSCH || (node.op === Model.ARCSINH || (node.op === Model.ARCCOSH || (node.op === Model.ARCTANH || (node.op === Model.ARCSECH || (node.op === Model.ARCCSCH || node.op === Model.ARCCOTH)))))))))));
         var args = [];
@@ -7854,6 +7862,7 @@ var Model = function() {
           args = args.concat(normalizeSympy(options, n))
         });
         Model.flags.hasLog = Model.flags.hasLog || (node.op === Model.LOG || node.op === Model.LN);
+        Model.flags.hasPower = Model.flags.hasPower || node.op === Model.POW && (node.args[1].op === Model.VAR || (variablePart(node.args[1]) !== null || node.args[1].op === Model.FRAC && variablePart(node.args[0]) !== null));
         return Object.assign({}, node, newNode(node.op, args))
       }, comma:function(node) {
         var args = [];
@@ -7868,7 +7877,7 @@ var Model = function() {
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(options, n))
         });
-        Model.flags.hasNone = true;
+        Model.flags.hasRel = true;
         return Object.assign({}, node, newNode(node.op, args))
       }}), root.location);
       normalizeSympyLevel--;
