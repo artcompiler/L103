@@ -2,8 +2,8 @@ import fs from "fs";
 import {execSync} from "child_process";
 
 // Current best rule sets
-const latexRulesID = "vwJHz3n6xsg";
-const sympyRulesID = "LO8cnL97YFg";
+const latexRulesID = "xVeFzZ6QWfo";
+const sympyRulesID = "aLvCx2ZyJsJ";
 
 function rmdir(path) {
   try { var files = fs.readdirSync(path); }
