@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 539e6d4
+ * Mathcore unversioned - 092eb2f
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7803,7 +7803,7 @@ var Model = function() {
         if(flags.hasRel) {
           node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
         }else {
-          if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || flags.hasPower))) {
+          if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
             if(flags.hasTrig) {
               node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
             }
@@ -7813,8 +7813,11 @@ var Model = function() {
             if(flags.hasLog) {
               node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
             }
-            if(flags.hasPower) {
-              node = newNode(Model.OPERATORNAME, [variableNode("POWER"), node])
+            if(flags.hasExpo) {
+              node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+            }
+            if(flags.hasFrac) {
+              node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
             }
           }else {
             node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
@@ -7840,13 +7843,13 @@ var Model = function() {
         });
         return Object.assign({}, node, newNode(node.op, args))
       }, multiplicative:function(node) {
+        Model.flags.hasFrac = Model.flags.hasFrac || node.op === Model.FRAC;
         var args = [];
         forEach(node.args, function(n) {
           args = args.concat(normalizeSympy(options, n))
         });
         return Object.assign({}, node, newNode(node.op, args))
       }, unary:function(node) {
-        Model.flags.hasPower = Model.flags.hasPower || node.op === Model.SQRT && variablePart(node.args[0]) !== null;
         Model.flags.hasTrig = Model.flags.hasTrig || (node.op === Model.SIN || (node.op === Model.COS || (node.op === Model.TAN || (node.op === Model.SEC || (node.op === Model.COT || (node.op === Model.CSC || (node.op === Model.ARCSIN || (node.op === Model.ARCCOS || (node.op === Model.ARCTAN || (node.op === Model.ARCSEC || (node.op === Model.ARCCSC || node.op === Model.ARCCOT)))))))))));
         Model.flags.hasHyperTrig = Model.flags.hasHyperTrig || (node.op === Model.SINH || (node.op === Model.COSH || (node.op === Model.TANH || (node.op === Model.SECH || (node.op === Model.COTH || (node.op === Model.CSCH || (node.op === Model.ARCSINH || (node.op === Model.ARCCOSH || (node.op === Model.ARCTANH || (node.op === Model.ARCSECH || (node.op === Model.ARCCSCH || node.op === Model.ARCCOTH)))))))))));
         var args = [];
@@ -7862,7 +7865,8 @@ var Model = function() {
           args = args.concat(normalizeSympy(options, n))
         });
         Model.flags.hasLog = Model.flags.hasLog || (node.op === Model.LOG || node.op === Model.LN);
-        Model.flags.hasPower = Model.flags.hasPower || node.op === Model.POW && (node.args[1].op === Model.VAR || (variablePart(node.args[1]) !== null || node.args[1].op === Model.FRAC && variablePart(node.args[0]) !== null));
+        Model.flags.hasExpo = Model.flags.hasExpo || node.op === Model.POW && (node.args[1].op === Model.VAR || variablePart(node.args[1]) !== null);
+        Model.flags.hasFrac = Model.flags.hasFrac || node.op === Model.POW && (variablePart(node.args[1]) === null && isNeg(mathValue(options, node.args[1], true)));
         return Object.assign({}, node, newNode(node.op, args))
       }, comma:function(node) {
         var args = [];
@@ -10225,7 +10229,11 @@ var Model = function() {
         forEach(node.args, function(n) {
           var mv = mathValue(options, n, env, true, normalizeUnits);
           if(mv && val) {
-            val = val.add(mv)
+            if(node.op === Model.SUB) {
+              val = val.subtract(mv)
+            }else {
+              val = val.add(mv)
+            }
           }else {
             val = null
           }
@@ -12300,6 +12308,7 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
+          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
             var node;
             if(err && err.length) {
