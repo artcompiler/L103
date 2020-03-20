@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 092eb2f
+ * Mathcore unversioned - 3179f7c
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12308,7 +12308,6 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
-          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
             var node;
             if(err && err.length) {
