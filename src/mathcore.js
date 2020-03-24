@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - c263b35
+ * Mathcore unversioned - 23e43b0
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7411,9 +7411,6 @@ var Model = function() {
       }
       var rootNid = nid;
       var node = Model.create(options, visit(options, root, {name:"normalize", numeric:function(node) {
-        if(!option(options, "dontConvertDecimalToFraction") && (isRepeating(node) || isDecimal(node))) {
-          node = decimalToFraction(node)
-        }
         return node
       }, additive:function(node) {
         if(node.op === Model.SUB) {
@@ -7437,7 +7434,7 @@ var Model = function() {
         var mv = bigZero;
         var args = [];
         node.args.forEach(function(n) {
-          if(n.op === Model.NUM && (mathValue(options, n, true) && !option(options, "dontConvertDecimalToFraction"))) {
+          if(n.op === Model.NUM && (mathValue(options, n, true) && !option(options, "doingSimplified"))) {
             mv = mv.add(mathValue(options, n, true))
           }else {
             args = args.concat(normalize(options, n))
@@ -7449,7 +7446,7 @@ var Model = function() {
           args.unshift(numberNode(options, mv))
         }
         node = newNode(node.op, args);
-        if(mathValue(options, node, true) && !option(options, "dontConvertDecimalToFraction")) {
+        if(mathValue(options, node, true) && !option(options, "doingSimplified")) {
           node = commonDenom(node)
         }
         node.isMixedNumber = isMixedNumber;
@@ -7832,9 +7829,6 @@ var Model = function() {
       var nid = ast.intern(root);
       normalizeSympyLevel++;
       var node = Model.create(options, visit(options, root, {name:"normalize", numeric:function(node) {
-        if(!option(options, "dontConvertDecimalToFraction") && (isRepeating(node) || isDecimal(node))) {
-          node = decimalToFraction(node)
-        }
         return node
       }, additive:function(node) {
         var args = [];
@@ -7899,12 +7893,8 @@ var Model = function() {
       }
       var rootNid = nid;
       var node = Model.create(options, visit(options, root, {name:"normalizeCalculate", numeric:function(node) {
-        if(isRepeating(node) || !option(options, "dontConvertDecimalToFraction") && isDecimal(node)) {
-          node = decimalToFraction(node)
-        }else {
-          if(isNeg(node)) {
-            node = numberNode(options, node.args[0])
-          }
+        if(isNeg(node)) {
+          node = numberNode(options, node.args[0])
         }
         return node
       }, additive:function(node) {
@@ -8680,35 +8670,6 @@ var Model = function() {
         s = s.substring(1);
         return findRepeatingPattern(s, p, x)
       }
-    }
-    function repeatingDecimalToFraction(node) {
-      assert(isRepeating(node), "2000: Internal error.");
-      var str = node.args[0];
-      if(str.charAt(0) === "0") {
-        str = str.slice(1)
-      }
-      var pos = indexOf(str, ".");
-      var integerPart = str.slice(0, pos);
-      var decimalPart = findRepeatingPattern(str.slice(pos + 1));
-      var decimalPlaces = decimalPart.length;
-      var numer = numberNode(options, integerPart + decimalPart);
-      var denom = addNode([binaryNode(Model.POW, [numberNode(options, "10"), numberNode(options, decimalPlaces)]), nodeMinusOne]);
-      return fractionNode(numer, denom)
-    }
-    function decimalToFraction(node) {
-      assert(node.op === Model.NUM, "2000: Internal error.");
-      if(isRepeating(node)) {
-        return repeatingDecimalToFraction(node)
-      }
-      var str = node.args[0];
-      if(str.charAt(0) === "0") {
-        str = str.slice(1)
-      }
-      var pos = indexOf(str, ".");
-      var decimalPlaces = str.length - pos - 1;
-      var numer = numberNode(options, str.slice(0, pos) + str.slice(pos + 1));
-      var denom = binaryNode(Model.POW, [numberNode(options, "10"), negate(numberNode(options, decimalPlaces))]);
-      return multiplyNode([numer, denom])
     }
     function isLessThan(n1, n2) {
       if(n1 && n1.op !== undefined) {
@@ -10256,7 +10217,7 @@ var Model = function() {
             val = null
           }
         });
-        if(allowDecimal || (isInteger(val) || hasDecimal && option(options, "dontConvertDecimalToFraction"))) {
+        if(allowDecimal || (isInteger(val) || hasDecimal && option(options, "doingSimplified"))) {
           return val
         }
         return null
@@ -12439,7 +12400,7 @@ var Model = function() {
   Model.fn.isExpanded = function isExpanded(node, options) {
     var inverseResult = option(options, "inverseResult");
     var n1, n2, nid1, nid2, result;
-    var dontConvertDecimalToFraction = option(options, "dontConvertDecimalToFraction", true);
+    var doingSimplified = option(options, "doingSimplified", true);
     if(node.op === Model.COMMA) {
       result = every(node.args, function(n) {
         return isExpanded(n, options)
@@ -12460,7 +12421,7 @@ var Model = function() {
           var dontExpandPowers = option(options, "dontExpandPowers", true);
           var dontFactorDenominators = option(options, "dontFactorDenominators", true);
           var dontFactorTerms = option(options, "dontFactorTerms", true);
-          var dontConvertDecimalToFraction = option(options, "dontConvertDecimalToFraction", true);
+          var doingSimplified = option(options, "doingSimplified", true);
           var dontSimplifyImaginary = option(options, "dontSimplifyImaginary", true);
           node = flattenNestedNodes(normalize(options, node));
           n1 = node;
@@ -12470,7 +12431,7 @@ var Model = function() {
           option(options, "dontExpandPowers", dontExpandPowers);
           option(options, "dontFactorDenominators", dontFactorDenominators);
           option(options, "dontFactorTerms", dontFactorTerms);
-          option(options, "dontConvertDecimalToFraction", dontConvertDecimalToFraction);
+          option(options, "doingSimplified", doingSimplified);
           option(options, "dontSimplifyImaginary", dontSimplifyImaginary);
           if(nid1 === nid2 && !(hasLikeFactorsOrTerms(n1) || node.op === Model.POW && (isAdditive(node.args[0]) && isPolynomial(node)))) {
             result = true
@@ -12480,7 +12441,7 @@ var Model = function() {
         }
       }
     }
-    option(options, "dontConvertDecimalToFraction", dontConvertDecimalToFraction);
+    option(options, "doingSimplified", doingSimplified);
     return inverseResult ? !result : result
   };
   function hasDenominator(node) {
@@ -12507,7 +12468,7 @@ var Model = function() {
     var n1, n2, nid1, nid2, result;
     var dontFactorDenominators = option(options, "dontFactorDenominators", true);
     var dontFactorTerms = option(options, "dontFactorTerms", true);
-    var dontConvertDecimalToFraction = option(options, "dontConvertDecimalToFraction", true);
+    var doingSimplified = option(options, "doingSimplified", true);
     var dontSimplifyImaginary = option(options, "dontSimplifyImaginary", true);
     var inverseResult = option(options, "inverseResult");
     if(node.op === Model.COMMA) {
@@ -12548,7 +12509,7 @@ var Model = function() {
     }
     option(options, "dontFactorDenominators", dontFactorDenominators);
     option(options, "dontFactorTerms", dontFactorTerms);
-    option(options, "dontConvertDecimalToFraction", dontConvertDecimalToFraction);
+    option(options, "doingSimplified", doingSimplified);
     option(options, "dontSimplifyImaginary", dontSimplifyImaginary);
     option(options, "inverseResult", inverseResult);
     if(result && (n1 && hasLikeFactorsOrTerms(n1))) {
@@ -12558,9 +12519,9 @@ var Model = function() {
   };
   Model.fn.isFactorised = function(n1, options) {
     var inverseResult = option(options, "inverseResult");
-    var dontConvertDecimalToFraction = option(options, "dontConvertDecimalToFraction", true);
+    var doingSimplified = option(options, "doingSimplified", true);
     var result = isFactorised(options, normalize(options, n1));
-    option(options, "dontConvertDecimalToFraction", dontConvertDecimalToFraction);
+    option(options, "doingSimplified", doingSimplified);
     return inverseResult ? !result : result
   };
   Model.fn.isUnit = function(n1, n2, options) {
@@ -12665,7 +12626,7 @@ var Model = function() {
         ;
         case "dontFactorTerms":
         ;
-        case "dontConvertDecimalToFraction":
+        case "doingSimplified":
         ;
         case "strict":
         ;

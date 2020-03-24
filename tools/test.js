@@ -38,7 +38,7 @@ function batchScrape(scale, force, ids, index, resume) {
           result = false;
         } else {
           val.score.forEach(s => {
-            result = result && s && s.result;
+            result = result && s && s.result === true;
           });
         }
         if (result) {

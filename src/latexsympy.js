@@ -673,6 +673,8 @@ var _model = require("./model.js");
 
 var _rules2 = require("./rules.js");
 
+// FIXME create some basic rules for testing.
+
 (function (ast) {
 
   var messages = _assert.Assert.messages;
@@ -945,6 +947,12 @@ var _rules2 = require("./rules.js");
               }
             }
             break;
+          case "repeatingDecimal":
+            if (node.numberFormat === "decimal" && node.isRepeating) {
+              (0, _assert.assert)(!length, "The repeatingDecimal pattern does not take a length");
+              return true;
+            }
+            return false;
           case "number":
             if (node.numberFormat === "decimal" && node.isRepeating) {
               if (length === undefined) {
@@ -1075,6 +1083,7 @@ var _rules2 = require("./rules.js");
           case "mixedFraction": // deprecated
           case "mixedNumber":
           case "fractionOrDecimal":
+          case "repeatingDecimal":
             return checkNumberType(pattern.args[0], node);
           case "variable":
             return node.op === _model.Model.VAR;
@@ -2209,7 +2218,7 @@ if (typeof window !== "undefined") {
   window.Core = Core;
 }
 /*
- * Latexsympy commit fc3bd7d
+ * Latexsympy commit 7ee0a40
  * Copyright 2019 Learnosity Ltd. All Rights Reserved.
  *
  */
