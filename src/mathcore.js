@@ -12790,7 +12790,7 @@ var MathCore = function() {
       ;
       case "dontFactorTerms":
       ;
-      case "dontConvertDecimalToFraction":
+      case "doingSimplified":
       ;
       case "dontSimplifyImaginary":
       ;
