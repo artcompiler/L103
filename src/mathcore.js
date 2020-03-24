@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 3179f7c
+ * Mathcore unversioned - c263b35
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7851,7 +7851,6 @@ var Model = function() {
         return Object.assign({}, node, newNode(node.op, args))
       }, unary:function(node) {
         Model.flags.hasAbs = Model.flags.hasAbs || node.op === Model.ABS;
-        console.trace(Model.flags.hasAbs);
         Model.flags.hasTrig = Model.flags.hasTrig || (node.op === Model.SIN || (node.op === Model.COS || (node.op === Model.TAN || (node.op === Model.SEC || (node.op === Model.COT || (node.op === Model.CSC || (node.op === Model.ARCSIN || (node.op === Model.ARCCOS || (node.op === Model.ARCTAN || (node.op === Model.ARCSEC || (node.op === Model.ARCCSC || node.op === Model.ARCCOT)))))))))));
         Model.flags.hasHyperTrig = Model.flags.hasHyperTrig || (node.op === Model.SINH || (node.op === Model.COSH || (node.op === Model.TANH || (node.op === Model.SECH || (node.op === Model.COTH || (node.op === Model.CSCH || (node.op === Model.ARCSINH || (node.op === Model.ARCCOSH || (node.op === Model.ARCTANH || (node.op === Model.ARCSECH || (node.op === Model.ARCCSCH || node.op === Model.ARCCOTH)))))))))));
         var args = [];
@@ -11480,7 +11479,6 @@ var Model = function() {
     if(node.location) {
       Assert.setLocation(node.location)
     }
-    Model.flags = {};
     node = visitor.normalizeSympy(options, node);
     Assert.setLocation(prevLocation);
     return node
@@ -12032,6 +12030,7 @@ var Model = function() {
     var inverseResult = option(options, "inverseResult");
     var strict = option(options, "strict");
     delete n1.env;
+    Model.flags = {};
     n1 = normalizeSympy(options, n1);
     n2 = normalizeSympy(options, n2);
     var node = newNode(Model.PAREN, [newNode(Model.COMMA, [n1, n2])]);
@@ -12255,6 +12254,13 @@ var Model = function() {
     var result;
     var syms = variables(normalize(options, expr));
     var symNode = Model.create(options, String(syms));
+    var flags = Model.flags;
+    var assumption;
+    if(flags.hasAbs) {
+      assumption = "real"
+    }else {
+      assumption = "positive"
+    }
     texToSympy(symNode, function(err, val) {
       syms = val && val.split(",") || [];
       if(syms.includes("I")) {
@@ -12273,14 +12279,6 @@ var Model = function() {
       });
       var params = "";
       var symbols = "";
-      var flags = Model.flags;
-      var assumption;
-      if(flags.hasAbs) {
-        assumption = "real"
-      }else {
-        assumption = "positive"
-      }
-      console.log(assumption);
       if(syms && syms.length) {
         syms.forEach(function(s) {
           if(symbols) {
@@ -12318,7 +12316,6 @@ var Model = function() {
         }else {
           var args = v + opts;
           var obj = {func:"eval", expr:"(lambda" + params + ":" + " " + args + ")(" + symbols + ")"};
-          console.log("evalSympy() expr=" + obj.expr);
           getSympy("/api/v1/eval", obj, function(err, data) {
             var node;
             if(err && err.length) {
