@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - cbffbd6
+ * Mathcore unversioned - 001b065
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7791,31 +7791,35 @@ var Model = function() {
       normalizedNodes[rootNid] = node;
       return node
     }
-    function markSympy(node) {
+    function markSympy(node, markNumberType) {
       var flags = Model.flags;
       if(flags.hasNone) {
       }else {
         if(flags.hasRel) {
           node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
         }else {
-          if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
-            if(flags.hasTrig) {
-              node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
-            }
-            if(flags.hasHyperTrig) {
-              node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
-            }
-            if(flags.hasLog) {
-              node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
-            }
-            if(flags.hasExpo) {
-              node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
-            }
-            if(flags.hasFrac) {
-              node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
-            }
+          if(markNumberType && (node.op !== Model.PAREN && (mathValue(normalize(options, node), true) || variablePart(node) === null))) {
+            node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
           }else {
-            node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+            if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
+              if(flags.hasTrig) {
+                node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+              }
+              if(flags.hasHyperTrig) {
+                node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+              }
+              if(flags.hasLog) {
+                node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+              }
+              if(flags.hasExpo) {
+                node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+              }
+              if(flags.hasFrac) {
+                node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
+              }
+            }else {
+              node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+            }
           }
         }
       }
@@ -7865,7 +7869,7 @@ var Model = function() {
         var args = [];
         forEach(node.args, function(n) {
           Model.flags = {};
-          args = args.concat(markSympy(normalizeSympy(options, n)))
+          args = args.concat(markSympy(normalizeSympy(options, n), true))
         });
         Model.flags = {hasNone:true};
         return Object.assign({}, node, newNode(node.op, args))
@@ -7879,7 +7883,7 @@ var Model = function() {
       }}), root.location);
       normalizeSympyLevel--;
       if(normalizeSympyLevel === 0) {
-        node = markSympy(node)
+        node = markSympy(node, true)
       }
       return node
     }
