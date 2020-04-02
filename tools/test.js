@@ -101,7 +101,7 @@ function getTimeStr(ms) {
 const REGRESSION = 1;
 const TRIAGE = 0;
 const BUG = -1;
-const SCALE = 10;
+const SCALE = 3;
 
 getTests(REGRESSION, function (err, testData) {
   testData = testData.slice(0);

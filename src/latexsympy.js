@@ -1169,7 +1169,7 @@ var _rules2 = require("./rules.js");
       });
       // if (matches.length > 0) {
       //   console.log("node: " + JSON.stringify(node, null, 2));
-      //   console.log("matches: " + JSON.stringify(matches, null, 2));
+      //   console.log("matches: " + JSON.stringify(matches[0], null, 2));
       // }
       return matches;
     }
@@ -3852,7 +3852,6 @@ var Model = exports.Model = function () {
 
     function isRepeatingDecimal(args) {
       // "3." "\overline{..}"
-      // "3." "(..)"
       // "3." "\dot{..}"
       var expr = void 0,
           n0 = void 0,
