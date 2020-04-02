@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 3f3ecdd
+ * Mathcore unversioned - 001b065
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4294,7 +4294,10 @@ var Model = function() {
           }else {
             if(!args[1].lbrk && args[1].op === Model.OVERLINE) {
               n0 = args[0];
-              n1 = args[1].args[0]
+              n1 = args[1];
+              if(n0.op === Model.NUM && n0.args[0].indexOf(".") === -1) {
+                n0.args[0] += "."
+              }
             }else {
               if(!args[1].lbrk && args[1].op === Model.DOT) {
                 n0 = args[0];
@@ -4304,17 +4307,8 @@ var Model = function() {
               }
             }
           }
-          n1 = numberNode("." + n1.args[0]);
           n1.isRepeating = args[1].op;
-          if(indexOf(n0.args[0], ".") >= 0) {
-            var decimalPlaces = n0.args[0].length - indexOf(n0.args[0], ".") - 1;
-            n1 = multiplyNode([n1, binaryNode(Model.POW, [numberNode("10"), numberNode("-" + decimalPlaces)])])
-          }
-          if(n0.op === Model.NUM && +n0.args[0] === 0) {
-            expr = n1
-          }else {
-            expr = binaryNode(Model.ADD, [n0, n1])
-          }
+          expr = binaryNode(Model.ADD, [n0, n1]);
           expr.numberFormat = "decimal";
           expr.isRepeating = args[1].op
         }else {
@@ -4590,7 +4584,7 @@ var Model = function() {
           return n
         }
       }catch(x) {
-        console.log("SYNTAX ERROR " + x.stack)
+        console.log("SYNTAX ERROR " + x)
       }
       return nodeNone
     }
@@ -7431,6 +7425,10 @@ var Model = function() {
         if(node.op === Model.MATRIX || node.op === Model.BACKSLASH) {
           return node
         }
+        if(isRepeating(node) && option(options, "convertRepeatingDecimalToFraction")) {
+          node = repeatingDecimalToFraction(options, node);
+          return node
+        }
         var mv = bigZero;
         var args = [];
         node.args.forEach(function(n) {
@@ -7441,7 +7439,7 @@ var Model = function() {
           }
         });
         var isMixedNumber = node.isMixedNumber;
-        var isRepeating = node.isRepeating;
+        var isRepeatingFlag = node.isRepeating;
         if(!isZero(mv) || args.length === 0) {
           args.unshift(numberNode(options, mv))
         }
@@ -7452,7 +7450,7 @@ var Model = function() {
         node.isMixedNumber = isMixedNumber;
         node = flattenNestedNodes(node);
         node.isMixedNumber = isMixedNumber;
-        node.isRepeating = isRepeating;
+        node.isRepeating = isRepeatingFlag;
         return sort(node)
       }, multiplicative:function(node) {
         assert(node.op !== Model.DIV, "2000: Divsion should be eliminated during parsing");
@@ -7502,7 +7500,7 @@ var Model = function() {
             }
           }
         });
-        var isRepeating = node.isRepeating;
+        var isRepeatingFlag = node.isRepeating;
         if(args.length === 0) {
           node = nodeOne
         }else {
@@ -7515,7 +7513,7 @@ var Model = function() {
         if(hasPM) {
           node = unaryNode(Model.PM, [node])
         }
-        node.isRepeating = isRepeating;
+        node.isRepeating = isRepeatingFlag;
         return node
       }, unary:function(node) {
         switch(node.op) {
@@ -7793,31 +7791,35 @@ var Model = function() {
       normalizedNodes[rootNid] = node;
       return node
     }
-    function markSympy(node) {
+    function markSympy(node, markNumberType) {
       var flags = Model.flags;
       if(flags.hasNone) {
       }else {
         if(flags.hasRel) {
           node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
         }else {
-          if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
-            if(flags.hasTrig) {
-              node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
-            }
-            if(flags.hasHyperTrig) {
-              node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
-            }
-            if(flags.hasLog) {
-              node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
-            }
-            if(flags.hasExpo) {
-              node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
-            }
-            if(flags.hasFrac) {
-              node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
-            }
+          if(markNumberType && (node.op !== Model.PAREN && (mathValue(normalize(options, node), true) || variablePart(node) === null))) {
+            node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
           }else {
-            node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+            if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
+              if(flags.hasTrig) {
+                node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+              }
+              if(flags.hasHyperTrig) {
+                node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+              }
+              if(flags.hasLog) {
+                node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+              }
+              if(flags.hasExpo) {
+                node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+              }
+              if(flags.hasFrac) {
+                node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
+              }
+            }else {
+              node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+            }
           }
         }
       }
@@ -7867,7 +7869,7 @@ var Model = function() {
         var args = [];
         forEach(node.args, function(n) {
           Model.flags = {};
-          args = args.concat(markSympy(normalizeSympy(options, n)))
+          args = args.concat(markSympy(normalizeSympy(options, n), true))
         });
         Model.flags = {hasNone:true};
         return Object.assign({}, node, newNode(node.op, args))
@@ -7881,7 +7883,7 @@ var Model = function() {
       }}), root.location);
       normalizeSympyLevel--;
       if(normalizeSympyLevel === 0) {
-        node = markSympy(node)
+        node = markSympy(node, true)
       }
       return node
     }
@@ -8096,10 +8098,10 @@ var Model = function() {
         });
         var op = node.op === Model.SUB ? Model.ADD : node.op;
         var isMixedNumber = node.isMixedNumber;
-        var isRepeating = node.isRepeating;
+        var isRepeatingFlag = node.isRepeating;
         node = binaryNode(op, args, true);
         node.isMixedNumber = isMixedNumber;
-        node.isRepeating = isRepeating;
+        node.isRepeating = isRepeatingFlag;
         if(node.op === Model.PM || node.op === Model.BACKSLASH) {
           return node
         }
@@ -8647,7 +8649,7 @@ var Model = function() {
       return node
     }
     function isRepeating(node) {
-      assert(node.op === Model.NUM, "2000: Internal error.");
+      assert(node && isAdditive(node), "2000: Internal error.");
       return node.isRepeating
     }
     function findRepeatingPattern(s, p, x) {
@@ -8670,6 +8672,22 @@ var Model = function() {
         s = s.substring(1);
         return findRepeatingPattern(s, p, x)
       }
+    }
+    function repeatingDecimalToFraction(options, node) {
+      assert(isRepeating(node), "2000: Internal error.");
+      assert(node.op === Model.ADD && node.args[0].op === Model.NUM, "2000: Internal error.");
+      var decimalPart = node.args[0].args[0];
+      var repeatingPart = node.args[1].args[0].args[0];
+      var decimalPos = indexOf(decimalPart, ".");
+      repeatingPart = findRepeatingPattern(repeatingPart);
+      var decimalPlaces = decimalPart.length - decimalPos - 1;
+      var repeatingPlaces = repeatingPart.length;
+      var numer = numberNode(options, repeatingPart);
+      var denom = addNode([binaryNode(Model.POW, [numberNode(options, "10"), numberNode(options, repeatingPlaces)]), nodeMinusOne]);
+      var scaleNode = newNode(Model.POW, [numberNode(options, "10"), negate(numberNode(options, decimalPlaces))]);
+      node = multiplyNode([scaleNode, fractionNode(numer, denom)]);
+      node = addNode([numberNode(options, decimalPart), node]);
+      return node
     }
     function isLessThan(n1, n2) {
       if(n1 && n1.op !== undefined) {
@@ -10179,12 +10197,12 @@ var Model = function() {
         }
       }
       return visit(options, root, {name:"mathValue", numeric:function(node) {
-        if(isUndefined(node) || isRepeating(node)) {
+        if(isUndefined(node)) {
           return null
         }
         return toDecimal(node.args[0])
       }, additive:function(node) {
-        if(node.op === Model.PM) {
+        if(node.op === Model.PM || isRepeating(node)) {
           return null
         }
         var val = bigZero;
@@ -11712,6 +11730,7 @@ var Model = function() {
     }
     var n1b, n2b, n1t, n2t;
     var v1, v2;
+    var convertRepeatingDecimalToFraction = option(options, "convertRepeatingDecimalToFraction", true);
     if(n1.op === Model.PM && n1.args.length > 1) {
       n1b = simplify(options, expand(options, normalize(options, n1.args[0])));
       n1t = simplify(options, expand(options, normalize(options, n1.args[1])));
@@ -11740,6 +11759,7 @@ var Model = function() {
         v2 = mathValue(options, n2b, true, true)
       }
     }
+    option(options, "convertRepeatingDecimalToFraction", convertRepeatingDecimalToFraction);
     if(isUndefined(n1b) || isUndefined(n2b)) {
       result = false;
       return inverseResult ? !result : result
@@ -12821,6 +12841,8 @@ var MathCore = function() {
       case "ignoreUnits":
       ;
       case "compareGrouping":
+      ;
+      case "convertRepeatingDecimalToFraction":
         if(typeof v === "undefined" || typeof v === "boolean") {
           break
         }
