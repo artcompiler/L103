@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 001b065
+ * Mathcore unversioned - 5450e31
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3215,7 +3215,7 @@ var Model = function() {
       var lastSeparatorIndex, lastSignificantIndex;
       var separatorCount = 0;
       var numberFormat = "integer";
-      var hasLeadingZero, hasTrailingZero;
+      var hasLeadingZero = 0, hasTrailingZero;
       if(n0 === ".") {
         assert(false, message(1004, [n0, n0.charCodeAt(0)]))
       }
@@ -3235,9 +3235,6 @@ var Model = function() {
             numberFormat = "decimal";
             if(separatorCount && lastSeparatorIndex !== i - 4) {
               assert(false, message(1005))
-            }
-            if(n2 === "0") {
-              hasLeadingZero = true
             }
             lastSignificantIndex = n2.length;
             lastSeparatorIndex = i;
@@ -3266,6 +3263,15 @@ var Model = function() {
           }
         }
       }
+      hasLeadingZero = 0;
+      var done = false;
+      n2.split("").forEach(function(d) {
+        if(+d === 0 && !done) {
+          hasLeadingZero++
+        }else {
+          done = true
+        }
+      });
       n2 = new BigDecimal(n2);
       if(doScale) {
         var scale = Model.option(options, "decimalPlaces");
@@ -8679,9 +8685,10 @@ var Model = function() {
       var decimalPart = node.args[0].args[0];
       var repeatingPart = node.args[1].args[0].args[0];
       var decimalPos = indexOf(decimalPart, ".");
+      var leadingZeros = node.args[1].args[0].hasLeadingZero || 0;
       repeatingPart = findRepeatingPattern(repeatingPart);
       var decimalPlaces = decimalPart.length - decimalPos - 1;
-      var repeatingPlaces = repeatingPart.length;
+      var repeatingPlaces = repeatingPart.length + leadingZeros;
       var numer = numberNode(options, repeatingPart);
       var denom = addNode([binaryNode(Model.POW, [numberNode(options, "10"), numberNode(options, repeatingPlaces)]), nodeMinusOne]);
       var scaleNode = newNode(Model.POW, [numberNode(options, "10"), negate(numberNode(options, decimalPlaces))]);
