@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 5450e31
+ * Mathcore unversioned - 61ad1d7
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -6292,7 +6292,7 @@ var Model = function() {
         return null
       }, variable:function(node) {
         var val;
-        if(mathValue(options, node, true) === null) {
+        if(mathValue(options, node, true) === null && node.args[0] !== "i") {
           return node
         }
         return null
@@ -7804,7 +7804,7 @@ var Model = function() {
         if(flags.hasRel) {
           node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
         }else {
-          if(markNumberType && (node.op !== Model.PAREN && (mathValue(normalize(options, node), true) || variablePart(node) === null))) {
+          if(markNumberType && (node.op !== Model.PAREN && (mathValue(options, normalize(options, node), true) || variablePart(node) === null))) {
             node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
           }else {
             if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
