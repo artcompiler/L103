@@ -3657,7 +3657,12 @@ var Model = function() {
           return newNode(Model.FORMAT, [braceExpr()]);
         case TK_OVERLINE:
           next();
-          return newNode(Model.OVERLINE, [braceExpr()]);
+          eat(TK_LEFTBRACE);
+          var numStr = lexeme();
+          eat(TK_NUM);
+          eat(TK_RIGHTBRACE);
+          return newNode(Model.OVERLINE, [newNode(Model.NUM, [numStr])]);
+          return node;
         case TK_DOT:
           next();
           return newNode(Model.DOT, [braceExpr()]);
