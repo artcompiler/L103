@@ -552,7 +552,7 @@ let transformer = (function() {
       }, d, function (err, val) {
         resume(err, {
           method: "isTrue",
-          input: d,
+          settings: options.settings,
           result: val.result,
         });
       });
@@ -562,7 +562,7 @@ let transformer = (function() {
         validations[i].push({
           type: "method",
           method: "istrue",
-          settings: options.settings,
+          settings: val[i].settings,
           result: val[i].result,
         });
       });
@@ -582,7 +582,7 @@ let transformer = (function() {
       }, d, function (err, val) {
         resume(err, {
           method: "validSyntax",
-          input: d,
+          settings: options.settings,
           result: val.result,
         });
       });
@@ -592,7 +592,7 @@ let transformer = (function() {
         validations[i].push({
           type: "method",
           method: "isvalid",
-          settings: options.settings,
+          settings: val[i].settings,
           result: val[i].result,
         });
       });
@@ -612,7 +612,7 @@ let transformer = (function() {
       }, d, function (err, val) {
         resume(err, {
           method: "isSimplified",
-          input: d,
+          settings: options.settings,
           result: val.result,
         });
       });
@@ -622,7 +622,7 @@ let transformer = (function() {
         validations[i].push({
           type: "method",
           method: "simplified",
-          settings: options.settings,
+          settings: val[i].settings,
           result: val[i].result,
         });
       });
@@ -642,7 +642,7 @@ let transformer = (function() {
       }, d, function (err, val) {
         resume(err, {
           method: "isExpanded",
-          input: d,
+          settings: options.settings,
           result: val.result,
         });
       });
@@ -652,6 +652,7 @@ let transformer = (function() {
         validations[i].push({
           type: "method",
           method: "expanded",
+          settings: val[i].settings,
           result: val[i].result,
         });
       });
@@ -671,7 +672,7 @@ let transformer = (function() {
       }, d, function (err, val) {
         resume(err, {
           method: "isFactorised",
-          input: d,
+          settings: options.settings,
           result: val.result,
         });
       });
@@ -681,7 +682,7 @@ let transformer = (function() {
         validations[i].push({
           type: "method",
           method: "factored",
-          settings: options.settings,
+          settings: val[i].settings,
           result: val[i].result,
         });
       });
@@ -781,7 +782,7 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
-    var errs = []; 
+    var errs = [];
     options.settings.compareSides = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
@@ -856,9 +857,6 @@ let transformer = (function() {
   }
   function literal(node, options, resume) {
     var errs = [];
-    if (!options.settings) {
-      options.settings = {};
-    }
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
@@ -879,6 +877,7 @@ let transformer = (function() {
             method: "literal",
             value: value,
             result: val.result,
+            settings: options.settings,
           });
         });
       }, (err, val) => {
@@ -887,8 +886,8 @@ let transformer = (function() {
           validations[i].push({
             type: "method",
             method: "literal",
-            settings: options.settings,
-            value: value,
+            settings: val[i].settings,
+            value: val[i].value,
             result: val[i].result,
           });
         });
@@ -921,6 +920,7 @@ let transformer = (function() {
           }
           resume(err, {
             method: "equivSymbolic",
+            settings: options.settings,
             value: value,
             result: val.result,
           });
@@ -931,8 +931,8 @@ let transformer = (function() {
           validations[i].push({
             type: "method",
             method: "symbolic",
-            settings: options.settings,
-            value: value,
+            settings: val[i].settings,
+            value: val[i].value,
             result: val[i].result,
           });
         });
@@ -964,6 +964,7 @@ let transformer = (function() {
           resume(err, {
             method: "equivSyntax",
             value: value,
+            settings: options.settings,
             result: val.result,
           });
         });
@@ -973,8 +974,8 @@ let transformer = (function() {
           validations[i].push({
             type: "method",
             method: "syntax",
-            settings: options.settings,
-            value: value,
+            settings: val[i].settings,
+            value: val[i].value,
             result: val[i].result,
           });
         });
@@ -1006,6 +1007,7 @@ let transformer = (function() {
           resume(err, {
             method: "isUnit",
             value: value,
+            settings: options.settings,
             result: val.result,
           });
         });
@@ -1015,8 +1017,8 @@ let transformer = (function() {
           validations[i].push({
             type: "method",
             method: "isunit",
-            settings: options.settings,
-            value: value,
+            settings: val[i].settings,
+            value: val[i].value,
             result: val[i].result,
           });
         });
@@ -1048,6 +1050,7 @@ let transformer = (function() {
           resume(err, {
             method: "equivValue",
             value: value,
+            settings: options.settings,
             result: val.result,
           });
         });
@@ -1057,8 +1060,8 @@ let transformer = (function() {
           validations[i].push({
             type: "method",
             method: "numeric",
-            settings: options.settings,
-            value: value,
+            settings: val[i].settings,
+            value: val[i].value,
             result: val[i].result,
           });
         });
@@ -1359,6 +1362,7 @@ let transformer = (function() {
   }
   function rubric(node, options, resume) {
     options.validations = [];
+    options.clearSettings = true;
     visit(node.elts[1], options, function (err2, val2) {
       options.input = val2.input;
       options.rating = val2.rating;
@@ -1458,7 +1462,12 @@ let transformer = (function() {
     });
   }
   function list(node, options, resume) {
+    let clearSettings = options.clearSettings;
     if (node.elts && node.elts.length > 1) {
+      if (clearSettings) {
+        options.settings = {};  // Reset for each scorer.
+        options.clearSettings = false;
+      }
       visit(node.elts[0], options, function (err1, val1) {
         node = {
           tag: "LIST",
@@ -1471,6 +1480,10 @@ let transformer = (function() {
         });
       });
     } else if (node.elts && node.elts.length > 0) {
+      if (clearSettings) {
+        options.settings = {};  // Reset for each scorer.
+        options.clearSettings = false;
+      }
       visit(node.elts[0], options, function (err1, val1) {
         let val = [val1];
         resume([].concat(err1), val);
@@ -1508,7 +1521,7 @@ let transformer = (function() {
         let val = {
           input: input,
           rating: rating,
-        }
+        };
         resume([].concat(err1), val);
       });
     }
@@ -1622,10 +1635,10 @@ let transformer = (function() {
             env: env
           },
         }, expr, function (err, val) {
-          return resume([], val.result);
+          resume([], val.result);
         });
       } else {
-        return resume([], expr);
+        resume([], expr);
       }
     }
     function generateDataFromArgs(keys, args) {
@@ -1706,7 +1719,7 @@ let transformer = (function() {
     return null;
   }
   function topEnv(ctx) {
-    return ctx.env[ctx.env.length-1]
+    return ctx.env[ctx.env.length-1];
   }
   function lambda(node, options, resume) {
     // Return a function value.
@@ -1911,7 +1924,7 @@ let transformer = (function() {
     "CONTEXT" : context,
     "TEMPLATE" : template,
     "PARAMS" : params,
-  }
+  };
   return transform;
 });
 let render = (function() {
@@ -2009,7 +2022,7 @@ export let compiler = (function () {
       let options = {
         data: data,
         config: config,
-      };      
+      };
       transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
