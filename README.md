@@ -70,10 +70,10 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
 ### Running automated tests against a remote deployment
 
 * Get the Graffiticode host app (https://github.com/graffiticode/graffiticode)
-* Set the environment variable DATABASE_URL to
-"postgres://ucuhs5vbv75b95:p678afd5db29e2af04cbeceeef42a3161d402176e31fc245378c0aa9ac7f75d71@ec2-3-212-48-221.compute-1.amazonaws.com:5432/d30jtcnfqhdl65"
-* Set the environment variable API_HOST to the URL of a remote API gateway that supports L107
-* Set the environment variable LOCAL_COMPILES to false
+* Set the environment variable `DATABASE_URL` to
+`postgres://ucuhs5vbv75b95:p678afd5db29e2af04cbeceeef42a3161d402176e31fc245378c0aa9ac7f75d71@ec2-3-212-48-221.compute-1.amazonaws.com:5432/d30jtcnfqhdl65`
+* Set the environment variable `API_HOST` to the URL of a remote API gateway that supports L107
+* Set the environment variable `LOCAL_COMPILES` to false
 * Build and run Graffiticode
 * Open a new terminal window and cd to ./L107
 * Make sure that in ./tools/test.js that TEST_GATEWAY is pointing to your local instance of Graffiticode. E.g.
