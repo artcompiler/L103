@@ -5,6 +5,7 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
 ### Getting started
 
 * Get, build and start the Graffiticode host app (https://github.com/graffiticode/graffiticode).
+* Get, build and start the Graffiticode API (https://github.com/graffiticode/api).
 * Clone and initialize L107.
   * `$ git clone git@github.com:artcompiler/L107.git`
   * `$ cd L107`
@@ -65,3 +66,20 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
 * Pull and build the latest commits from the remote repo:
   * `$ git pull origin master`
   * `$ make dev`
+
+### Running automated tests against a remote deployment
+
+* Get the Graffiticode host app (https://github.com/graffiticode/graffiticode)
+* Set the environment variable DATABASE_URL to
+"postgres://ucuhs5vbv75b95:p678afd5db29e2af04cbeceeef42a3161d402176e31fc245378c0aa9ac7f75d71@ec2-3-212-48-221.compute-1.amazonaws.com:5432/d30jtcnfqhdl65"
+* Set the environment variable API_HOST to the URL of a remote API gateway that supports L107
+* Set the environment variable LOCAL_COMPILES to false
+* Build and run Graffiticode
+* Open a new terminal window and cd to ./L107
+* Make sure that in ./tools/test.js that TEST_GATEWAY is pointing to your local instance of Graffiticode. E.g.
+  `const TEST_GATEWAY = 'http://localhost:3000/';`
+* To verify that everything is set up: `$ make smoke`
+* To run all tests: `$ make test`
+
+
+
