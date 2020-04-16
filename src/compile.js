@@ -782,7 +782,7 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
-    var errs = []; 
+    var errs = [];
     options.settings.compareSides = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
@@ -1362,6 +1362,7 @@ let transformer = (function() {
   }
   function rubric(node, options, resume) {
     options.validations = [];
+    options.clearSettings = true;
     visit(node.elts[1], options, function (err2, val2) {
       options.input = val2.input;
       options.rating = val2.rating;
@@ -1461,8 +1462,12 @@ let transformer = (function() {
     });
   }
   function list(node, options, resume) {
+    let clearSettings = options.clearSettings;
     if (node.elts && node.elts.length > 1) {
-      options.settings = {};  // Reset for each scorer.
+      if (clearSettings) {
+        options.settings = {};  // Reset for each scorer.
+        options.clearSettings = false;
+      }
       visit(node.elts[0], options, function (err1, val1) {
         node = {
           tag: "LIST",
@@ -1475,7 +1480,10 @@ let transformer = (function() {
         });
       });
     } else if (node.elts && node.elts.length > 0) {
-      options.settings = {};  // Reset for each scorer.
+      if (clearSettings) {
+        options.settings = {};  // Reset for each scorer.
+        options.clearSettings = false;
+      }
       visit(node.elts[0], options, function (err1, val1) {
         let val = [val1];
         resume([].concat(err1), val);
@@ -2014,7 +2022,7 @@ export let compiler = (function () {
       let options = {
         data: data,
         config: config,
-      };      
+      };
       transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));

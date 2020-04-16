@@ -3,6 +3,7 @@ SUBPROJ := ./mathcore ./latexsympy
 default: build-dev start
 
 build:
+	npm run prebuild
 	npm run build
 
 start: build

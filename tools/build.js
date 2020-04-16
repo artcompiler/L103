@@ -1,5 +1,5 @@
-import fs from "fs";
-import {execSync} from "child_process";
+const fs = require('fs');
+const {execSync} = require('child_process');
 
 // Current best rule sets
 const latexRulesID = "epLtg4YeVh5";
@@ -14,7 +14,7 @@ function rmdir(path) {
       if (fs.statSync(filePath).isFile()) {
         fs.unlinkSync(filePath);
       } else {
-	rmdir(filePath);
+        rmdir(filePath);
       }
     }
   }
@@ -31,7 +31,7 @@ function cldir(path) {
 }
 
 function exec(cmd, args) {
-  execSync(cmd, args);
+  return execSync(cmd, args);
 }
 
 function clean() {
@@ -83,4 +83,17 @@ function build(debug) {
   console.log("Build completed in " + (Date.now() - t0) + " ms");
 }
 
-build(true);
+function prebuild() {
+  const commit = String(exec('git rev-parse HEAD')).trim().slice(0, 7);
+  const build = {
+    'name': 'L107',
+    'commit': commit,
+  };
+  fs.writeFile('build.json', JSON.stringify(build, null, 2), () => {});
+}
+
+if (process.argv.includes('--prebuild')) {
+  prebuild();
+} else {
+  build();
+}
