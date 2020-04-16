@@ -1,19 +1,15 @@
 SUBPROJ := ./mathcore ./latexsympy
 
-default: build-dev start
+default: build start
 
 build:
-	npm run prebuild
-	npm run build
+	npm run build-dev
 
 start: build
 	npm start
 
 watch: build
 	npm run watch
-
-build-dev:
-	npm run build-dev
 
 smoke:
 	npm run smoke

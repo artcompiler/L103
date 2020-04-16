@@ -45,6 +45,7 @@ function compile() {
   if (process.argv.includes("--dev")) {
     exec("cp ./mathcore/lib/mathcore.js ./src/mathcore.js");
     exec("cp ./latexsympy/build/spokenmath.js ./src/latexsympy.js");
+    prebuild();
   }
   exec("babel src --out-dir lib");
 }
