@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 61d9531
+ * Mathcore unversioned - 4ada1f7
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
