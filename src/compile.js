@@ -545,6 +545,8 @@ let transformer = (function() {
     }
     let input = options.input;
     let validations = options.validations;
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isTrue",
@@ -557,6 +559,7 @@ let transformer = (function() {
         });
       });
     }, (err, val) => {
+      options.clearSettings = clearSettings;
       input.forEach((v, i) => {
         validations[i] = validations[i] || [];
         validations[i].push({
@@ -575,6 +578,8 @@ let transformer = (function() {
     }
     let input = options.input;
     let validations = options.validations;
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "validSyntax",
@@ -587,6 +592,7 @@ let transformer = (function() {
         });
       });
     }, (err, val) => {
+      options.clearSettings = clearSettings;
       input.forEach((v, i) => {
         validations[i] = validations[i] || [];
         validations[i].push({
@@ -605,6 +611,8 @@ let transformer = (function() {
     }
     let input = options.input;
     let validations = options.validations;
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isSimplified",
@@ -617,6 +625,7 @@ let transformer = (function() {
         });
       });
     }, (err, val) => {
+      options.clearSettings = clearSettings;
       input.forEach((v, i) => {
         validations[i] = validations[i] || [];
         validations[i].push({
@@ -635,6 +644,8 @@ let transformer = (function() {
     }
     let input = options.input;
     let validations = options.validations;
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isExpanded",
@@ -647,6 +658,7 @@ let transformer = (function() {
         });
       });
     }, (err, val) => {
+      options.clearSettings = clearSettings;
       input.forEach((v, i) => {
         validations[i] = validations[i] || [];
         validations[i].push({
@@ -665,6 +677,8 @@ let transformer = (function() {
     }
     let input = options.input;
     let validations = options.validations;
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     mapList(input, (d, resume) => {
       MathCore.evaluateVerbose({
         method: "isFactorised",
@@ -677,6 +691,7 @@ let transformer = (function() {
         });
       });
     }, (err, val) => {
+      options.clearSettings = clearSettings;
       input.forEach((v, i) => {
         validations[i] = validations[i] || [];
         validations[i].push({
@@ -857,6 +872,8 @@ let transformer = (function() {
   }
   function literal(node, options, resume) {
     var errs = [];
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
@@ -869,6 +886,7 @@ let transformer = (function() {
           options: options.settings,
           value: value,
         }, d, function (err, val) {
+          options.clearSettings = clearSettings;
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
             console.log("literal() errs=" + errs);
@@ -900,6 +918,8 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
@@ -914,6 +934,7 @@ let transformer = (function() {
           config: options.config,
           value: value,
         }, d, function (err, val) {
+          options.clearSettings = clearSettings;
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
             console.log("symbolic() errs=" + JSON.stringify(errs, null, 2));
@@ -945,6 +966,8 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
@@ -957,6 +980,7 @@ let transformer = (function() {
           options: options.settings,
           value: value,
         }, d, function (err, val) {
+          options.clearSettings = clearSettings;
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
             console.log("syntax() errs=" + JSON.stringify(errs));
@@ -988,6 +1012,8 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
@@ -1000,6 +1026,7 @@ let transformer = (function() {
           options: options.settings,
           value: value,
         }, d, function (err, val) {
+          options.clearSettings = clearSettings;
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
             console.log("syntax() errs=" + JSON.stringify(errs));
@@ -1031,6 +1058,8 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
       let input = options.input;
@@ -1043,6 +1072,7 @@ let transformer = (function() {
           options: options.settings,
           value: value,
         }, d, function (err, val) {
+          options.clearSettings = clearSettings;
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
             console.log("numeric() errs=" + JSON.stringify(errs));
@@ -1466,7 +1496,6 @@ let transformer = (function() {
     if (node.elts && node.elts.length > 1) {
       if (clearSettings) {
         options.settings = {};  // Reset for each scorer.
-        options.clearSettings = false;
       }
       visit(node.elts[0], options, function (err1, val1) {
         node = {
@@ -1482,7 +1511,6 @@ let transformer = (function() {
     } else if (node.elts && node.elts.length > 0) {
       if (clearSettings) {
         options.settings = {};  // Reset for each scorer.
-        options.clearSettings = false;
       }
       visit(node.elts[0], options, function (err1, val1) {
         let val = [val1];

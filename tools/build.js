@@ -93,8 +93,4 @@ function prebuild() {
   fs.writeFile('build.json', JSON.stringify(build, null, 2), () => {});
 }
 
-if (process.argv.includes('--prebuild')) {
-  prebuild();
-} else {
-  build();
-}
+build();
