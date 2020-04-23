@@ -1310,6 +1310,16 @@ let transformer = (function() {
       resume(errs, data);
     });
   }
+  function ast(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      try {
+        val = JSON.parse(val);
+      } catch (x) {
+        err = "Unable to parse ast=" + val;
+      }
+      resume([].concat(err), val);
+    });
+  }
   function latex(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       if (val.indexOf("\\text") >= 0) {
@@ -1513,6 +1523,7 @@ let transformer = (function() {
       });
     } else {
       visit(node.elts[0], options, function (err1, val1) {
+        val1 = [].concat(val1);
         let rating = [];
         let input = options.data && Object.keys(options.data).length !== 0 && isArray(options.data) ? options.data : val1;
         input.forEach(i => {
@@ -1842,6 +1853,7 @@ let transformer = (function() {
     "NUM": num,
     "IDENT": ident,
     "BOOL": bool,
+    "AST": ast,
     "LIST": list,
     "RECORD": record,
     "BINDING": binding,
@@ -1995,7 +2007,6 @@ let render = (function() {
   }
   return render;
 })();
-
 
 function statusCodeFromErrors(errs) {
   let statusCode;
