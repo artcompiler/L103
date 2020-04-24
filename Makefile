@@ -15,7 +15,7 @@ smoke:
 	npm run smoke
 
 test:
-	npm run test
+	npm run test $(color)
 
 test-bugs:
 	npm run test-bugs
