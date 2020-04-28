@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 4ada1f7
+ * Mathcore unversioned - d147b1d
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7806,30 +7806,34 @@ var Model = function() {
       var flags = Model.flags;
       if(flags.hasNone) {
       }else {
-        if(flags.hasRel) {
-          node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
+        if(flags.hasSum || (flags.hasIntegral || (flags.hasDeriv || flags.hasLim))) {
+          node = newNode(Model.OPERATORNAME, [variableNode("CALC"), node])
         }else {
-          if(markNumberType && (node.op !== Model.PAREN && (mathValue(options, normalize(options, node), true) || variablePart(node) === null))) {
-            node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
+          if(flags.hasRel) {
+            node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
           }else {
-            if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
-              if(flags.hasTrig) {
-                node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
-              }
-              if(flags.hasHyperTrig) {
-                node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
-              }
-              if(flags.hasLog) {
-                node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
-              }
-              if(flags.hasExpo) {
-                node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
-              }
-              if(flags.hasFrac) {
-                node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
-              }
+            if(markNumberType && (node.op !== Model.PAREN && (mathValue(options, normalize(options, node), true) || variablePart(node) === null))) {
+              node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
             }else {
-              node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+              if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
+                if(flags.hasTrig) {
+                  node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+                }
+                if(flags.hasHyperTrig) {
+                  node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+                }
+                if(flags.hasLog) {
+                  node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+                }
+                if(flags.hasExpo) {
+                  node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+                }
+                if(flags.hasFrac) {
+                  node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
+                }
+              }else {
+                node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+              }
             }
           }
         }
@@ -7858,6 +7862,10 @@ var Model = function() {
         return Object.assign({}, node, newNode(node.op, args))
       }, unary:function(node) {
         Model.flags.hasAbs = Model.flags.hasAbs || node.op === Model.ABS;
+        Model.flags.hasSum = Model.flags.hasSum || node.op === Model.SUM;
+        Model.flags.hasIntegral = Model.flags.hasIntegral || node.op === Model.INTEGRAL;
+        Model.flags.hasDeriv = Model.flags.hasDeriv || node.op === Model.DERIV;
+        Model.flags.hasLim = Model.flags.hasLim || node.op === Model.LIM;
         Model.flags.hasTrig = Model.flags.hasTrig || (node.op === Model.SIN || (node.op === Model.COS || (node.op === Model.TAN || (node.op === Model.SEC || (node.op === Model.COT || (node.op === Model.CSC || (node.op === Model.ARCSIN || (node.op === Model.ARCCOS || (node.op === Model.ARCTAN || (node.op === Model.ARCSEC || (node.op === Model.ARCCSC || node.op === Model.ARCCOT)))))))))));
         Model.flags.hasHyperTrig = Model.flags.hasHyperTrig || (node.op === Model.SINH || (node.op === Model.COSH || (node.op === Model.TANH || (node.op === Model.SECH || (node.op === Model.COTH || (node.op === Model.CSCH || (node.op === Model.ARCSINH || (node.op === Model.ARCCOSH || (node.op === Model.ARCTANH || (node.op === Model.ARCSECH || (node.op === Model.ARCCSCH || node.op === Model.ARCCOTH)))))))))));
         var args = [];
