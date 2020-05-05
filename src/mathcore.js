@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - d147b1d
+ * Mathcore unversioned - 62f4ce5
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7804,35 +7804,39 @@ var Model = function() {
     }
     function markSympy(node, markNumberType) {
       var flags = Model.flags;
-      if(flags.hasNone) {
+      if(flags.hasSum || (flags.hasIntegral || (flags.hasDeriv || flags.hasLim))) {
+        node = newNode(Model.OPERATORNAME, [variableNode("CALC"), node])
       }else {
-        if(flags.hasSum || (flags.hasIntegral || (flags.hasDeriv || flags.hasLim))) {
-          node = newNode(Model.OPERATORNAME, [variableNode("CALC"), node])
+        if(flags.hasRel) {
+          node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
         }else {
-          if(flags.hasRel) {
-            node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
+          if(flags.hasMatrix) {
+            node = newNode(Model.OPERATORNAME, [variableNode("MATRIX"), node])
           }else {
-            if(markNumberType && (node.op !== Model.PAREN && (mathValue(options, normalize(options, node), true) || variablePart(node) === null))) {
-              node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
+            if(flags.hasComma) {
             }else {
-              if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
-                if(flags.hasTrig) {
-                  node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
-                }
-                if(flags.hasHyperTrig) {
-                  node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
-                }
-                if(flags.hasLog) {
-                  node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
-                }
-                if(flags.hasExpo) {
-                  node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
-                }
-                if(flags.hasFrac) {
-                  node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
-                }
+              if(markNumberType && (node.op !== Model.PAREN && (mathValue(options, normalize(options, node), true) || variablePart(node) === null))) {
+                node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
               }else {
-                node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+                if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
+                  if(flags.hasTrig) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+                  }
+                  if(flags.hasHyperTrig) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+                  }
+                  if(flags.hasLog) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+                  }
+                  if(flags.hasExpo) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+                  }
+                  if(flags.hasFrac) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
+                  }
+                }else {
+                  node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+                }
               }
             }
           }
@@ -7890,7 +7894,11 @@ var Model = function() {
           Model.flags = {};
           args = args.concat(markSympy(normalizeSympy(options, n), true))
         });
-        Model.flags = {hasNone:true};
+        if(node.op === Model.MATRIX) {
+          Model.flags = {hasMatrix:true}
+        }else {
+          Model.flags = {hasComma:true}
+        }
         return Object.assign({}, node, newNode(node.op, args))
       }, equals:function(node) {
         var args = [];
