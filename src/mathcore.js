@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 324de71
+ * Mathcore unversioned - a7e5a8e
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7317,13 +7317,11 @@ var Model = function() {
     }
     function radicalToPower(options, node) {
       if(node.op === Model.SQRT) {
-        console.log("node1" + JSON.stringify(node, null, 2));
         var base = node.args[0];
         var nthRoot = node.args[1];
         nthRoot.numberFormat = "integer";
         node.op = Model.POW;
-        node.args = [base, newNode(Model.FRAC, [nodeOne, nthRoot])];
-        console.log("node2" + JSON.stringify(node, null, 2))
+        node.args = [base, newNode(Model.FRAC, [nodeOne, nthRoot])]
       }
       var args = [];
       forEach(node.args, function(arg) {
