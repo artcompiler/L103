@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 62f4ce5
+ * Mathcore unversioned - 324de71
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -7306,6 +7306,136 @@ var Model = function() {
       }
       return multiplyNode(args.concat(addNode(addArgs)))
     }
+    function crossMultiply(options, n1, n2) {
+      n1 = fractionize(options, together(options, n1));
+      n2 = fractionize(options, together(options, n2));
+      var n10n21 = newNode(Model.MUL, [n1.args[0], n2.args[1]]);
+      var n11n20 = newNode(Model.MUL, [n1.args[1], n2.args[0]]);
+      n10n21.isAlgebraic = true;
+      n11n20.isAlgebraic = true;
+      return[n10n21, n11n20]
+    }
+    function radicalToPower(options, node) {
+      if(node.op === Model.SQRT) {
+        console.log("node1" + JSON.stringify(node, null, 2));
+        var base = node.args[0];
+        var nthRoot = node.args[1];
+        nthRoot.numberFormat = "integer";
+        node.op = Model.POW;
+        node.args = [base, newNode(Model.FRAC, [nodeOne, nthRoot])];
+        console.log("node2" + JSON.stringify(node, null, 2))
+      }
+      var args = [];
+      forEach(node.args, function(arg) {
+        if(arg.op) {
+          arg = radicalToPower(options, arg)
+        }
+        args.push(arg)
+      });
+      node.args = args;
+      return node
+    }
+    function together(options, node) {
+      node = radicalToPower(options, node);
+      if(node.op === Model.POW) {
+        var base = node.args[0];
+        var expo = node.args[1];
+        base = together(options, base);
+        expo = together(options, expo);
+        if(base.op === Model.FRAC) {
+          node = newNode(Model.FRAC, [newNode(Model.POW, [base.args[0], expo]), newNode(Model.POW, [base.args[1], expo])])
+        }
+        if(expo.op === Model.FRAC) {
+          var numer = expo.args[0];
+          var denom = expo.args[1];
+          if(numer.op === Model.SUB && numer.args.length === 1) {
+            expo = newNode(Model.SUB, [newNode(Model.FRAC, [numer.args[0], denom])]);
+            node = newNode(Model.POW, [base, expo])
+          }
+        }
+        if(expo.op === Model.SUB && expo.args.length === 1) {
+          node = newNode(Model.FRAC, [nodeOne, newNode(Model.POW, [base, expo.args[0]])])
+        }
+      }
+      if(node.op === Model.FRAC) {
+        var numer = node.args[0];
+        var denom = node.args[1];
+        numer = together(options, numer);
+        denom = together(options, denom);
+        if(denom.op === Model.FRAC) {
+          node = multiplyNode([numer, newNode(Model.FRAC, [denom.args[1], denom.args[0]])])
+        }else {
+          if(numer.op === Model.FRAC) {
+            node = multiplyNode([numer, newNode(Model.FRAC, [nodeOne, denom])])
+          }
+        }
+      }
+      if(node.op === Model.MUL) {
+        var numers = [];
+        var denoms = [];
+        forEach(node.args, function(arg) {
+          arg = together(options, arg);
+          if(arg.op === Model.FRAC) {
+            numers.push(arg.args[0]);
+            denoms.push(arg.args[1])
+          }else {
+            numers.push(arg)
+          }
+        });
+        if(denoms.length) {
+          node = newNode(Model.FRAC, [multiplyNode(numers), multiplyNode(denoms)])
+        }
+      }
+      if(node.op === Model.SUB && node.args.length === 2) {
+        var minuend = node.args[0];
+        var subtrahend = node.args[1];
+        minuend = together(options, minuend);
+        subtrahend = together(options, subtrahend);
+        if(subtrahend.op === Model.FRAC) {
+          node = addNode([minuend, newNode(Model.FRAC, [newNode(Model.SUB, [subtrahend.args[0]]), subtrahend.args[1]])])
+        }else {
+          node = addNode([minuend, newNode(Model.SUB, [subtrahend])])
+        }
+      }
+      if(node.op === Model.SUB && node.args.length === 1) {
+        node.args[0] = together(options, node.args[0]);
+        if(node.args[0].op === Model.FRAC) {
+          var numer = node.args[0].args[0];
+          var denom = node.args[0].args[1];
+          node = newNode(Model.FRAC, [newNode(Model.SUB, [numer]), denom])
+        }
+      }
+      if(node.op === Model.ADD) {
+        var numers = [];
+        var denoms = [];
+        var hasFraction;
+        forEach(node.args, function(arg) {
+          arg = together(options, arg);
+          if(arg.op === Model.FRAC) {
+            numers.push(arg.args[0]);
+            denoms.push(arg.args[1]);
+            hasFraction = true
+          }else {
+            numers.push(arg);
+            denoms.push(nodeOne)
+          }
+        });
+        if(hasFraction) {
+          for(var i = 0;i < numers.length;i++) {
+            var commonDenomFactor = denoms.slice(0, i).concat(denoms.slice(i + 1, denoms.length + 1));
+            numers[i] = multiplyNode(commonDenomFactor.concat(numers[i]))
+          }
+          node = newNode(Model.FRAC, [addNode(numers), multiplyNode(denoms)])
+        }
+      }
+      return node
+    }
+    function fractionize(options, node) {
+      if(node.op !== Model.FRAC) {
+        node = newNode(Model.FRAC, [node, nodeOne])
+      }
+      return node
+    }
     function eraseCommonExpressions(options, n1, n2) {
       n1 = factorCommonExpressions(n1);
       n2 = factorCommonExpressions(n2);
@@ -7802,47 +7932,51 @@ var Model = function() {
       normalizedNodes[rootNid] = node;
       return node
     }
-    function markSympy(node, markNumberType) {
+    function tagNode(node) {
       var flags = Model.flags;
       if(flags.hasSum || (flags.hasIntegral || (flags.hasDeriv || flags.hasLim))) {
-        node = newNode(Model.OPERATORNAME, [variableNode("CALC"), node])
+        node.isCalculus = true
       }else {
         if(flags.hasRel) {
-          node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
+          node.isRelation = true
         }else {
           if(flags.hasMatrix) {
-            node = newNode(Model.OPERATORNAME, [variableNode("MATRIX"), node])
+            node.isMatrix = true
           }else {
             if(flags.hasComma) {
+              node.isComma = true
             }else {
-              if(markNumberType && (node.op !== Model.PAREN && (mathValue(options, normalize(options, node), true) || variablePart(node) === null))) {
-                node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
+              if(mathValue(options, normalize(options, node), true) || variablePart(node) === null) {
+                node.isNumeric = true
               }else {
-                if(flags.hasTrig || (flags.hasLog || (flags.hasHyperTrig || (flags.hasExpo || flags.hasFrac)))) {
+                if(flags.hasTrig || (flags.hasHyperTrig || (flags.hasExpo || flags.hasLog))) {
+                  node.isAlgebraic = false;
                   if(flags.hasTrig) {
-                    node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+                    node.hasTrig = true
                   }
                   if(flags.hasHyperTrig) {
-                    node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
-                  }
-                  if(flags.hasLog) {
-                    node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+                    node.hasHyperTrig = true
                   }
                   if(flags.hasExpo) {
-                    node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+                    node.hasExpo = true
                   }
-                  if(flags.hasFrac) {
-                    node = newNode(Model.OPERATORNAME, [variableNode("FRAC"), node])
+                  if(flags.hasLog) {
+                    node.hasLog = true
                   }
                 }else {
-                  node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+                  node.isAlgebraic = true
                 }
               }
             }
           }
         }
       }
-      return node
+      if(flags.hasAbs) {
+        node.hasAbs = true
+      }
+      if(flags.hasFrac) {
+        node.hasFrac = true
+      }
     }
     var normalizeSympyLevel = 0;
     function normalizeSympy(options, root) {
@@ -7892,7 +8026,7 @@ var Model = function() {
         var args = [];
         forEach(node.args, function(n) {
           Model.flags = {};
-          args = args.concat(markSympy(normalizeSympy(options, n), true))
+          args = args.concat(normalizeSympy(options, n))
         });
         if(node.op === Model.MATRIX) {
           Model.flags = {hasMatrix:true}
@@ -7910,7 +8044,7 @@ var Model = function() {
       }}), root.location);
       normalizeSympyLevel--;
       if(normalizeSympyLevel === 0) {
-        node = markSympy(node, true)
+        tagNode(node)
       }
       return node
     }
@@ -9437,6 +9571,10 @@ var Model = function() {
       }))))
     }
     function commonDenom(node) {
+      if(node.op !== Model.ADD) {
+        node = newNode(Model.ADD, [node])
+      }
+      assert(node.op === Model.ADD);
       var n0 = node.args;
       if(!isChemCore()) {
         var denoms = [];
@@ -11433,7 +11571,8 @@ var Model = function() {
     this.hasLikeFactorsOrTerms = hasLikeFactorsOrTerms;
     this.factorGroupingKey = factorGroupingKey;
     this.hint = hint;
-    this.eraseCommonExpressions = eraseCommonExpressions
+    this.eraseCommonExpressions = eraseCommonExpressions;
+    this.crossMultiply = crossMultiply
   }
   function degree(node, notAbsolute) {
     return visitor.degree(node, notAbsolute)
@@ -11486,6 +11625,7 @@ var Model = function() {
     if(node.location) {
       Assert.setLocation(node.location)
     }
+    Model.flags = {};
     node = visitor.normalizeSympy(options, node);
     Assert.setLocation(prevLocation);
     return node
@@ -11614,12 +11754,12 @@ var Model = function() {
     Assert.setLocation(prevLocation);
     return result
   }
-  function factors(options, node, env) {
+  function factors(options, node, env, ignorePrimeFactors, preserveNeg, factorAdditive) {
     var prevLocation = Assert.location;
     if(node.location) {
       Assert.setLocation(node.location)
     }
-    var result = visitor.factors(options, node, env);
+    var result = visitor.factors(options, node, env, ignorePrimeFactors, preserveNeg, factorAdditive);
     Assert.setLocation(prevLocation);
     return result
   }
@@ -11652,6 +11792,9 @@ var Model = function() {
   }
   function eraseCommonExpressions(options, n1, n2) {
     return visitor.eraseCommonExpressions(options, n1, n2)
+  }
+  function crossMultiply(options, n1, n2) {
+    return visitor.crossMultiply(options, n1, n2)
   }
   var env = Model.env;
   function precision(bd) {
@@ -12039,10 +12182,28 @@ var Model = function() {
     var inverseResult = option(options, "inverseResult");
     var strict = option(options, "strict");
     delete n1.env;
-    Model.flags = {};
     n1 = normalizeSympy(options, n1);
     n2 = normalizeSympy(options, n2);
+    if(n1.hasAbs || n2.hasAbs) {
+      var hasAbs = true
+    }
+    if(n1.isRelation && n2.isRelation) {
+    }else {
+      if(n1.isNumeric && n2.isNumeric) {
+      }else {
+        if((n1.isAlgebraic || n1.isNumeric) && (n2.isAlgebraic || n2.isNumeric)) {
+          var nn = crossMultiply(options, n1, n2);
+          n1 = nn[0];
+          n2 = nn[1]
+        }
+      }
+    }
+    n1 = markSympy(options, n1);
+    n2 = markSympy(options, n2);
     var node = newNode(Model.PAREN, [newNode(Model.COMMA, [n1, n2])]);
+    if(hasAbs) {
+      node.hasAbs = true
+    }
     node.lbrk = 40;
     node.rbrk = 41;
     evalSympy(node, options, function(err, val) {
@@ -12065,6 +12226,47 @@ var Model = function() {
         }
       }
     });
+    function markSympy(options, node) {
+      if(node.isCalculus) {
+        node = newNode(Model.OPERATORNAME, [variableNode("CALC"), node])
+      }else {
+        if(node.isRelation) {
+          node = newNode(Model.OPERATORNAME, [variableNode("REL"), node])
+        }else {
+          if(node.isMatrix) {
+            node = newNode(Model.OPERATORNAME, [variableNode("MATRIX"), node])
+          }else {
+            if(node.isComma) {
+              node = newNode(Model.OPERATORNAME, [variableNode("INTERVAL"), node])
+            }else {
+              if(node.isNumeric) {
+                node = newNode(Model.OPERATORNAME, [variableNode("NUM"), node])
+              }else {
+                if(node.hasTrig || (node.hasHyperTrig || (node.hasLog || node.hasExpo))) {
+                  if(node.hasTrig) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("TRIG"), node])
+                  }
+                  if(node.hasHyperTrig) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("HYPER"), node])
+                  }
+                  if(node.hasLog) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("LOG"), node])
+                  }
+                  if(node.hasExpo) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("EXPO"), node])
+                  }
+                }else {
+                  if(node.isAlgebraic) {
+                    node = newNode(Model.OPERATORNAME, [variableNode("DEFAULT"), node])
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      return node
+    }
     function compare(n1, n2, resume) {
       try {
         if(!strict) {
@@ -12172,8 +12374,6 @@ var Model = function() {
               var nn = eraseCommonExpressions(options, normalize(options, n1), normalize(options, n2));
               n1 = nn[0];
               n2 = nn[1];
-              var n1o = stripMetadata(n1o);
-              var n2o = stripMetadata(n2o);
               var mv1, mv2;
               if((mv1 = mathValue(options, n1, true)) && (mv2 = mathValue(options, n2, true))) {
                 n1 = scale(options, n1);
@@ -12263,9 +12463,8 @@ var Model = function() {
     var result;
     var syms = variables(normalize(options, expr));
     var symNode = Model.create(options, String(syms));
-    var flags = Model.flags;
     var assumption;
-    if(flags.hasAbs) {
+    if(expr.hasAbs) {
       assumption = "real"
     }else {
       assumption = "positive"
