@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - a7e5a8e
+ * Mathcore unversioned - 6434994
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12182,8 +12182,9 @@ var Model = function() {
     delete n1.env;
     n1 = normalizeSympy(options, n1);
     n2 = normalizeSympy(options, n2);
+    var hasAbs;
     if(n1.hasAbs || n2.hasAbs) {
-      var hasAbs = true
+      hasAbs = true
     }
     if(n1.isRelation && n2.isRelation) {
     }else {
