@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 6434994
+ * Mathcore unversioned - 3be18af
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -3358,8 +3358,8 @@ var Model = function() {
     }
     function isSimpleFraction(node) {
       if(node.op === Model.FRAC) {
-        var n0 = node.args[0];
-        var n1 = node.args[1];
+        var n0 = node.args[0].op === Model.SUB && (node.args[0].args.length === 1 && node.args[0].args[0]) || node.args[0];
+        var n1 = node.args[1].op === Model.SUB && (node.args[1].args.length === 1 && node.args[1].args[0]) || node.args[1];
         return n0.op === Model.NUM && (n0.numberFormat === "integer" && (n1.op === Model.NUM && n1.numberFormat === "integer"))
       }
       return false
@@ -4147,6 +4147,7 @@ var Model = function() {
                       if(isOne(args[0])) {
                         args.pop()
                       }else {
+                        args.pop();
                         expr = negate(expr)
                       }
                     }else {
@@ -5152,7 +5153,7 @@ var Model = function() {
       return false
     }
     if(n.op) {
-      if(n.op === Model.POW) {
+      if(n.op === Model.POW || isAdditive(n)) {
         n = n.args[0]
       }
       var cp = constantPart(n);
@@ -6449,7 +6450,7 @@ var Model = function() {
                 return false
               }
             }
-            if(node.numberFormat === "decimal") {
+            if(node.numberFormat === "decimal" || node.numberFormat === "integer") {
               if(length === undefined || (length === 0 && indexOf(node.args[0], ".") === -1 || length === node.args[0].substring(indexOf(node.args[0], ".") + 1).length)) {
                 return true
               }
@@ -6479,26 +6480,31 @@ var Model = function() {
             }
             break;
           case "\\fraction":
-            if(node.isFraction || node.isMixedNumber) {
+            if(node.isFraction || (node.isMixedNumber || node.numberFormat === "integer")) {
               return true
             }
             break;
           case "\\simpleFraction":
           ;
           case "\\nonMixedNumber":
-            if(node.isFraction) {
+            if(node.isFraction || node.numberFormat === "integer") {
               return true
             }
             break;
           case "\\mixedFraction":
           ;
           case "\\mixedNumber":
-            if(node.isMixedNumber) {
+            var mv;
+            if(node.isMixedNumber || node.numberFormat === "integer") {
               return true
+            }else {
+              if(node.isFraction && ((mv = mathValue(options, normalize(options, node), true)) && (mv.compareTo(bigMinusOne) === 1 && mv.compareTo(bigOne) === -1))) {
+                return true
+              }
             }
             break;
           case "\\fractionOrDecimal":
-            if(node.isFraction || (node.isMixedNumber || node.numberFormat === "decimal")) {
+            if(node.isFraction || (node.isMixedNumber || (node.numberFormat === "decimal" || node.numberFormat === "integer"))) {
               return true
             }
             break;
@@ -7605,13 +7611,31 @@ var Model = function() {
         }
         var args = [];
         var hasPM;
+        var negs = 0;
         forEach(node.args, function(n) {
           n = normalize(options, n);
           if(ast.intern(n) === ast.intern(nodeOne)) {
             return
           }
-          if(args.length > 0) {
+          if(option("normalizeArithmetic")) {
             if(isMinusOne(args[args.length - 1])) {
+              if(isMinusOne(n)) {
+                negs++;
+                return
+              }
+            }else {
+              if(n.op === Model.POW && (isMinusOne(n.args[1]) && isNeg(n.args[0]))) {
+                negs++;
+                n = newNode(n.op, [negate(n.args[0]), n.args[1]])
+              }else {
+                if(isNeg(n)) {
+                  negs++;
+                  n = negate(n)
+                }
+              }
+            }
+          }else {
+            if(args.length > 0 && isMinusOne(args[args.length - 1])) {
               if(isMinusOne(n)) {
                 args.pop();
                 return
@@ -7640,13 +7664,27 @@ var Model = function() {
           }
         });
         var isRepeatingFlag = node.isRepeating;
-        if(args.length === 0) {
-          node = nodeOne
-        }else {
-          if(args.length === 1) {
-            node = args[0]
+        var neg = negs % 2;
+        if(neg) {
+          if(args.length === 0) {
+            node = nodeMinusOne
           }else {
-            node = sort(binaryNode(node.op, args))
+            if(args.length === 1) {
+              node = multiplyNode([nodeMinusOne, args[0]])
+            }else {
+              args.unshift(nodeMinusOne);
+              node = sort(binaryNode(node.op, args))
+            }
+          }
+        }else {
+          if(args.length === 0) {
+            node = nodeOne
+          }else {
+            if(args.length === 1) {
+              node = args[0]
+            }else {
+              node = sort(binaryNode(node.op, args))
+            }
           }
         }
         if(hasPM) {
@@ -8335,7 +8373,12 @@ var Model = function() {
       }, multiplicative:function(node) {
         var args = [];
         forEach(node.args, function(n, i) {
-          args.push(sort(n))
+          if(isMinusOne(node.args[i - 1]) && isMinusOne(node.args[i])) {
+            args.pop();
+            args.push(nodeOne)
+          }else {
+            args.push(sort(n))
+          }
         });
         node = binaryNode(node.op, args);
         if(node.op === Model.FRAC || node.op === Model.COEFF) {
@@ -8576,6 +8619,9 @@ var Model = function() {
         return node
       }, unary:function(node) {
         var args = [];
+        if(node.op === Model.SUB) {
+          negate(n)
+        }
         forEach(node.args, function(n) {
           args = args.concat(sortLiteral(n))
         });
@@ -10743,8 +10789,7 @@ var Model = function() {
         }else {
           node = binaryNode(node.op, n0)
         }
-        if(node.op === Model.MATRIX) {
-          return node
+        if(node.op === Model.MATRIX || option("equivLiteral")) {
         }
         node = cancelTerms(node, "expand");
         node.isMixedNumber = isMixedNumber;
@@ -10763,13 +10808,27 @@ var Model = function() {
           n1 = expand(options, n1);
           n0 = n0.concat(unfold(n0.pop(), n1))
         });
+        args = n0;
+        var countMinusOne = 0;
+        n0 = [];
+        var normalizeArithmetic = option(options, "equivLiteral") && (option(options, "normalizeArithmetic") && args.length > 1);
+        forEach(args, function(n, i) {
+          if(normalizeArithmetic && isOne(n)) {
+          }else {
+            if(normalizeArithmetic && (args.length > 1 && isMinusOne(n))) {
+              countMinusOne++
+            }else {
+              n0.push(n)
+            }
+          }
+        });
+        if(countMinusOne % 2) {
+          n0.unshift(nodeMinusOne)
+        }
         if(n0.length < 2) {
           node = n0[0]
         }else {
           node = multiplyNode(n0)
-        }
-        if(node.op === Model.MATRIX) {
-          return node
         }
         return node;
         function unfold(lnode, rnode) {
@@ -12132,13 +12191,18 @@ var Model = function() {
   };
   Model.fn.equivLiteral = function equivLiteral(n1, n2, options) {
     var inverseResult = option(options, "inverseResult");
-    if(terms(n1).length !== terms(n2).length) {
+    if(terms(n1).length !== terms(n2).length && (!(n1.op === Model.MUL && isMinusOne(n1.args[0])) && (!(n2.op === Model.MUL && isMinusOne(n2.args[0])) && (!(n1.op === Model.SUB && n1.args.length === 1) && !(n2.op === Model.SUB && n2.args.length === 1))))) {
       return inverseResult ? true : false
     }
-    var ignoreOrder = option(options, "ignoreOrder");
     n1 = normalizeLiteral(options, n1);
     n2 = normalizeLiteral(options, n2);
-    if(ignoreOrder) {
+    if(option(options, "normalizeArithmetic")) {
+      option(options, "equivLiteral", true);
+      n1 = expand(options, normalize(options, n1));
+      n2 = expand(options, normalize(options, n2));
+      option(options, "equivLiteral", undefined)
+    }
+    if(option(options, "ignoreOrder")) {
       n1 = sortLiteral(n1);
       n2 = sortLiteral(n2)
     }
@@ -13003,7 +13067,7 @@ var MathCore = function() {
   function setTimeoutDuration(duration) {
     timeoutDuration = duration
   }
-  function validateOption(p, v) {
+  function validateOption(options, p, v) {
     switch(p) {
       case "field":
         switch(v) {
@@ -13098,6 +13162,15 @@ var MathCore = function() {
         }
         assert(false, message(3007, [p, JSON.stringify(v)]));
         break;
+      case "normalizeArithmetic":
+        Model.option(options, "ignoreTrailingZeros", true);
+        Model.option(options, "ignoreOrder", true);
+        Model.option(options, "ignoreCoefficientOne", true);
+        if(typeof v === "undefined" || typeof v === "boolean") {
+          break
+        }
+        assert(false, message(3007, [p, v]));
+        break;
       default:
         assert(false, message(3006, [p]));
         break
@@ -13107,7 +13180,7 @@ var MathCore = function() {
   function validateOptions(options) {
     if(options) {
       forEach(keys(options), function(option) {
-        validateOption(option, options[option])
+        validateOption(options, option, options[option])
       })
     }
   }

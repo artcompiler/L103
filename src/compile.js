@@ -740,6 +740,17 @@ let transformer = (function() {
     });
   }
 
+  function normalizeArithmetic(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    options.settings.normalizeArithmetic = true;
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      resume(errs, val1);
+    });
+  }
   function ignoreOrder(node, options, resume) {
     if (!options.settings) {
       options.settings = {};
@@ -1863,6 +1874,7 @@ let transformer = (function() {
     "DIV" : div,
     "POW" : pow,
     "IGNORE-ORDER" : ignoreOrder,
+    "NORMALIZE-ARITHMETIC" : normalizeArithmetic,
     "INVERSE-RESULT" : inverseResult,
     "RUBRIC" : rubric,
     "STYLE" : style,
@@ -1884,7 +1896,6 @@ let transformer = (function() {
     "DECIMAL-PLACES": decimalPlaces,
     "ALLOW-DECIMAL": allowDecimal,
     "ALLOW-EULERS-NUMBER": allowEulersNumber,
-    "IGNORE-ORDER": ignoreOrder,
     "IGNORE-COEFFICIENT-ONE": ignoreCoefficientOne,
     "COMPARE-SIDES": compareSides,
     "COMPARE-GROUPING": compareGrouping,

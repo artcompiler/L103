@@ -15,6 +15,7 @@ window.gcexports.globalLexicon = {
   "isvalid" : { "tk": 1, "name": "IS-VALID", "cls": "function", "length": 0 , "arity": 0 },
   "isunit" : { "tk": 1, "name": "IS-UNIT", "cls": "function", "length": 1 , "arity": 1 },
   "ignoreOrder" : { "tk": 1, "name": "IGNORE-ORDER", "cls": "function", "length": 1, "arity": 1 },
+  "normalizeArithmetic" : { "tk": 1, "name": "NORMALIZE-ARITHMETIC", "cls": "function", "length": 1, "arity": 1 },
   "inverseResult" : { "tk": 1, "name": "INVERSE-RESULT", "cls": "function", "length": 1 , "arity": 1 },
   "not" : { "tk": 1, "name": "INVERSE-RESULT", "cls": "function", "length": 1 , "arity": 1 },
   "allowDecimal" : { "tk": 1, "name": "ALLOW-DECIMAL", "cls": "function", "length": 1 , "arity": 1 },
