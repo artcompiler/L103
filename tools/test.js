@@ -107,7 +107,7 @@ const RED = -1;
 const YELLOW = 0;
 
 getTests(GREEN, function (err, testData) {
-  testData = testData.slice(0);
+  testData = testData.slice(0); // Slice off leading tests when wanting to get to a particular test.
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;

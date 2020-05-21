@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 3be18af
+ * Mathcore unversioned - 08db676
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -4964,6 +4964,7 @@ var Model = function() {
   var latexSympy = require("./latexsympy.js").Core;
   var http = require("http");
   var https = require("https");
+  var Decimal = require("decimal.js");
   var sympyRules = require("./sympyRules.js").sympyRules;
   function texToSympy(tex, resume) {
     var errs = [];
@@ -5005,13 +5006,13 @@ var Model = function() {
   messages[2016] = "Exponents should be wrapped in braces.";
   messages[2017] = "Units with different base units not allowed in a single expression. Found: %1";
   var visitor = new Visitor(ast);
-  var bigZero = new BigDecimal("0");
-  var bigOne = new BigDecimal("1");
-  var bigTwo = new BigDecimal("2");
-  var bigThree = new BigDecimal("3");
-  var bigFour = new BigDecimal("4");
-  var bigFive = new BigDecimal("5");
-  var bigMinusOne = new BigDecimal("-1");
+  var bigZero = new Decimal("0");
+  var bigOne = new Decimal("1");
+  var bigTwo = new Decimal("2");
+  var bigThree = new Decimal("3");
+  var bigFour = new Decimal("4");
+  var bigFive = new Decimal("5");
+  var bigMinusOne = new Decimal("-1");
   var options = {};
   var nodeZero = numberNode(options, "0");
   var nodeOne = numberNode(options, "1");
@@ -5127,7 +5128,7 @@ var Model = function() {
     if(n === null) {
       return null
     }else {
-      if(n instanceof BigDecimal) {
+      if(n instanceof Decimal) {
         if(n === null) {
           return null
         }
@@ -5165,34 +5166,34 @@ var Model = function() {
         return false
       }
     }else {
-      if(!(n instanceof BigDecimal)) {
+      if(!(n instanceof Decimal)) {
         return false
       }else {
         mv = n
       }
     }
-    return mv.compareTo(bigZero) < 0
+    return mv.cmp(bigZero) < 0
   }
   function numberNode(options, val, doScale, roundOnly, isRepeating) {
     assert(!(val instanceof Array), "2000: Expecting a scalar");
     var mv, node, minusOne;
     if(doScale) {
-      var scale = option(options, "decimalPlaces");
+      var scale = +option(options, "decimalPlaces");
       if(isRepeating) {
       }
       mv = toDecimal(val);
       if(isNeg(mv) && !isMinusOne(mv)) {
-        minusOne = bigMinusOne.setScale(scale, BigDecimal.ROUND_HALF_UP);
-        mv = bigMinusOne.multiply(mv)
+        minusOne = bigMinusOne.toDecimalPlaces(scale, Decimal.ROUND_HALF_UP);
+        mv = bigMinusOne.mul(mv)
       }
       if(mv !== null && (!roundOnly || mv.scale() > scale)) {
-        mv = mv.setScale(scale, BigDecimal.ROUND_HALF_UP)
+        mv = mv.toDecimalPlaces(scale, Decimal.ROUND_HALF_UP)
       }
     }else {
       mv = toDecimal(val);
       if(isNeg(mv) && !isMinusOne(mv)) {
         minusOne = bigMinusOne;
-        mv = bigMinusOne.multiply(mv)
+        mv = bigMinusOne.mul(mv)
       }
     }
     var numberFormat = isInteger(mv) && "integer" || "decimal";
@@ -5344,8 +5345,8 @@ var Model = function() {
     if(n === null) {
       return false
     }else {
-      if(n instanceof BigDecimal) {
-        return!bigE.compareTo(n)
+      if(n instanceof Decimal) {
+        return!bigE.cmp(n)
       }else {
         if(typeof n === "number") {
           return n === Math.E
@@ -5367,8 +5368,8 @@ var Model = function() {
     if(n === null) {
       return false
     }else {
-      if(n instanceof BigDecimal) {
-        return!bigZero.compareTo(n)
+      if(n instanceof Decimal) {
+        return!bigZero.cmp(n)
       }else {
         if(typeof n === "number") {
           return n === 0
@@ -5387,8 +5388,8 @@ var Model = function() {
     if(n === null) {
       return false
     }else {
-      if(n instanceof BigDecimal) {
-        return!bigOne.compareTo(n)
+      if(n instanceof Decimal) {
+        return!bigOne.cmp(n)
       }else {
         if(typeof n === "number") {
           return n === 1
@@ -5396,7 +5397,7 @@ var Model = function() {
           if(n.op === Model.NUM) {
             var mv = mathValue(options, n);
             if(mv) {
-              return!bigOne.compareTo(mv)
+              return!bigOne.cmp(mv)
             }
             return false
           }
@@ -5411,8 +5412,8 @@ var Model = function() {
       if(typeof n === "number") {
         return n === -1
       }else {
-        if(n instanceof BigDecimal) {
-          return!bigMinusOne.compareTo(n)
+        if(n instanceof Decimal) {
+          return!bigMinusOne.cmp(n)
         }else {
           if(n.op) {
             if(ast.intern(n) === nidMinusOne) {
@@ -5420,7 +5421,7 @@ var Model = function() {
             }
             var mv = mathValue(options, n, true);
             if(mv) {
-              return!bigMinusOne.compareTo(mathValue(options, n, true))
+              return!bigMinusOne.cmp(mathValue(options, n, true))
             }else {
               return false
             }
@@ -5438,8 +5439,8 @@ var Model = function() {
     if(node.op === Model.NUM && ((mv = mathValue(options, node, true)) !== null && isInteger(mv))) {
       return true
     }else {
-      if(node instanceof BigDecimal) {
-        return node.remainder(bigOne).compareTo(bigZero) === 0
+      if(node instanceof Decimal) {
+        return node.mod(bigOne).cmp(bigZero) === 0
       }
     }
     return false
@@ -5452,7 +5453,7 @@ var Model = function() {
     if(node.op === Model.NUM && ((mv = mathValue(options, node, true)) !== null && !isInteger(mv))) {
       return true
     }else {
-      if(node instanceof BigDecimal && !isInteger(node)) {
+      if(node instanceof Decimal && !isInteger(node)) {
         return true
       }
     }
@@ -5466,8 +5467,8 @@ var Model = function() {
     if(node.op === Model.NUM && ((mv = mathValue(options, node, true)) !== null && isEven(mv))) {
       return true
     }else {
-      if(node instanceof BigDecimal) {
-        return node.remainder(bigTwo).compareTo(bigZero) === 0
+      if(node instanceof Decimal) {
+        return node.mod(bigTwo).cmp(bigZero) === 0
       }
     }
     return false
@@ -5523,7 +5524,7 @@ var Model = function() {
       if(typeof n === "number") {
         return n
       }else {
-        if(n instanceof BigDecimal) {
+        if(n instanceof Decimal) {
           str = n.toString()
         }else {
           if(n.op === Model.NUM) {
@@ -5541,7 +5542,7 @@ var Model = function() {
     if(val === null || (isNaN(val) || (isInfinity(val) || (isImaginary(val) || typeof val === "string" && indexOf(val, "Infinity") >= 0)))) {
       return null
     }else {
-      if(val instanceof BigDecimal) {
+      if(val instanceof Decimal) {
         return val
       }else {
         if(val.op === Model.NUM) {
@@ -5551,7 +5552,7 @@ var Model = function() {
         }
       }
     }
-    return new BigDecimal(str)
+    return new Decimal(str)
   }
   function toRadians(node) {
     assert(node.op, "2000: Invalid node");
@@ -5562,7 +5563,7 @@ var Model = function() {
         if(n.op === Model.VAR) {
           switch(n.args[0]) {
             case "\\degree":
-              args.push(numberNode(options, (new BigDecimal("" + Math.PI)).divide(new BigDecimal("180"))));
+              args.push(numberNode(options, (new Decimal("" + Math.PI)).div(new Decimal("180"))));
               break;
             case "\\radians":
               break;
@@ -5581,7 +5582,7 @@ var Model = function() {
   function logBase(b, v) {
     var n = Math.log(toNumber(v)) / Math.log(toNumber(b));
     if(!isNaN(n)) {
-      return new BigDecimal(String(n))
+      return new Decimal(String(n))
     }
     return null
   }
@@ -5590,7 +5591,7 @@ var Model = function() {
     var result = bigOne;
     for(;i <= n;i++) {
       Assert.checkTimeout();
-      result = result.multiply(new BigDecimal(i.toString()))
+      result = result.mul(new Decimal(i.toString()))
     }
     return result
   }
@@ -6498,7 +6499,7 @@ var Model = function() {
             if(node.isMixedNumber || node.numberFormat === "integer") {
               return true
             }else {
-              if(node.isFraction && ((mv = mathValue(options, normalize(options, node), true)) && (mv.compareTo(bigMinusOne) === 1 && mv.compareTo(bigOne) === -1))) {
+              if(node.isFraction && ((mv = mathValue(options, normalize(options, node), true)) && (mv.cmp(bigMinusOne) === 1 && mv.cmp(bigOne) === -1))) {
                 return true
               }
             }
@@ -6527,7 +6528,7 @@ var Model = function() {
           }else {
             var mv = mathValue(options, normalize(options, node), true);
             var ip = mv.mant.slice(0, mv.mant.length + mv.exp).join("");
-            var np = String(nmv - dmv.multiply(toDecimal(ip)));
+            var np = String(nmv - dmv.mul(toDecimal(ip)));
             var dp = String(dmv);
             node = binaryNode(Model.MUL, [numberNode(options, ip), binaryNode(Model.FRAC, [numberNode(options, np), numberNode(options, dp)])]);
             node.isMixedNumber = true;
@@ -6620,24 +6621,24 @@ var Model = function() {
       }
     }
     function formatNumber(fmt, node) {
-      var mv = mathValue(options, normalize(options, node), true);
-      var before = -1, after = -1, explaces = -1, exdigits = -1, exform = MathContext.SCIENTIFIC, exround = -1;
+      var str;
+      var mv = mathValue(normalize(node), true);
+      if(!mv) {
+        return""
+      }
       switch(fmt.code) {
         case "\\decimal":
-          after = fmt.length;
+          str = mv.toFixed();
           break;
         case "\\scientific":
         ;
         case "\\engineering":
-          exdigits = 1;
-          after = fmt.length || -1;
+          str = mv.toExponential();
+          str = str.indexOf("e+") > 0 && str.replace("e+", "\\times10^{") + "}" || str;
+          str = str.indexOf("e-") > 0 && str.replace("e", "\\times10^{") + "}" || str;
           break;
         default:
           break
-      }
-      var str = mv.format(before, after, explaces, exdigits, exform, exround);
-      if(fmt.code === "\\scientific" && str.indexOf("E+") >= 0) {
-        str = str.replace("E+", "\\times10^{") + "}"
       }
       return str
     }
@@ -7136,7 +7137,7 @@ var Model = function() {
         rarg = multiplyNode(rargs)
       }
       var lmv, rmv;
-      if((lmv = mathValue(options, larg)) && ((rmv = mathValue(options, rarg)) && lmv.compareTo(rmv) === 0)) {
+      if((lmv = mathValue(options, larg)) && ((rmv = mathValue(options, rarg)) && lmv.cmp(rmv) === 0)) {
         larg = rarg = nodeZero
       }
       return binaryNode(node.op, [larg, rarg])
@@ -7231,7 +7232,7 @@ var Model = function() {
               var ef = ff.op === Model.POW && mathValue(options, ff.args[1]) ? mathValue(options, ff.args[1], true) : bigOne;
               var e2 = f2.op === Model.POW && mathValue(options, f2.args[1]) ? mathValue(options, f2.args[1], true) : bigOne;
               if(isLessThan(ef, e2)) {
-                var e = e2.subtract(ef);
+                var e = e2.sub(ef);
                 var b = ff.op === Model.POW && mathValue(options, ff.args[1], true) ? ff.args[0] : ff;
                 if(!isZero(e)) {
                   ff2.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(options, e)]))
@@ -7240,7 +7241,7 @@ var Model = function() {
                   fff.push(isOne(ef) ? b : newNode(Model.POW, [b, numberNode(options, ef)]))
                 }
               }else {
-                var e = ef.subtract(e2);
+                var e = ef.sub(e2);
                 var b = ff.op === Model.POW && mathValue(options, ff.args[1], true) ? ff.args[0] : ff;
                 if(!isZero(e)) {
                   ttt.forEach(function(nf1) {
@@ -7489,11 +7490,11 @@ var Model = function() {
             var e1 = n1.op === Model.POW && mathValue(options, n1.args[1]) ? mathValue(options, n1.args[1], true) : bigOne;
             var e2 = n2.op === Model.POW && mathValue(options, n2.args[1]) ? mathValue(options, n2.args[1], true) : bigOne;
             if(isLessThan(e1, e2)) {
-              var e = e2.subtract(e1);
+              var e = e2.sub(e1);
               var b = n1.op === Model.POW && mathValue(options, n1.args[1], true) ? n1.args[0] : n1;
               dd.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(options, e)]))
             }else {
-              var e = e1.subtract(e2);
+              var e = e1.sub(e2);
               var b = n1.op === Model.POW && mathValue(options, n1.args[1], true) ? n1.args[0] : n1;
               if(!isZero(e)) {
                 nn.push(isOne(e) ? b : newNode(Model.POW, [b, numberNode(options, e)]))
@@ -7733,7 +7734,7 @@ var Model = function() {
           case Model.PERCENT:
             if(args[0].op === Model.NUM) {
               var mv = mathValue(options, args[0]);
-              node = numberNode(options, divide(mv, 100))
+              node = numberNode(options, div(mv, 100))
             }else {
               node = multiplyNode([binaryNode(Model.POW, [numberNode(options, "100"), nodeMinusOne]), args[0]])
             }
@@ -8179,7 +8180,7 @@ var Model = function() {
           case Model.PERCENT:
             if(args[0].op === Model.NUM) {
               var mv = mathValue(options, args[0]);
-              node = numberNode(options, divide(mv, 100))
+              node = numberNode(options, div(mv, 100))
             }else {
               node = multiplyNode([binaryNode(Model.POW, [numberNode(options, "100"), nodeMinusOne]), args[0]])
             }
@@ -8902,62 +8903,46 @@ var Model = function() {
       if(n2 && n2.op !== undefined) {
         n2 = mathValue(options, n2, true)
       }
-      if(n1 === null || (!(n1 instanceof BigDecimal) || (n2 === null || !(n1 instanceof BigDecimal)))) {
+      if(n1 === null || (!(n1 instanceof Decimal) || (n2 === null || !(n1 instanceof Decimal)))) {
         return false
       }
-      return n1.compareTo(n2) < 0
+      return n1.cmp(n2) < 0
     }
     function isPos(bd) {
-      return bd.compareTo(bigZero) > 0
+      return bd.cmp(bigZero) > 0
     }
     function pow(b, e) {
       var val;
-      if(b === null || e === null) {
+      if(isNaN(b) || (isNaN(e) || (b === null || e === null))) {
         return null
       }
-      if(Math.abs(toNumber(e)) > 1E3) {
-        e = toNumber(e);
-        b = toNumber(b);
-        return toDecimal(Math.pow(b, e))
-      }
-      if(b instanceof BigDecimal) {
-        if(isInteger(e)) {
-          val = b.pow(e.abs());
-          if(isNeg(e)) {
-            val = divide(bigOne, val)
-          }
-          return val
-        }else {
-          b = toNumber(b);
-          e = toNumber(e);
-          val = Math.pow(b, e);
-          if(isNaN(val)) {
-            return null
-          }
-          return toDecimal(val)
-        }
+      var bmv = toDecimal(b);
+      var emv = toDecimal(e);
+      if(bmv && emv) {
+        val = bmv.pow(emv)
       }else {
-        return toDecimal(Math.pow(b, e))
+        assert(false, "Should not get here");
+        val = toDecimal(Math.pow(toNumber(b), toNumber(e)))
       }
+      return val
     }
-    var DECIMAL128 = new MathContext(34);
-    function divide(n, d) {
+    function div(n, d) {
       if(n === null || d === null) {
         return null
       }
-      if(!(n instanceof BigDecimal)) {
+      if(!(n instanceof Decimal)) {
         n = toDecimal(n)
       }
-      if(!(d instanceof BigDecimal)) {
+      if(!(d instanceof Decimal)) {
         d = toDecimal(d)
       }
       if(isZero(d)) {
         return null
       }
-      return n.divide(d, DECIMAL128)
+      return n.div(d)
     }
     function sqrt(n) {
-      if(n instanceof BigDecimal) {
+      if(n instanceof Decimal) {
         if(n === null) {
           return null
         }
@@ -8966,13 +8951,13 @@ var Model = function() {
       if(isNaN(n)) {
         return null
       }
-      return toDecimal(Math.sqrt(n)).setScale(option(options, "decimalPlaces"), BigDecimal.ROUND_HALF_UP)
+      return toDecimal(Math.sqrt(n)).toDecimalPlaces(option(options, "decimalPlaces"), Decimal.ROUND_HALF_UP)
     }
     function trig(n, op) {
       if(n === null) {
         return null
       }else {
-        if(n instanceof BigDecimal) {
+        if(n instanceof Decimal) {
           n = toNumber(n)
         }else {
           if(isNaN(n)) {
@@ -9894,7 +9879,7 @@ var Model = function() {
             }
           }
           if(isInteger(lmv = mathValue(options, lnode)) && isInteger(rmv = mathValue(options, rnode))) {
-            return numberNode(options, lmv.multiply(rmv))
+            return numberNode(options, lmv.mul(rmv))
           }else {
             if(ldegr === 0 && isOne(lcoeffmv)) {
               return rnode
@@ -9953,8 +9938,8 @@ var Model = function() {
                               var rbaseN = toNumber(rbase);
                               var d = gcd(lbaseN, rbaseN);
                               if(d === (d | 0)) {
-                                lbase = divide(lbase, toDecimal(d));
-                                rbase = divide(rbase, toDecimal(d))
+                                lbase = div(lbase, toDecimal(d));
+                                rbase = div(rbase, toDecimal(d))
                               }
                               if(lexpo < 0 && isOne(lbase)) {
                                 node = numberNode(options, rbase)
@@ -9967,13 +9952,13 @@ var Model = function() {
                                   if(isOne(n)) {
                                     node = binaryNode(Model.POW, [numberNode(options, d), nodeMinusOne])
                                   }else {
-                                    var q = divide(n, d);
+                                    var q = div(n, d);
                                     if(isInteger(q)) {
                                       node = numberNode(options, q)
                                     }else {
                                       if(isNeg(n) && isNeg(d)) {
-                                        n = n.multiply(toDecimal("-1"));
-                                        d = d.multiply(toDecimal("-1"))
+                                        n = n.mul(toDecimal("-1"));
+                                        d = d.mul(toDecimal("-1"))
                                       }
                                       node = [numberNode(options, n), binaryNode(Model.POW, [numberNode(options, d), nodeMinusOne])]
                                     }
@@ -10207,16 +10192,16 @@ var Model = function() {
                     return[base]
                   }else {
                     if(isImaginary(base) && emv !== null) {
-                      if(emv.remainder(bigFour).compareTo(bigZero) === 0) {
+                      if(emv.mod(bigFour).cmp(bigZero) === 0) {
                         return[nodeOne]
                       }else {
-                        if(emv.remainder(bigTwo).compareTo(bigZero) === 0) {
+                        if(emv.mod(bigTwo).cmp(bigZero) === 0) {
                           return[nodeMinusOne]
                         }else {
-                          if(emv.remainder(bigThree).compareTo(bigZero) === 0) {
+                          if(emv.mod(bigThree).cmp(bigZero) === 0) {
                             return[negate(nodeImaginary)]
                           }else {
-                            if(emv.remainder(bigFive).compareTo(bigZero) === 0) {
+                            if(emv.mod(bigFive).cmp(bigZero) === 0) {
                               return[nodeImaginary]
                             }
                           }
@@ -10420,7 +10405,7 @@ var Model = function() {
           var mv = mathValue(options, n, env, true, normalizeUnits);
           if(mv && val) {
             if(node.op === Model.SUB) {
-              val = val.subtract(mv)
+              val = val.sub(mv)
             }else {
               val = val.add(mv)
             }
@@ -10440,7 +10425,7 @@ var Model = function() {
           hasDecimal = hasDecimal || isDecimal(n);
           var mv = mathValue(options, n, env, true, normalizeUnits);
           if(val !== null && mv != null) {
-            val = val.multiply(mv)
+            val = val.mul(mv)
           }else {
             val = null
           }
@@ -10456,7 +10441,7 @@ var Model = function() {
             if(val === null) {
               return null
             }
-            return val.multiply(bigMinusOne);
+            return val.mul(bigMinusOne);
           case Model.FACT:
             var n = mathValue(options, node.args[0], env, allowDecimal, normalizeUnits);
             if(n) {
@@ -12045,10 +12030,10 @@ var Model = function() {
         v2t = baseUnitConversion(n1b, n2b)(v2t)
       }
       var s = options.decimalPlaces != undefined ? +options.decimalPlaces : 10;
-      v1 = v1.setScale(s, BigDecimal.ROUND_HALF_UP);
-      v2 = v2.setScale(s, BigDecimal.ROUND_HALF_UP);
+      v1 = v1.toDecimalPlaces(s, Decimal.ROUND_HALF_UP);
+      v2 = v2.toDecimalPlaces(s, Decimal.ROUND_HALF_UP);
       if(isZero(v1t) && isZero(v2t)) {
-        var cmp = v1.compareTo(v2);
+        var cmp = v1.cmp(v2);
         switch(op) {
           case Model.LT:
             result = cmp < 0 ? true : false;
@@ -12068,13 +12053,13 @@ var Model = function() {
         }
         return inverseResult ? !result : result
       }else {
-        v1t = v1t.setScale(s, BigDecimal.ROUND_HALF_UP);
-        v2t = v2t.setScale(s, BigDecimal.ROUND_HALF_UP);
-        var v1min = v1.subtract(v1t);
-        var v2min = v2.subtract(v2t);
+        v1t = v1t.toDecimalPlaces(s, Decimal.ROUND_HALF_UP);
+        v2t = v2t.toDecimalPlaces(s, Decimal.ROUND_HALF_UP);
+        var v1min = v1.sub(v1t);
+        var v2min = v2.sub(v2t);
         var v1max = v1.add(v1t);
         var v2max = v2.add(v2t);
-        if(v1min.compareTo(v2min) >= 0 && v1max.compareTo(v2min) <= 0 || (v1min.compareTo(v2max) >= 0 && v1max.compareTo(v2max) <= 0 || (v2min.compareTo(v1min) >= 0 && v2max.compareTo(v1max) <= 0 || v2min.compareTo(v1max) >= 0 && v2max.compareTo(v1max) <= 0))) {
+        if(v1min.cmp(v2min) >= 0 && v1max.cmp(v2min) <= 0 || (v1min.cmp(v2max) >= 0 && v1max.cmp(v2max) <= 0 || (v2min.cmp(v1min) >= 0 && v2max.cmp(v1max) <= 0 || v2min.cmp(v1max) >= 0 && v2max.cmp(v1max) <= 0))) {
           result = true;
           return inverseResult ? !result : result
         }
@@ -12125,29 +12110,29 @@ var Model = function() {
     function baseUnitConversion(u1, u2) {
       var NaN = Math.NaN;
       var baseUnitConversions = {"g/lb":function(v) {
-        return v.multiply(toDecimal("453.592"))
+        return v.mul(toDecimal("453.592"))
       }, "lb/g":function(v) {
-        return v.multiply(toDecimal("0.00220462"))
+        return v.mul(toDecimal("0.00220462"))
       }, "m/ft":function(v) {
-        return v.multiply(toDecimal("0.3048"))
+        return v.mul(toDecimal("0.3048"))
       }, "ft/m":function(v) {
-        return v.multiply(toDecimal("3.28084"))
+        return v.mul(toDecimal("3.28084"))
       }, "L/fl":function(v) {
-        return v.multiply(toDecimal("0.02957353"))
+        return v.mul(toDecimal("0.02957353"))
       }, "fl/L":function(v) {
-        return v.multiply(toDecimal("33.814022702"))
+        return v.mul(toDecimal("33.814022702"))
       }, "\\degree K/\\degree C":function(v) {
         return v.add(toDecimal("273.15"))
       }, "\\degree C/\\degree K":function(v) {
-        return v.subtract(toDecimal("273.15"))
+        return v.sub(toDecimal("273.15"))
       }, "\\degree C/\\degree F":function(v) {
-        return v.subtract(toDecimal("32")).multiply(toDecimal("5")).divide(toDecimal("9"))
+        return v.sub(toDecimal("32")).mul(toDecimal("5")).div(toDecimal("9"))
       }, "\\degree F/\\degree C":function(v) {
-        return v.multiply(toDecimal("9")).divide(toDecimal("5")).add(toDecimal("32"))
+        return v.mul(toDecimal("9")).div(toDecimal("5")).add(toDecimal("32"))
       }, "\\degree K/\\degree F":function(v) {
-        return v.add(toDecimal("459.67")).multiply(toDecimal("5")).divide(toDecimal("9"))
+        return v.add(toDecimal("459.67")).mul(toDecimal("5")).div(toDecimal("9"))
       }, "\\degree F/\\degree K":function(v) {
-        return v.multiply(toDecimal("9")).divide(toDecimal("5")).subtract(toDecimal("459.67"))
+        return v.mul(toDecimal("9")).div(toDecimal("5")).sub(toDecimal("459.67"))
       }};
       var bu1 = baseUnit(u1);
       var bu2 = baseUnit(u2);
