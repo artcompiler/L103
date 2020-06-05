@@ -1,5 +1,4 @@
 /* Copyright (c) 2016, Art Compiler LLC */
-/* @flow */
 const MATHJAX = false;
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
 /* MATHJAX
@@ -8,7 +7,6 @@ import * as mjAPI from "mathjax-node/lib/main.js";
 import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
-import {Core} from "./latexsympy.js";
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
 messages[1002] = "Invalid tag in node with Node ID %1.";
@@ -129,7 +127,7 @@ let transformer = (function() {
 
     };
   }
-  const latexSympy = require("./latexsympy.js").Core;
+  const latexSympy = require("./translatex.js").Core;
   const sympyRules = require("./sympyRules.js").sympyRules;
   function texToSympy(tex, resume) {
     var errs = [];

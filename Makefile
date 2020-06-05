@@ -2,25 +2,30 @@ SUBPROJ := ./mathcore ./latexsympy
 
 default: build-dev start
 
-build:
-	npm run build
+all: init build
 
-start: build
-	npm start
+init: .npm-install-done
 
-watch: build
-	npm run watch
+.npm-install-done:
+	npm install
+	touch .npm-install-done
 
 build-dev:
-	npm run build-dev
+	npm run build
 
-smoke:
-	npm run smoke
+start:
+	npm start
 
 test:
 	npm run test
 
-test-bugs:
-	npm run test-bugs
+debug:
+	npm run debug
+
+clean:
+	rm -f .npm-install-done
+	rm -rf node_modules
+	rm -rf dist
+	rm -rf build
 
 .PHONY: $(SUBPROJ) init clean test
