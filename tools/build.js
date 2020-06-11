@@ -37,11 +37,16 @@ function exec(cmd, args) {
 function clean() {
   console.log("Cleaning...");
   cldir("./pub");
-  cldir("./lib");
+  cldir("./build");
+  cldir("./dist");
 }
 
 function compile() {
   console.log("Compiling...");
+  if (process.argv.includes("--dev")) {
+    exec("cp ./mathcore/dist/mathcore.js ./src/");
+    exec("cp ./translatex/dist/translatex.js ./src/");
+  }
   let sha = exec("git rev-parse HEAD | cut -c 1-7").toString().replace("\n", "");
   exec("tsc --build ./tools/config/tsconfig.json");
   exec("cat ./tools/license.js | sed 's/{{sha}}/" + sha + "/' >> ./build/src/compile.js");
@@ -49,7 +54,7 @@ function compile() {
 
 function bundle() {
   console.log("Bundling...");
-  exec("webpack --config ./tools/config/webpack.config.js");
+//  exec("webpack --config ./tools/config/webpack.config.js");
 }
 
 // function compile() {

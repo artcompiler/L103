@@ -4,9 +4,9 @@ import {assert, message, messages, reserveCodeRange} from "./assert.js"
 /* MATHJAX
 import * as mjAPI from "mathjax-node/lib/main.js";
 */
-import MathCore from "./mathcore.js";
 import * as https from "https";
 import * as http from "http";
+import {MathCore} from "./mathcore.js";
 reserveCodeRange(1000, 1999, "compile");
 messages[1001] = "Node ID %1 not found in pool.";
 messages[1002] = "Invalid tag in node with Node ID %1.";
@@ -43,7 +43,7 @@ function get(path, resume) {
     });
   });
 }
-var config = require(process.env.ARTCOMPILER_CONFIG || "../config.json");
+var config = require(process.env.ARTCOMPILER_CONFIG || "../../config.json");
 function getSympy(path, data, resume) {
   path = path.trim().replace(/ /g, "+");
   var encodedData = JSON.stringify(data);
