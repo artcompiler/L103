@@ -45,7 +45,6 @@ function compile() {
   console.log("Compiling...");
   if (process.argv.includes("--dev")) {
     exec("cp ./mathcore/dist/mathcore.js ./src/");
-    exec("cp ./translatex/dist/translatex.js ./src/");
   }
   let sha = exec("git rev-parse HEAD | cut -c 1-7").toString().replace("\n", "");
   exec("tsc --build ./tools/config/tsconfig.json");
@@ -94,7 +93,7 @@ function rules() {
 function build(debug) {
   let t0 = Date.now();
   clean();
-  rules();
+//  rules();
   compile();
   bundle(debug);
   console.log("Build completed in " + (Date.now() - t0) + " ms");

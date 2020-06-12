@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "build-dev": "make -C mathcore; make -C translatex; node ./tools/build --dev",
+    "build-dev": "make -C mathcore; node ./tools/build --dev",
     "build": "node ./tools/build",
     "smoke": "node tools/test.js --smoke",
     "test": "node tools/test.js",
