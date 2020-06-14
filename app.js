@@ -4,7 +4,7 @@ const morgan = require('morgan');
 const path = require('path');
 
 const routes = require('./routes');
-const compiler = require("./build/src/compile.js");
+const compiler = require("./dist/compile.js");
 const {createAuth} = require('./build/src/auth.js');
 
 const auth = createAuth(compiler);

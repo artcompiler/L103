@@ -4,7 +4,7 @@ import {execSync} from "child_process";
 // Current best rule sets
 const latexRulesID = "epLtg4YeVh5";
 const sympyRulesID = "4LgCb2yvbTw";
-
+const debug = true;
 function rmdir(path) {
   try { var files = fs.readdirSync(path); }
   catch(e) { return; }
@@ -53,7 +53,14 @@ function compile() {
 
 function bundle() {
   console.log("Bundling...");
-//  exec("webpack --config ./tools/config/webpack.config.js");
+  exec("cp ./src/lexicon.js ./pub");
+  exec("cp ./src/style.css ./pub");
+  // if (debug) {
+  //   exec("browserify ./src/viewer.js -s viewer > ./pub/viewer.js");
+  // } else {
+  //   exec("browserify ./src/viewer.js -s viewer | uglifyjs --screw-ie8 > ./pub/viewer.js");
+  // }
+  exec("webpack --config ./tools/config/webpack.config.js");
 }
 
 // function compile() {

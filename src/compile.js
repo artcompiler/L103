@@ -4,6 +4,7 @@ import {assert, message, messages, reserveCodeRange} from "./assert.js"
 /* MATHJAX
 import * as mjAPI from "mathjax-node/lib/main.js";
 */
+import fs from "fs";
 import * as https from "https";
 import * as http from "http";
 import {MathCore} from "./mathcore.js";
@@ -43,7 +44,9 @@ function get(path, resume) {
     });
   });
 }
-var config = require(process.env.ARTCOMPILER_CONFIG || "../../config.json");
+const path = require('path');
+const configFile = process.env.ARTCOMPILER_CONFIG || path.resolve(process.cwd(), "config.json");
+const config = JSON.parse(fs.readFileSync(configFile));
 function getSympy(path, data, resume) {
   path = path.trim().replace(/ /g, "+");
   var encodedData = JSON.stringify(data);
