@@ -104,7 +104,7 @@ const BUG = -1;
 const SCALE = 3;
 
 getTests(REGRESSION, function (err, testData) {
-  testData = testData.slice(0);
+  testData = testData.slice(9000);
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
