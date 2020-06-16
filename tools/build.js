@@ -1,5 +1,5 @@
-import fs from "fs";
-import {execSync} from "child_process";
+import fs from 'fs';
+import {execSync} from 'child_process';
 
 // Current best rule sets
 const latexRulesID = "epLtg4YeVh5";
@@ -14,7 +14,7 @@ function rmdir(path) {
       if (fs.statSync(filePath).isFile()) {
         fs.unlinkSync(filePath);
       } else {
-	rmdir(filePath);
+        rmdir(filePath);
       }
     }
   }
@@ -85,13 +85,13 @@ function bundle() {
 
 function rules() {
   console.log("Fetching latex to latex rules " + latexRulesID);
-  exec('curl -L "http://www.graffiticode.com/data?id=' + latexRulesID + '" -o "./data.txt"');
+  exec('curl -L "https://gc.acx.ac/data?id=' + latexRulesID + '" -o "./data.txt"');
   var data = JSON.parse(fs.readFileSync("./data.txt", "utf8"));
   delete data.options.data; // Cleanup
   fs.writeFileSync("src/latexRules.js", "export var latexRules=" + JSON.stringify(data.options), "utf8");
 
   console.log("Fetching latex to sympy rules " + sympyRulesID);
-  exec('curl -L "http://www.graffiticode.com/data?id=' + sympyRulesID + '" -o "./data.txt"');
+  exec('curl -L "https://gc.acx.ac/data?id=' + sympyRulesID + '" -o "./data.txt"');
   var data = JSON.parse(fs.readFileSync("./data.txt", "utf8"));
   delete data.options.data; // Cleanup
   fs.writeFileSync("src/sympyRules.js", "export var sympyRules=" + JSON.stringify(data.options), "utf8");
@@ -106,4 +106,13 @@ function build(debug) {
   console.log("Build completed in " + (Date.now() - t0) + " ms");
 }
 
-build(true);
+function prebuild() {
+  const commit = String(exec('git rev-parse HEAD')).trim().slice(0, 7);
+  const build = {
+    'name': 'L107',
+    'commit': commit,
+  };
+  fs.writeFile('build.json', JSON.stringify(build, null, 2), () => {});
+}
+
+build();

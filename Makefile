@@ -15,7 +15,7 @@ start:
 	npm start
 
 test:
-	npm run test
+	npm run test $(color)
 
 debug:
 	npm run debug

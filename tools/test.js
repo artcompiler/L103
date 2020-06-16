@@ -74,7 +74,7 @@ function batchScrape(scale, force, ids, index, resume) {
 function getCompile(host, id, resume) {
   const hostUrl = new url.URL(host);
   hostUrl.searchParams.set('id', id);
-//  hostUrl.searchParams.set('refresh', 'true');
+  hostUrl.searchParams.set('refresh', 'true');
   hostUrl.searchParams.set('dontSave', 'true');
   hostUrl.pathname = '/data';
   request(hostUrl.toString(), function(err, res, body) {
@@ -98,13 +98,16 @@ function getTimeStr(ms) {
   return mins && mins + " minutes " + (secs % 60) + " seconds" || secs + " seconds";
 }
 
-const REGRESSION = 1;
-const TRIAGE = 0;
-const BUG = -1;
 const SCALE = 3;
+const GREEN = 1;
+const BLUE = 2;
+const PURPLE = 3;
+const GREY = 4;
+const RED = -1;
+const YELLOW = 0;
 
-getTests(REGRESSION, function (err, testData) {
-  testData = testData.slice(0, 150);
+getTests(GREEN, function (err, testData) {
+  testData = testData.slice(0, 150); // Slice off leading tests when wanting to get to a particular test.
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
@@ -113,8 +116,26 @@ getTests(REGRESSION, function (err, testData) {
   });
 });
 
-function getTests(mark, resume) {
-  console.log("Getting tests...");
+function getTests(color, resume) {
+  console.log(JSON.stringify(process.argv));
+  color = process.argv[process.argv.length - 1] || color;
+  let mark;
+  switch (color) {
+  case 'grey':
+    mark = GREY;
+    break;
+  case 'purple':
+    mark = PURPLE;
+    break;
+  case 'blue':
+    mark = BLUE;
+    break;
+  default:
+    color = "green";
+    mark = GREEN;
+    break;
+  }
+  console.log("Getting " + color + " tests...");  
   const hostUrl = new url.URL(DATA_GATEWAY);
   hostUrl.searchParams.set('table', 'items');
   hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark=' + mark);

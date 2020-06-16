@@ -716,9 +716,12 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, function (err1, val1) {
       options.settings.setThousandsSeparator = val1;
       visit(node.elts[1], options, function (err2, val2) {
+        options.clearSettings = clearSettings;
         resume([].concat(err1).concat(err2), val2);
       });
     });
@@ -727,14 +730,28 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
+    const clearSettings = options.clearSettings;
+    options.clearSettings = false;
     visit(node.elts[0], options, function (err1, val1) {
       options.settings.setDecimalSeparator = val1;
       visit(node.elts[1], options, function (err2, val2) {
+        options.clearSettings = clearSettings;
         resume([].concat(err1).concat(err2), val2);
       });
     });
   }
 
+  function normalizeArithmetic(node, options, resume) {
+    if (!options.settings) {
+      options.settings = {};
+    }
+    var errs = [];
+    options.settings.normalizeArithmetic = true;
+    visit(node.elts[0], options, (err, val1) => {
+      errs = errs.concat(err);
+      resume(errs, val1);
+    });
+  }
   function ignoreOrder(node, options, resume) {
     if (!options.settings) {
       options.settings = {};
@@ -783,7 +800,7 @@ let transformer = (function() {
     if (!options.settings) {
       options.settings = {};
     }
-    var errs = []; 
+    var errs = [];
     options.settings.compareSides = true;
     visit(node.elts[0], options, (err, val1) => {
       errs = errs.concat(err);
@@ -1305,6 +1322,16 @@ let transformer = (function() {
       resume(errs, data);
     });
   }
+  function ast(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      try {
+        val = JSON.parse(val);
+      } catch (x) {
+        err = "Unable to parse ast=" + val;
+      }
+      resume([].concat(err), val);
+    });
+  }
   function latex(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       if (val.indexOf("\\text") >= 0) {
@@ -1363,6 +1390,7 @@ let transformer = (function() {
   }
   function rubric(node, options, resume) {
     options.validations = [];
+    options.clearSettings = true;
     visit(node.elts[1], options, function (err2, val2) {
       options.input = val2.input;
       options.rating = val2.rating;
@@ -1462,8 +1490,11 @@ let transformer = (function() {
     });
   }
   function list(node, options, resume) {
+    let clearSettings = options.clearSettings;
     if (node.elts && node.elts.length > 1) {
-      options.settings = {};  // Reset for each scorer.
+      if (clearSettings) {
+        options.settings = {};  // Reset for each scorer.
+      }
       visit(node.elts[0], options, function (err1, val1) {
         node = {
           tag: "LIST",
@@ -1476,7 +1507,9 @@ let transformer = (function() {
         });
       });
     } else if (node.elts && node.elts.length > 0) {
-      options.settings = {};  // Reset for each scorer.
+      if (clearSettings) {
+        options.settings = {};  // Reset for each scorer.
+      }
       visit(node.elts[0], options, function (err1, val1) {
         let val = [val1];
         resume([].concat(err1), val);
@@ -1502,6 +1535,7 @@ let transformer = (function() {
       });
     } else {
       visit(node.elts[0], options, function (err1, val1) {
+        val1 = [].concat(val1);
         let rating = [];
         let input = options.data && Object.keys(options.data).length !== 0 && isArray(options.data) ? options.data : val1;
         input.forEach(i => {
@@ -1831,6 +1865,7 @@ let transformer = (function() {
     "NUM": num,
     "IDENT": ident,
     "BOOL": bool,
+    "AST": ast,
     "LIST": list,
     "RECORD": record,
     "BINDING": binding,
@@ -1840,6 +1875,7 @@ let transformer = (function() {
     "DIV" : div,
     "POW" : pow,
     "IGNORE-ORDER" : ignoreOrder,
+    "NORMALIZE-ARITHMETIC" : normalizeArithmetic,
     "INVERSE-RESULT" : inverseResult,
     "RUBRIC" : rubric,
     "STYLE" : style,
@@ -1861,7 +1897,6 @@ let transformer = (function() {
     "DECIMAL-PLACES": decimalPlaces,
     "ALLOW-DECIMAL": allowDecimal,
     "ALLOW-EULERS-NUMBER": allowEulersNumber,
-    "IGNORE-ORDER": ignoreOrder,
     "IGNORE-COEFFICIENT-ONE": ignoreCoefficientOne,
     "COMPARE-SIDES": compareSides,
     "COMPARE-GROUPING": compareGrouping,
@@ -1985,7 +2020,6 @@ let render = (function() {
   return render;
 })();
 
-
 function statusCodeFromErrors(errs) {
   let statusCode;
   return errs.some(
@@ -2015,7 +2049,7 @@ export let compiler = (function () {
       let options = {
         data: data,
         config: config,
-      };      
+      };
       transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
