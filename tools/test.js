@@ -74,7 +74,7 @@ function batchScrape(scale, force, ids, index, resume) {
 function getCompile(host, id, resume) {
   const hostUrl = new url.URL(host);
   hostUrl.searchParams.set('id', id);
-  hostUrl.searchParams.set('refresh', 'true');
+//  hostUrl.searchParams.set('refresh', 'true');
   hostUrl.searchParams.set('dontSave', 'true');
   hostUrl.pathname = '/data';
   request(hostUrl.toString(), function(err, res, body) {
@@ -104,7 +104,7 @@ const BUG = -1;
 const SCALE = 3;
 
 getTests(REGRESSION, function (err, testData) {
-  testData = testData.slice(9000);
+  testData = testData.slice(0, 150);
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
