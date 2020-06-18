@@ -2,6 +2,7 @@ const path = require('path');
 module.exports = {
   target: 'node',
   mode: 'development',
+  devtool: 'source-map',
   entry: './build/src/compile.js',
   context: path.resolve(__dirname, '../../'),
   output: {

@@ -43,6 +43,7 @@ function count(compiler, token, count) {
 exports.createAuth = function createAuth(compiler) {
   const validatedCache = new Map();
   return function (token, scope, resume) {
+    console.log("createAuth() token=" + token);
     if (!token) {
       return resume(null, {
         address: 'guest',

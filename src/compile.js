@@ -2050,6 +2050,7 @@ export let compiler = (function () {
         data: data,
         config: config,
       };
+      console.log("[1] compile() code=" + JSON.stringify(code));
       transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
@@ -2058,7 +2059,9 @@ export let compiler = (function () {
             error: messageFromErrors(err),
           }], val);
         } else {
+          console.log("[2] compile() render val=" + JSON.stringify(val));
           render(val, options, function (err, val) {
+            console.log("[3] compile() render val=" + JSON.stringify(val));
             resume(err, val);
           });
         }
