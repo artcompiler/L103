@@ -9,7 +9,6 @@ module.exports = (compiler) => {
     if (!code || !data) {
       res.sendStatus(400);
     }
-    console.log("compile()");
     compiler.compile(code, data, config, function (err, val) {
       if (err && err.length) {
         res.status(err[0].statusCode || 500).json({error: err});
