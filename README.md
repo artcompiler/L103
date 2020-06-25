@@ -82,5 +82,11 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
 * To verify that everything is set up: `$ make smoke`
 * To run all tests: `$ make test`
 
+### Using a local instance of SymPy service (https://github.com/artcompiler/sympy-service) for symbolic processing.
 
-
+* `$ cd ./L107` (Traverse to the root dir of L107)
+* `$ export ARTCOMPILER_CONFIG=config-local.json` (Point to the config file for running L107 with local sympy service)
+* Start the local instance of SymPy service
+* Verify that the port number aligns with the port number in `config-local.json`
+* `$ make` (Start L107)
+* You should be good to go!
