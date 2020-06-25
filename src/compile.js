@@ -45,7 +45,8 @@ function get(path, resume) {
     });
   });
 }
-var config = require(process.env.ARTCOMPILER_CONFIG || "../config.json");
+var config = require('../' + process.env.ARTCOMPILER_CONFIG || '../config.json');
+console.log("config=" + JSON.stringify(config, null, 2));
 function getSympy(path, data, resume) {
   path = path.trim().replace(/ /g, "+");
   var encodedData = JSON.stringify(data);
