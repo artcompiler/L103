@@ -5,7 +5,7 @@
   "author": "Art Compiler LLC",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node --stack-size=10000 app.js",
     "build-dev": "make -C mathcore; node ./tools/build --dev",
     "build": "node ./tools/build",
     "smoke": "node tools/test.js --smoke",
