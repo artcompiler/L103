@@ -12937,8 +12937,6 @@ __webpack_require__.r(__webpack_exports__);
           }
           return node2;
           function unfold(op, expo, base) {
-            console.log("unfold() expo=" + JSON.stringify(expo, null, 2));
-            console.log("unfold() base=" + JSON.stringify(base, null, 2));
             var node;
             var dontExpandPowers = option(options, "dontExpandPowers");
             const equivLiteral = option(options, 'equivLiteral');
@@ -12953,9 +12951,7 @@ __webpack_require__.r(__webpack_exports__);
                 base = base.args[0];
                 return [expo, base];
               }
-              console.log("expand() unfold base=" + JSON.stringify(base, null, 2));
               var ff = factors(options, base, null, false, true);
-              console.log("expand() unfold ff=" + JSON.stringify(ff, null, 2));
               if (ff.length === 0) {
                 // No factors means we have a node with math value '1', so just
                 // return it.
@@ -13078,9 +13074,7 @@ __webpack_require__.r(__webpack_exports__);
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
         if (nid === 80 || nid === 82) {
-          console.log("expand() nid=" + nid + " node=" + JSON.stringify(stripMetadata(node), null, 2));
         }
-        console.log("expand() nid=" + nid);
         node = expand(options, node);
       }
       node.expandNid = nid;
@@ -14518,7 +14512,7 @@ __webpack_require__.r(__webpack_exports__);
     } else if ((n1.isAlgebraic || n1.isNumeric) &&
                (n2.isAlgebraic || n2.isNumeric)) {
       // Cross multiply.
-      var nn = crossMultiply(options, n1, n2);
+      var nn = crossMultiply(options, normalize(options, n1), normalize(options, n2));
       n1 = nn[0];
       n2 = nn[1];
     }
