@@ -889,7 +889,7 @@ let transformer = (function() {
         }, d, function (err, val) {
           if (err && err.length) {
             errs = errs.concat(error(err, node.elts[0]));
-            console.log("literal() errs=" + errs);
+            console.log("literal() errs=" + JSON.stringify(errs, null, 2));
           }
           resume(err, {
             method: "literal",

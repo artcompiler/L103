@@ -6294,9 +6294,10 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function newNode(op, args) {
+    // assert(!((op === Model.MUL || op === Model.TIMES || op === Model.COEFF) && isMinusOne(args[args.length - 1])), JSON.stringify(args, null, 2));
     // args.forEach((arg, i) => {
     //   if (i > 0) {
-    //     assert(op !== Model.MUL || !isMinusOne(arg), JSON.stringify(args, null, 2));
+    //     assert(!(op === Model.MUL && isMinusOne(arg)), JSON.stringify(args, null, 2));
     //   }
     // })
     return {
@@ -7140,7 +7141,7 @@ __webpack_require__.r(__webpack_exports__);
             return 1;
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SQRT:
 //            assert(args.length === 1, message(2003));
-            return d / 2;
+            return Number.POSITIVE_INFINITY;
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FACT:
             if (d !==  0) {
               return nodePositiveInfinity;
@@ -7677,7 +7678,7 @@ __webpack_require__.r(__webpack_exports__);
         list.push({
           code: code,
           length: length
-        });        
+        });
         break;
       case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA:
         fmt.args.forEach(function (f) {
@@ -8886,7 +8887,7 @@ __webpack_require__.r(__webpack_exports__);
       return node;
     }
 
-    function normalizeFracDivDotAsMul(node) {
+    function normalizeMul(node) {
       if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC) {
         if (node.args[1].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW) {
           // We have a denom with an exponent, so just invert it.
@@ -8897,7 +8898,7 @@ __webpack_require__.r(__webpack_exports__);
         } else {
           node = multiplyNode([node.args[0], newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [node.args[1], nodeMinusOne])]);
         }
-      } else if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT) {
+      } else if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF) {
         node = multiplyNode(node.args);
       }
       return node;
@@ -9106,73 +9107,52 @@ __webpack_require__.r(__webpack_exports__);
         },
         multiplicative: function(node) {
           const normalizeArithmetic = option(options, 'normalizeArithmetic');
-          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC) {
-            node = normalizeFracDivDotAsMul(node);
-          } else if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV) {
-            Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(node.args.length === 2);
-            node = fractionNode(node.args[0], node.args[1]);
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF) {
+            node = normalizeMul(node);
           }
           var args = [];
           // Flatten nested multiplication.
           // FIXME can't use flattenNestedNode because of slight differences
           var hasPM;
-          var negs = 0;
+          let hasMinusOne = false;
           node.args.forEach(function (n) {
             n = normalize(options, n);
-            if (ast.intern(n) === ast.intern(nodeOne)) {
-              // If number node one, then erase it. Can't use mathValue here,
-              // because it simplifies constant expressions.
+            if (isOne(n)) {
+              // If number node one, then erase it.
               return;
             }
             if (!normalizeArithmetic) {
               // Do a more agressive normalization.
-              if (isMinusOne(args[args.length-1])) {
-                if (isMinusOne(n)) {
-                  negs++;
-                  return;
-                }
-              } else if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isMinusOne(n.args[1]) && isNeg(n.args[0])) {
-                // We got something that looks like a negative denominator.
-                negs++;
-                n = newNode(n.op, [negate(n.args[0]), n.args[1]]);
+              if (isMinusOne(n)) {
+                hasMinusOne = !hasMinusOne;
+                return;
               } else if (isNeg(n)) {
-                negs++;
+                hasMinusOne = !hasMinusOne;
                 n = negate(n);
               }
+            } else if (isMinusOne(n)) {
+              hasMinusOne = !hasMinusOne;
+              return;
+            } else if (hasMinusOne && isPositiveInfinity(n)) {
+              args.push(nodeNegativeInfinity);
+              return;
+            } else if (hasMinusOne && isNegativeInfinity(n)) {
+              args.push(nodePositiveInfinity);
+              return;
             } else {
-              if (args.length > 0 && isMinusOne(args[args.length-1])) {
-                if (isMinusOne(n)) {
-                  // Double negative, so erase both.
-                  args.pop();
-                  return;
-                }
-                if (isPositiveInfinity(n)) {
-                  // Collapse.
-                  args.pop();
-                  args.push(nodeNegativeInfinity);
-                  return;
-                }
-                if (isNegativeInfinity(n)) {
-                  // Collapse.
-                  args.pop();
-                  args.push(nodePositiveInfinity);
-                  return;
-                }
+              if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL) {
+                // Flatten
+                args = args.concat(n.args);
+              } else if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PM) {
+                hasPM = true;
+                args.push(n.args[0]);
+              } else {
+                args.push(n);
               }
-            }
-            if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL) {
-              // Flatten
-              args = args.concat(n.args);
-            } else if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PM) {
-              hasPM = true;
-              args.push(n.args[0]);
-            } else if (!isOne(n)) {
-              args.push(n);
             }
           });
           var isRepeatingFlag = node.isRepeating;
-          var neg = negs % 2;
-          if (neg) {
+          if (hasMinusOne) {
             if (args.length === 0) {
               node = nodeMinusOne;
             } else if (args.length === 1) {
@@ -9197,7 +9177,7 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         unary: function(node) {
-          const equivLiteral = option(options, 'equivLiteral');
+          const normalizeArithmetic = option(options, 'normalizeArithmetic');
           switch (node.op) {
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUBSCRIPT:
             if (node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].EVALAT) {
@@ -9264,7 +9244,7 @@ __webpack_require__.r(__webpack_exports__);
             }
             break;
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SQRT:
-            if (!equivLiteral) {
+            if (!normalizeArithmetic) {
               var base = node.args[0];
               var root = node.args[1];
               node = newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [base, newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [root, nodeMinusOne])]);
@@ -9279,7 +9259,7 @@ __webpack_require__.r(__webpack_exports__);
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COSH:
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ARCSINH:
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ARCCOSH:
-            if (!equivLiteral) {
+            if (!normalizeArithmetic) {
               node = normalizeTrigIdent(node);
             }
             break;
@@ -9287,7 +9267,7 @@ __webpack_require__.r(__webpack_exports__);
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TANH:
             var arg0 = normalize(options, node.args[0]);
             // tan x = sin x / cos x
-            if (!equivLiteral) {
+            if (!normalizeArithmetic) {
               const s = node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TAN ? _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SIN : _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SINH;
               const c = node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TAN ? _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COS : _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COSH;
               node = multiplyNode([
@@ -9304,7 +9284,7 @@ __webpack_require__.r(__webpack_exports__);
             var arg0 = normalize(options, node.args[0]);
             var s = node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COT ? _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SIN : _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SINH;
             var c = node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COT ? _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COS : _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COSH;
-            if (!equivLiteral) {
+            if (!normalizeArithmetic) {
               node = multiplyNode([
                 newNode(c, [arg0]),
                 binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [
@@ -9317,7 +9297,7 @@ __webpack_require__.r(__webpack_exports__);
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SEC:
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SECH:
             var arg0 = normalize(options, node.args[0]);
-            if (!equivLiteral) {
+            if (!normalizeArithmetic) {
               const c = node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SEC ? _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COS : _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COSH;
               node = multiplyNode([
                 binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [
@@ -9330,7 +9310,7 @@ __webpack_require__.r(__webpack_exports__);
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CSC:
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CSCH:
             var arg0 = normalize(options, node.args[0]);
-            if (!equivLiteral) {
+            if (!normalizeArithmetic) {
               const s = node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CSC ? _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SIN : _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SINH;
               node = multiplyNode([
                 binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [
@@ -9437,6 +9417,7 @@ __webpack_require__.r(__webpack_exports__);
             isUnit = true;
           }
           var args = [];
+          let hasMinusOne = false;
           node.args.forEach(function (n) {
             args = args.concat(normalize(options, n));
           });
@@ -9771,7 +9752,7 @@ __webpack_require__.r(__webpack_exports__);
         multiplicative: function(node) {
           Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(node.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV, "2000: Divsion should be eliminated during parsing");
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC) {
-            node = normalizeFracDivDotAsMul(node);
+            node = normalizeMul(node);
           }
           var args = [];
           // Flatten nested multiplication.
@@ -10437,7 +10418,7 @@ __webpack_require__.r(__webpack_exports__);
         },
         multiplicative: function (node) {
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || (option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV))) {
-            node = normalizeFracDivDotAsMul(node);
+            node = normalizeMul(node);
           }
           var args = [];
           var compareGrouping = node.lbrk && _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compareGrouping");
@@ -11601,7 +11582,7 @@ __webpack_require__.r(__webpack_exports__);
         if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && !isOne(n.args[0])) {
           // If denominator is 1 then skip it.
           if (isMinusOne(n.args[1])) {
-            dd.push(d0);
+            dd.unshift(nodeMinusOne);
           } else if (isNeg(mathValue(options, n.args[1], true))) {
             dd.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [d0, simplify(options, negate(n.args[1]), env)]));
           }
@@ -12799,7 +12780,7 @@ __webpack_require__.r(__webpack_exports__);
           } else {
             node = binaryNode(node.op, n0);
           }
-          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MATRIX || option(options, "equivLiteral")) {
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MATRIX || option(options, "normalizeArithmetic")) {
             // Nothing more to do here.
           }
           node = cancelTerms(node, "expand");
@@ -12825,7 +12806,6 @@ __webpack_require__.r(__webpack_exports__);
           var isNeg = false;
           n0 = [];
           var normalizeArithmetic =
-              option(options, "equivLiteral") &&
               option(options, "normalizeArithmetic") &&
               args.length > 1;
           args.forEach(function (n, i) {
@@ -12939,7 +12919,7 @@ __webpack_require__.r(__webpack_exports__);
           function unfold(op, expo, base) {
             var node;
             var dontExpandPowers = option(options, "dontExpandPowers");
-            const equivLiteral = option(options, 'equivLiteral');
+            const normalizeArithmetic = option(options, 'normalizeArithmetic');
             var emv = mathValue(options, expo);
             if (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW) {
               if (dontExpandPowers && (base.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].VAR || base.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM)) {
@@ -12973,11 +12953,11 @@ __webpack_require__.r(__webpack_exports__);
                   var bmv;
                   if (isZero(emv)) {
                     args.push(nodeOne);
-                  } else if (!equivLiteral && isNeg((bmv = mathValue(options, n))) && !isNeg(emv)) {
+                  } else if (!normalizeArithmetic && isNeg((bmv = mathValue(options, n))) && !isNeg(emv)) {
                     // We have a factor that has an integer math value, so just do the math.
                     var mv = pow(bmv, emv);
                     args.push(numberNode(options, mv));
-                  } else if (!equivLiteral && ea < 5 || ea < 10 && !isPolynomial(n) && !dontExpandPowers) {
+                  } else if (!normalizeArithmetic && (ea < 5 || ea < 10 && !isPolynomial(n)) && !dontExpandPowers) {
                     // Expand if the base is additive, or exponent is an integer and
                     // dontExpandPowers is false. We limit the power of the expansion
                     // to avoid long running computations.
@@ -12988,7 +12968,7 @@ __webpack_require__.r(__webpack_exports__);
                           // x^{-1}^{-1} -> x
                           args.push(n.args[0]);
                         } else if (isOne(n) && isMinusOne(emv)) {
-                          // 1^{-1} -> 1, -1^{-1} -> -1
+                          // 1^{-1} -> 1
                           args.push(n);
                         } else if (isMinusOne(n) && isMinusOne(emv)) {
                           hasMinusOne = !hasMinusOne;
@@ -13003,6 +12983,8 @@ __webpack_require__.r(__webpack_exports__);
                         args.push(n);
                       }
                     }
+                  } else if (isMinusOne(n) && isMinusOne(emv)) {
+                    hasMinusOne = !hasMinusOne;
                   } else {
                     args.push(newNode(op, [n, expo]));
                   }
@@ -13011,7 +12993,11 @@ __webpack_require__.r(__webpack_exports__);
                 }
               });
               if (hasMinusOne) {
-                args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [nodeMinusOne, nodeMinusOne]));
+                if (args.length === 0) {
+                  args.unshift(nodeMinusOne);
+                } else {
+                  args.unshift(negate(args.shift()));
+                }
                 hasMinusOne = false;
               }
             } else if (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].LOG) {
@@ -13073,8 +13059,6 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again.
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        if (nid === 80 || nid === 82) {
-        }
         node = expand(options, node);
       }
       node.expandNid = nid;
@@ -13092,7 +13076,7 @@ __webpack_require__.r(__webpack_exports__);
           }
           var ff = [];
           if (preserveNeg && isNeg(node)) {
-            ff.push(nodeMinusOne);
+            ff.unshift(nodeMinusOne);
           }
           var absv = Math.abs(+node.args[0]);
           var pff = primeFactors(absv);
@@ -14446,10 +14430,8 @@ __webpack_require__.r(__webpack_exports__);
       // combineFractions (expand)
       // normalizeNegatives (expand)
       // ignoreOrder (sortLiteral)
-      option(options, "equivLiteral", true);
       n1 = expand(options, normalize(options, n1));
       n2 = expand(options, normalize(options, n2));
-      option(options, "equivLiteral", undefined);
     }
     // console.log("[3] equivLiteral() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
     // console.log("[3] equivLiteral() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
@@ -14790,7 +14772,8 @@ __webpack_require__.r(__webpack_exports__);
   function evalSympy(expr, options, resume) {
     var errs = [];
     var result;
-    var syms = variables(normalize(options, expr));
+//    var syms = variables(normalize(options, expr));
+    var syms = variables(expr);
     var symNode = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].create(options, String(syms));
     var assumption;
     if (expr.hasAbs) {
@@ -16208,7 +16191,7 @@ let Model = (function () {
     function newNode(op, args) {
       // args.forEach((arg, i) => {
       //   if (i > 0) {
-      //     assert(op !== Model.MUL || !isMinusOne(arg), JSON.stringify(args, null, 2));
+      //     assert(op !== Model.MUL || !isMinusOne(arg), "Model: " + JSON.stringify(args, null, 2));
       //   }
       // });
       return {
@@ -16400,7 +16383,7 @@ let Model = (function () {
     }
 
     let nodeOne = numberNode("1");
-    let nodeMinusOne = unaryNode(Model.SUB, [numberNode("1")]);
+    let nodeMinusOne = numberNode("-1");
     let nodeNone = newNode(Model.NONE, [numberNode("0")]);
     let nodeEmpty = newNode(Model.VAR, ["0"]);
 
