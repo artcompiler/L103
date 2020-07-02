@@ -6294,7 +6294,8 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function newNode(op, args) {
-    // assert(!((op === Model.MUL || op === Model.TIMES || op === Model.COEFF) && isMinusOne(args[args.length - 1])), JSON.stringify(args, null, 2));
+//    assert(!((op === Model.MUL || op === Model.TIMES || op === Model.COEFF) && isMinusOne(args[args.length - 1])), JSON.stringify(args, null, 2));
+    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && args.length > 0 && isMinusOne(args[args.length - 1])), 'newNode() op=' + op + ' args=' + JSON.stringify(args, null, 2));
     // args.forEach((arg, i) => {
     //   if (i > 0) {
     //     assert(!(op === Model.MUL && isMinusOne(arg)), JSON.stringify(args, null, 2));
@@ -6578,6 +6579,9 @@ __webpack_require__.r(__webpack_exports__);
     } else if (typeof n === "number") {
       return n === 1;
     } else if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM) {
+      if (n.args[0] === '1') {
+        return true;
+      }
       var mv = mathValue(options, n);
       if (mv) {
         return !bigOne.comparedTo(mv);
@@ -6594,7 +6598,7 @@ __webpack_require__.r(__webpack_exports__);
     } else if (n instanceof decimal_js__WEBPACK_IMPORTED_MODULE_4__["Decimal"]) {
       return !bigMinusOne.comparedTo(n);
     } else if (n.op) {
-      if (ast.intern(n) === nidMinusOne) {
+      if (n.args[0] === '-1') {
         return true;
       }
       var mv = mathValue(options, n, true);
@@ -8187,6 +8191,9 @@ __webpack_require__.r(__webpack_exports__);
           return multiplyNode(args);
         },
         unary: function(node) {
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0]) {
+            return normalizeSyntax(options, node.args[0]);
+          }
           var args = [];
           node.args.forEach(function (n, i) {
             args = args.concat(normalizeSyntax(options, n, ref.args[i]));
@@ -8423,6 +8430,7 @@ __webpack_require__.r(__webpack_exports__);
       nKeys.forEach(function (k) {
         args = args.concat(neg[k]);
       });
+      
       if (args.length) {
         return addNode(args);
       } else {
@@ -8896,7 +8904,7 @@ __webpack_require__.r(__webpack_exports__);
           var e = denom.args[1];
           node = multiplyNode([node.args[0], newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [b, negate(e, true)])]);
         } else {
-          node = multiplyNode([node.args[0], newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [node.args[1], nodeMinusOne])]);
+          node = fractionNode(node.args[0], node.args[1]);
         }
       } else if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF) {
         node = multiplyNode(node.args);
@@ -9032,6 +9040,10 @@ __webpack_require__.r(__webpack_exports__);
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(options);
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(root && root.args, "2000: Internal error. root=" + JSON.stringify(root) + " options=" + JSON.stringify(options));
       var nid = ast.intern(root);
+      // if (nid === 47) {
+      //   console.log("normalize() nid=" + nid);
+      //   console.log("normalize() root=" + JSON.stringify(root, null, 2))
+      // }
       if (root.normalizeNid === nid) {
         return root;
       }
@@ -9119,26 +9131,15 @@ __webpack_require__.r(__webpack_exports__);
             n = normalize(options, n);
             if (isOne(n)) {
               // If number node one, then erase it.
-              return;
-            }
-            if (!normalizeArithmetic) {
-              // Do a more agressive normalization.
-              if (isMinusOne(n)) {
-                hasMinusOne = !hasMinusOne;
-                return;
-              } else if (isNeg(n)) {
-                hasMinusOne = !hasMinusOne;
-                n = negate(n);
-              }
             } else if (isMinusOne(n)) {
               hasMinusOne = !hasMinusOne;
-              return;
+            } else if (isNeg(n)) {
+              hasMinusOne = !hasMinusOne;
+              args.push(negate(n));
             } else if (hasMinusOne && isPositiveInfinity(n)) {
               args.push(nodeNegativeInfinity);
-              return;
             } else if (hasMinusOne && isNegativeInfinity(n)) {
               args.push(nodePositiveInfinity);
-              return;
             } else {
               if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL) {
                 // Flatten
@@ -9357,6 +9358,7 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         exponential: function(node) {
+          let n0 = node;
           if (node.args.length === 2 &&
               node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].VAR &&
               node.args[1].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].VAR &&
@@ -9525,6 +9527,10 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
+        if (nid === 43 || nid === 48) {
+          console.log("normalize() nid=" + nid);
+          console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
+        }
         node = normalize(options, node);
       }
       node.normalizeNid = nid;
@@ -10024,7 +10030,7 @@ __webpack_require__.r(__webpack_exports__);
           // Sort by ascending degree.
           var args = [];
           let isNeg = false;
-          node.args.forEach(function (n, i) {
+          node.args.forEach(n => {
             if (isMinusOne(n)) {
               isNeg = !isNeg;
             } else {
@@ -10032,29 +10038,29 @@ __webpack_require__.r(__webpack_exports__);
             }
           });
           if (args.length === 0) {
-            args.push(nodeOne);
+            return nodeOne;
           }
-          node = isNeg && negate(binaryNode(node.op, args)) || binaryNode(node.op, args);
+//          node = isNeg && negate(binaryNode(node.op, args)) || binaryNode(node.op, args);
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC ||
               node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF) {
             // Don't sort numerators and denominator or coefficients.
-            return node;
+            return isNeg && negate(binaryNode(node.op, args)) || binaryNode(node.op, args);
           }
           var d0, d1;
           var n0, n1;
           var v0, v1;
           var c0, c1;
-          for (var i = 0; i < node.args.length - 1; i++) {
+          for (var i = 0; i < args.length - 1; i++) {
             var s0, s1;
-            n0 = node.args[i];
-            n1 = node.args[i + 1];
+            n0 = args[i];
+            n1 = args[i + 1];
             d0 = degree(n0);
             d1 = degree(n1);
             if (d0 !== d1) {
               if (d0 > d1) {
                 // Swap adjacent elements
-                node.args[i] = n1;
-                node.args[i + 1] = n0;
+                args[i] = n1;
+                args[i + 1] = n0;
               }
             } else if (Math.abs(d0) === Math.abs(d1)) {
               v0 = n0.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && variables(n0.args[0]) || variables(n0);
@@ -10063,13 +10069,13 @@ __webpack_require__.r(__webpack_exports__);
               var e1 = exponent(n1);
               if (e0 !== e1 && !isNaN(e0) && !isNaN(e1)) {
                 if (e0 < e1) {
-                  node.args[i] = n1;
-                  node.args[i + 1] = n0;
+                  args[i] = n1;
+                  args[i + 1] = n0;
                 }
               } else if (v0.length !== v1.length) {
                 if (v0.length < v1.length) {
-                  node.args[i] = n1;
-                  node.args[i + 1] = n0;
+                  args[i] = n1;
+                  args[i + 1] = n0;
                 }
               } else if (n0.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW &&
                          n1.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW &&
@@ -10077,39 +10083,39 @@ __webpack_require__.r(__webpack_exports__);
                 // We have exponential exprs with the same exponent and no
                 // variables so compare constant operands.
                 if (isLessThan(mathValue(options, n0.args[0], true), mathValue(options, n1.args[0], true))) {
-                  node.args[i] = n1;
-                  node.args[i + 1] = n0;
+                  args[i] = n1;
+                  args[i + 1] = n0;
                 }
               } else if (n0.op !== n1.op) {
                 if (hashCode(n0.op) < hashCode(n1.op)) {
-                  node.args[i] = n1;
-                  node.args[i + 1] = n0;
+                  args[i] = n1;
+                  args[i + 1] = n0;
                 }
               } else if(v0.length > 0) {
                 if ((s0=v0.join(",")) !== (s1=v1.join(","))) {
                   if (s0 < s1) {
                     // Swap adjacent elements
-                    node.args[i] = n1;
-                    node.args[i + 1] = n0;
+                    args[i] = n1;
+                    args[i + 1] = n0;
                   }
                 } else if ((c0 = isPolynomial(n0)) && (c1 = isPolynomial(n1)) &&
                            (s0=c0.join(",")) !== (s1=c1.join(","))) {
                   if (s0 < s1) {
-                    node.args[i] = n1;
-                    node.args[i + 1] = n0;
+                    args[i] = n1;
+                    args[i + 1] = n0;
                   }
                 } else if (isLessThan(constantPart(n0), constantPart(n1))) {
-                  node.args[i] = n1;
-                  node.args[i + 1] = n0;
+                  args[i] = n1;
+                  args[i + 1] = n0;
                 }
               } else if (isLessThan(leadingCoeff(n0), leadingCoeff(n1))) {
                 // Keep last
-                node.args[i] = n1;
-                node.args[i + 1] = n0;
+                args[i] = n1;
+                args[i + 1] = n0;
               }
             }
           }
-          return node;
+          return isNeg && negate(binaryNode(node.op, args)) || binaryNode(node.op, args);
         },
         unary: function(node) {
           var args = [];
@@ -10212,6 +10218,7 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, sort again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
+        console.log("sort() nid=" + nid);
         node = sort(node);
       }
       node.sortNid = nid;
@@ -10448,6 +10455,9 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         unary: function(node) {
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0]) {
+            return normalizeLiteral(options, node.args[0]);
+          }
           var args = [];
           node.args.forEach(function (n) {
             args.push(normalizeLiteral(options, n));
@@ -13059,6 +13069,7 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again.
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
+        console.log("expand() nid=" + nid);
         node = expand(options, node);
       }
       node.expandNid = nid;
@@ -14382,6 +14393,7 @@ __webpack_require__.r(__webpack_exports__);
     if (!(n1 instanceof Array)) {
       n1 = [n1];
     }
+    n2 = normalizeSyntax(options, n2);
     result = n1.some(function (n) {
       try {
         options.is_normal = true;
@@ -14557,6 +14569,8 @@ __webpack_require__.r(__webpack_exports__);
       return node;
     }
     function compare(n1, n2, resume) {
+      // console.log(">> equivSymbolic() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
+      // console.log(">> equivSymbolic() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
       try {
         if (!strict) {
           var n1o = JSON.parse(JSON.stringify(n1));
@@ -14671,34 +14685,12 @@ __webpack_require__.r(__webpack_exports__);
               n2 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))));
             }
           }
+          // console.log("<< equivSymbolic() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
+          // console.log("<< equivSymbolic() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
           var nid1 = ast.intern(n1);
           var nid2 = ast.intern(n2);
           var result = nid1 === nid2;
-          if (!result) {
-            if (isComparison(n1.op)) {
-              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
-              nid1 = ast.intern(n1);
-              nid2 = ast.intern(n2);
-              result = nid1 === nid2;
-              result = inverseResult ? !result : result;
-              option(options, "ignoreUnits", ignoreUnits);
-              resume([], result);
-            } else if (!isComparison(n2.op) && !isAggregate(n1) && !isAggregate(n2)) {
-              n1 = addNode([n1o, negate(n2o)]);
-              n2 = nodeZero;
-              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
-              nid1 = ast.intern(n1);
-              nid2 = ast.intern(n2);
-              result = nid1 === nid2;
-              result = inverseResult ? !result : result;
-              option(options, "ignoreUnits", ignoreUnits);
-              resume([], result);
-            } else {
-              resume([], result);
-            }
-          } else {
+          if (false) {} else {
             result = inverseResult ? !result : result;
             option(options, "ignoreUnits", ignoreUnits);
             resume([], result);
@@ -16189,6 +16181,7 @@ let Model = (function () {
   let parse = function parse(options, src, env) {
     src = stripInvisible(src);
     function newNode(op, args) {
+      Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op !== Model.POW && args.length > 0 && isMinusOne(args[args.length - 1])), 'newNode() op=' + op + ' args=' + JSON.stringify(args, null, 2));
       // args.forEach((arg, i) => {
       //   if (i > 0) {
       //     assert(op !== Model.MUL || !isMinusOne(arg), "Model: " + JSON.stringify(args, null, 2));
