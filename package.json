@@ -21,7 +21,9 @@
     "hashids": "1.1.1",
     "mathjax-node": "^1.1.0",
     "morgan": "^1.9.1",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
   },
   "engines": {
     "node": "latest"

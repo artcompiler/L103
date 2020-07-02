@@ -60,7 +60,7 @@ function bundle() {
   // } else {
   //   exec("browserify ./src/viewer.js -s viewer | uglifyjs --screw-ie8 > ./pub/viewer.js");
   // }
-  exec("webpack --config ./tools/config/webpack.config.js");
+  exec("npx webpack --config ./tools/config/webpack.config.js");
 }
 
 // function compile() {

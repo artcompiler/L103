@@ -5830,6 +5830,7 @@ let MathCore = (function MathCore () {
         });
       });
     } catch (e) {
+      console.log("ERROR evaluateVerbose e=" + e.stack);
       if (!e.message) {
         try {
           // Internal error.
@@ -6294,8 +6295,8 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function newNode(op, args) {
-//    assert(!((op === Model.MUL || op === Model.TIMES || op === Model.COEFF) && isMinusOne(args[args.length - 1])), JSON.stringify(args, null, 2));
-    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && args.length > 0 && isMinusOne(args[args.length - 1])), 'newNode() op=' + op + ' args=' + JSON.stringify(args, null, 2));
+    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isOne(args[0]) && isMinusOne(args[1])));
+    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isMinusOne(args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
     // args.forEach((arg, i) => {
     //   if (i > 0) {
     //     assert(!(op === Model.MUL && isMinusOne(arg)), JSON.stringify(args, null, 2));
@@ -6596,14 +6597,14 @@ __webpack_require__.r(__webpack_exports__);
     } else if (typeof n === "number") {
       return n === -1;
     } else if (n instanceof decimal_js__WEBPACK_IMPORTED_MODULE_4__["Decimal"]) {
-      return !bigMinusOne.comparedTo(n);
+      return bigMinusOne.comparedTo(n) === 0;
     } else if (n.op) {
       if (n.args[0] === '-1') {
         return true;
       }
       var mv = mathValue(options, n, true);
       if (mv) {
-        return !bigMinusOne.comparedTo(mathValue(options, n, true));
+        return bigMinusOne.comparedTo(mathValue(options, n, true)) === 0;
       } else {
         return false;
       }
@@ -6670,9 +6671,15 @@ __webpack_require__.r(__webpack_exports__);
     ff.forEach(function (f) {
       if (f.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW || !isNeg(mathValue(options, f.args[1], true))) {
         // Is a numerator.
-        nn.push(f);
+        if (!isMinusOne(f)) {
+          // Erase -1.
+          nn.push(f);
+        }
       } else {
-        dd.push(f.args[1]);
+        if (!isMinusOne(f)) {
+          // Erase -1.
+          dd.push(f.args[0]);
+        }
       }
     });
     var n = multiplyNode(nn);
@@ -8267,9 +8274,9 @@ __webpack_require__.r(__webpack_exports__);
       node.args.forEach(function(n, i) {
         var f;
         if (isMinusOne(n)) {
-          // Move negatives to denom.
-          n = newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [nodeMinusOne, nodeMinusOne]);
-          changed = true;
+//          // Move negatives to denom.
+//          n = newNode(Model.POW, [nodeMinusOne, nodeMinusOne]);
+//          changed = true;
         }
         var ff = factors(options, n, {}, false, true, true);
         ff.forEach(function (f) {
@@ -8430,7 +8437,6 @@ __webpack_require__.r(__webpack_exports__);
       nKeys.forEach(function (k) {
         args = args.concat(neg[k]);
       });
-      
       if (args.length) {
         return addNode(args);
       } else {
@@ -9004,25 +9010,53 @@ __webpack_require__.r(__webpack_exports__);
         return [cancelFactors(options, n1), cancelFactors(options, n2)];
       }
       var args = [];
+      let hasMinusOne = false;
       nKeys.forEach(function (k) {
-        args = args.concat(nn1[k]);  // Save survivors.
+        nn1[k].forEach(n => {
+          if (isMinusOne(n)) {
+            hasMinusOne = !hasMinusOne;
+          } else {
+            args.push(n);  // Save survivors.
+          }
+        });
       });
+      if (hasMinusOne) {
+        if (args.length === 0) {
+          args.push(nodeMinusOne);
+        } else {
+          args.unshift(negate(args.shift()));
+        }
+      }
       if (args.length === 0) {
         n1 = nodeOne;
       } else if (args.length === 1) {
-        args.push(nodeOne);
+//        args.push(nodeOne);
         n1 = newNode(n1.op, args);
       } else {
         n1 = newNode(n1.op, args);
       }
-      var args = [];
+      args = [];
+      hasMinusOne = false;
       dKeys.forEach(function (k) {
-        args = args.concat(nn2[k]);
+        nn2[k].forEach(n => {
+          if (isMinusOne(n)) {
+            hasMinusOne = !hasMinusOne;
+          } else {
+            args.push(n);  // Save survivors.
+          }
+        });
       });
+      if (hasMinusOne) {
+        if (args.length === 0) {
+          args.push(nodeMinusOne);
+        } else {
+          args.unshift(negate(args.shift()));
+        }
+      }
       if (args.length === 0) {
         n2 = nodeOne;
       } else if (args.length === 1) {
-        args.push(nodeOne);
+//        args.push(nodeOne);
         n2 = newNode(n2.op, args);
       } else {
         n2 = newNode(n2.op, args);
@@ -9527,10 +9561,8 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        if (nid === 43 || nid === 48) {
-          console.log("normalize() nid=" + nid);
-          console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
-        }
+        console.log("normalize() nid=" + nid);
+//        console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
         node = normalize(options, node);
       }
       node.normalizeNid = nid;
@@ -12165,7 +12197,11 @@ __webpack_require__.r(__webpack_exports__);
                 // synthetic idiom for negative coefficients.
                 // Odd integers qualify as odd fractions. Key is that numerator
                 // and denominator are both odd.
-                return multiplyNode([nodeMinusOne, binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [negate(base), expo])]);
+                if (isMinusOne(expo)) {
+                  return nodeMinusOne;
+                } else {
+                  return multiplyNode([nodeMinusOne, binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [negate(base), expo])]);
+                }
               } else if (!option(options, "dontExpandPowers") && base.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL) {
                 // Expand factors.
                 var args = [];
@@ -12173,6 +12209,8 @@ __webpack_require__.r(__webpack_exports__);
                   if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW) {
                     // Flatten.
                     args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [n.args[0], multiplyNode([n.args[1], expo])]));
+                  } else if (isMinusOne(n) && isMinusOne(expo)) {
+                    args.push(nodeMinusOne);
                   } else {
                     args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [n, expo]));
                   }
@@ -12290,6 +12328,10 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
+        if (nid === 1 || nid === 73 || nid === 126 || nid === 154 || nid === 156) {
+          console.log("simplify() nid=" + nid);
+          console.log("simplify() node=" + JSON.stringify(stripMetadata(node)));
+        }
         node = simplify(options, node, env);
       }
       node.simplifyNid = nid;
@@ -13163,7 +13205,12 @@ __webpack_require__.r(__webpack_exports__);
               // Limit complexity of polynomial expansion.
               var args = factors(options, node.args[0], {}, false, true, true);
               for (var j = 0; j < args.length; j++) {
-                var f = isDenom ? newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [args[j], nodeMinusOne]) : args[j];
+                var f;
+                if (isMinusOne(args[j])) {
+                  f = nodeMinusOne;
+                } else {
+                  f = isDenom ? newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [args[j], nodeMinusOne]) : args[j];
+                }
                 for (var i = ea; i > 0; i--) {
                   ff.push(f);
                 }
@@ -18903,7 +18950,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) *
 /******/ });
 });
 /*
- * translatex commit 5411b89
+ * translatex commit a172ce1
  * Copyright 2020 Artcompiler Inc. All Rights Reserved.
  * Copyright 2020 Learnosity Ltd. All Rights Reserved.
  *
