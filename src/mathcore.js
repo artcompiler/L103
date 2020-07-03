@@ -6295,9 +6295,11 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function newNode(op, args) {
-    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isOne(args[0]) && isMinusOne(args[1])));
-    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isMinusOne(args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
+    // assert(!(op === Model.POW && args[0].op === Model.MUL && isMinusOne(args[0].args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
+    // assert(!(op === Model.POW && isMinusOne(args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
+    // assert(!(op === Model.MUL && isMinusOne(args[0]) && args[1].op === Model.POW && isMinusOne(args[1].args[1])), "op=" + op + " args=" + JSON.stringify(args, null, 2));
     // args.forEach((arg, i) => {
+    //   assert(!(op === Model.MUL && arg.op === Model.MUL), "op=" + op + " args=" + JSON.stringify(args, null, 2));
     //   if (i > 0) {
     //     assert(!(op === Model.MUL && isMinusOne(arg)), JSON.stringify(args, null, 2));
     //   }
@@ -6609,7 +6611,7 @@ __webpack_require__.r(__webpack_exports__);
         return false;
       }
     }
-    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false, "2000: Unable to compare with zero.");
+    Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false, "2000: Unable to compare with zero. typeof n= " + typeof n);
   }
 
   function isInteger(node) {
@@ -7192,6 +7194,7 @@ __webpack_require__.r(__webpack_exports__);
     // and 'variablePart' are complements. Their product are equivSymbolic with
     // the original expression.
     function constantPart(root) {
+      // console.trace("constantPart() root=" + JSON.stringify(root, null, 2));
       var env = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].env;
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(root && root.args, "2000: Internal error.");
       return visit(options, root, {
@@ -7199,6 +7202,7 @@ __webpack_require__.r(__webpack_exports__);
         exponential: function (node) {
           if (variablePart(node) === null) {
             // No variable part, so it's all constant part.
+            // console.trace("constantPart() exponential node=" + JSON.stringify(node, null, 2));
             return node;
           }
           return nodeOne;
@@ -7222,6 +7226,7 @@ __webpack_require__.r(__webpack_exports__);
               }
             } // Otherwise it's a variable part. Skip it.
           });
+          // console.trace("constantPart() multiplicative isNeg=" + isNeg + " args=" + JSON.stringify(args, null, 2));
           if (args.length === 0) {
             return isNeg && nodeMinusOne || nodeOne;
           } else if (args.length === 1) {
@@ -8271,54 +8276,55 @@ __webpack_require__.r(__webpack_exports__);
       var changed = false;
       var numers = {};
       var denoms = {};
+      let hasMinusOne;
       node.args.forEach(function(n, i) {
         var f;
         if (isMinusOne(n)) {
-//          // Move negatives to denom.
-//          n = newNode(Model.POW, [nodeMinusOne, nodeMinusOne]);
-//          changed = true;
-        }
-        var ff = factors(options, n, {}, false, true, true);
-        ff.forEach(function (f) {
-          var isDenom = f.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isNeg(f.args[1]);
-          var k = isDenom && isMinusOne(f.args[1]) && f.args[0] ||  // Strip exponent.
-                  isDenom && newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [f.args[0], negate(f.args[1])]) || // Invert exponent.
-                  f;
-          var mv = mathValue(options, k, true);
-          if (isOne(mv)) {
-            // Skip 1s.
-            return;
-          }
-          var key = mv !== null ? String(mv) : "nid$" + ast.intern(k);
-          if (isDenom) {
+          hasMinusOne = !hasMinusOne;
+          changed = true;
+        } else {
+          var ff = factors(options, n, {}, false, true, true);
+          ff.forEach(function (f) {
+            var isDenom = f.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isNeg(f.args[1]);
+            var k = isDenom && isMinusOne(f.args[1]) && f.args[0] ||  // Strip exponent.
+                isDenom && newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [f.args[0], negate(f.args[1])]) || // Invert exponent.
+                f;
+            var mv = mathValue(options, k, true);
+            if (isOne(mv)) {
+              // Skip 1s.
+              return;
+            }
+            var key = mv !== null ? String(mv) : "nid$" + ast.intern(k);
+            if (isDenom) {
             if (!denoms[key]) {
               denoms[key] = [];
             }
-            denoms[key].push(f);
-          } else {
-            if (!numers[key]) {
-              numers[key] = [];
+              denoms[key].push(f);
+            } else {
+              if (!numers[key]) {
+                numers[key] = [];
+              }
+              numers[key].push(f);
             }
-            numers[key].push(f);
-          }
-        })
+          });
+        }
       });
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!numers["1"] && !denoms["1"], "2000: Identity multiplication should be factored out by now.");
-      if (numers["-1"]) {
-        if (numers["-1"].length % 2 === 0) {
-          delete numers["-1"];
-        } else {
-          if (denoms.length > 0) {
-            // If there are denoms, then Move -1 to denom.
-            delete numers["-1"];
-            denoms["-1"] = (denoms["-1"] || []).concat(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [nodeMinusOne, nodeMinusOne]));
-          } else {
-            // Otherwise just keep -1 in the numer.
-            numers["-1"] = [].concat(numers["-1"][0]);
-          }
-        }
-        changed = true;
-      }
+      // if (numers["-1"]) {
+      //   if (numers["-1"].length % 2 === 0) {
+      //     delete numers["-1"];
+      //   } else {
+      //     if (denoms.length > 0) {
+      //       // If there are denoms, then Move -1 to denom.
+      //       delete numers["-1"];
+      //       denoms["-1"] = (denoms["-1"] || []).concat(binaryNode(Model.POW, [nodeMinusOne, nodeMinusOne]));
+      //     } else {
+      //       // Otherwise just keep -1 in the numer.
+      //       numers["-1"] = [].concat(numers["-1"][0]);
+      //     }
+      //   }
+      //   changed = true;
+      // }
       if (denoms["-1"]) {
         if (denoms["-1"].length % 2 === 0) {
           delete denoms["-1"];
@@ -8356,13 +8362,22 @@ __webpack_require__.r(__webpack_exports__);
       dKeys.forEach(function (k) {
         dargs = dargs.concat(denoms[k]);
       });
+
+      if (hasMinusOne) {
+        if (dargs.length > 0) {
+          dargs.unshift(negate(dargs.shift()));
+        } else {
+          nargs.unshift(negate(nargs.shift()));
+        }
+      }
+
       var n, d;
       if (nargs.length) {
         n = multiplyNode(nargs, true);
       } else {
         n = null;
       }
-      if (dargs.length) {
+      if (dargs.length > 0) {
         d = multiplyNode(dargs, true);
       } else {
         d = null;
@@ -8938,6 +8953,8 @@ __webpack_require__.r(__webpack_exports__);
       var changed = false;
       var nn1 = {};
       var nn2 = {};
+      // console.trace("eraseCommonExpressions() n1=" + JSON.stringify(n1, null, 2))
+      // console.trace("eraseCommonExpressions() n2=" + JSON.stringify(n2, null, 2))
       n1.args.forEach(function(n, i) {
         var mv = mathValue(options, n, true);
         // For numeric exponents, use base as key and later reduce
@@ -9024,7 +9041,7 @@ __webpack_require__.r(__webpack_exports__);
         if (args.length === 0) {
           args.push(nodeMinusOne);
         } else {
-          args.unshift(negate(args.shift()));
+          args.unshift(negate(args.shift(args)));
         }
       }
       if (args.length === 0) {
@@ -9050,7 +9067,7 @@ __webpack_require__.r(__webpack_exports__);
         if (args.length === 0) {
           args.push(nodeMinusOne);
         } else {
-          args.unshift(negate(args.shift()));
+          args.unshift(negate(args.shift(args)));
         }
       }
       if (args.length === 0) {
@@ -9190,11 +9207,9 @@ __webpack_require__.r(__webpack_exports__);
           if (hasMinusOne) {
             if (args.length === 0) {
               node = nodeMinusOne;
-            } else if (args.length === 1) {
-              node = multiplyNode([nodeMinusOne, args[0]]);
             } else {
-              args.unshift(nodeMinusOne);
-              node = sort(binaryNode(node.op, args));
+              args.unshift(negate(args.shift(args)));
+              node = sort(binaryNode(node.op, args, true));
             }
           } else {
             if (args.length === 0) {
@@ -9202,7 +9217,7 @@ __webpack_require__.r(__webpack_exports__);
             } else if (args.length === 1) {
               node = args[0];
             } else {
-              node = sort(binaryNode(node.op, args));
+              node = sort(binaryNode(node.op, args, true));
             }
           }
           if (hasPM) {
@@ -9562,7 +9577,9 @@ __webpack_require__.r(__webpack_exports__);
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
         console.log("normalize() nid=" + nid);
-//        console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
+        if (nid === 121 || nid === 123) {
+          console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
+        }
         node = normalize(options, node);
       }
       node.normalizeNid = nid;
@@ -9637,7 +9654,7 @@ __webpack_require__.r(__webpack_exports__);
           node.args.forEach(function (n) {
             args = args.concat(normalizeSympy(options, n));
           });
-          return Object.assign({}, node, newNode(node.op, args));
+          return Object.assign({}, node, binaryNode(node.op, args, true));
         },
         unary: function(node) {
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0]) {
@@ -10881,7 +10898,7 @@ __webpack_require__.r(__webpack_exports__);
       var arg;
       if (vp.length > 0) {
         if (phase) {
-          arg = addNode(vp.concat(shift));
+          arg = addNode(vp.concat(shift()));
         } else {
           arg = addNode(vp);
         }
@@ -11624,7 +11641,11 @@ __webpack_require__.r(__webpack_exports__);
         if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && !isOne(n.args[0])) {
           // If denominator is 1 then skip it.
           if (isMinusOne(n.args[1])) {
-            dd.unshift(nodeMinusOne);
+            if (dd.length === 0) {
+              dd.unshift(nodeMinusOne);
+            } else {
+              dd.unshift(negate(dd.shift(dd)));
+            }
           } else if (isNeg(mathValue(options, n.args[1], true))) {
             dd.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [d0, simplify(options, negate(n.args[1]), env)]));
           }
@@ -12205,17 +12226,25 @@ __webpack_require__.r(__webpack_exports__);
               } else if (!option(options, "dontExpandPowers") && base.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL) {
                 // Expand factors.
                 var args = [];
+                let hasMinusOne = false;
                 base.args.forEach(function (n) {
                   if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW) {
                     // Flatten.
                     args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [n.args[0], multiplyNode([n.args[1], expo])]));
                   } else if (isMinusOne(n) && isMinusOne(expo)) {
-                    args.push(nodeMinusOne);
+                    hasMinusOne = !hasMinusOne;
                   } else {
                     args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [n, expo]));
                   }
                 });
-                return multiplyNode(args);
+                if (hasMinusOne) {
+                  if (args.length === 0) {
+                    args.push(nodeMinusOne);
+                  } else {
+                    args.unshift(negate(args.shift()));
+                  }
+                }
+                return multiplyNode(args, true);
               } else if (bmv !== null && emv !== null && !isNeg(bmv)) {
                 // 2^3, 16^(-1*1^-2)
                 var b = pow(bmv, emv)
@@ -12328,9 +12357,9 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        if (nid === 1 || nid === 73 || nid === 126 || nid === 154 || nid === 156) {
-          console.log("simplify() nid=" + nid);
-          console.log("simplify() node=" + JSON.stringify(stripMetadata(node)));
+        console.log("simplify() nid=" + nid);
+        if (nid === 99 || nid === 106) {          
+          console.log("simplify() node=" + JSON.stringify(node, null, 2));
         }
         node = simplify(options, node, env);
       }
@@ -12871,14 +12900,18 @@ __webpack_require__.r(__webpack_exports__);
           });
           if (isNeg) {
             // Put back one minus one.
-            n0.unshift(negate(n0.shift()));
+            if (n0.length === 0) {
+              n0.unshift(nodeMinusOne);
+            } else {
+              n0.unshift(negate(n0.shift()));
+            }
           }
           if (n0.length === 0) {
             node = nodeOne;
           } else if (n0.length === 1) {
             node = n0[0];
           } else {
-            node = multiplyNode(n0);
+            node = multiplyNode(n0, true);
           }
           return node;
           function unfold(lnode, rnode) {
@@ -13128,8 +13161,9 @@ __webpack_require__.r(__webpack_exports__);
             return [node];
           }
           var ff = [];
+          let hasNeg = false;
           if (preserveNeg && isNeg(node)) {
-            ff.unshift(nodeMinusOne);
+            hasNeg = !hasNeg;
           }
           var absv = Math.abs(+node.args[0]);
           var pff = primeFactors(absv);
@@ -13139,6 +13173,9 @@ __webpack_require__.r(__webpack_exports__);
             primeFactors(+node.args[0]).forEach(function (n) {
               ff.push(numberNode(options, n));
             });
+          }
+          if (hasNeg) {
+            ff.unshift(nodeMinusOne);
           }
           return ff;
         },
@@ -13180,7 +13217,6 @@ __webpack_require__.r(__webpack_exports__);
             return ff;
           default:
             Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false, "2000: Node not normalized");
-            console.trace(node);
             break;
           }
           return [node];
