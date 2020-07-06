@@ -6295,15 +6295,16 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function newNode(op, args) {
+    // assert(!(op === Model.ADD && args[0].op === Model.MUL && isMinusOne(args[0].args[0]) && args[1].op === Model.MUL && isMinusOne(args[1].args[0])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.POW && args[0].op === Model.MUL && isMinusOne(args[0].args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.POW && isMinusOne(args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.MUL && isMinusOne(args[0]) && args[1].op === Model.POW && isMinusOne(args[1].args[1])), "op=" + op + " args=" + JSON.stringify(args, null, 2));
-    // args.forEach((arg, i) => {
-    //   assert(!(op === Model.MUL && arg.op === Model.MUL), "op=" + op + " args=" + JSON.stringify(args, null, 2));
-    //   if (i > 0) {
-    //     assert(!(op === Model.MUL && isMinusOne(arg)), JSON.stringify(args, null, 2));
-    //   }
-    // })
+    args.forEach((arg, i) => {
+//      assert(!(op === Model.MUL && arg.op === Model.MUL), "op=" + op + " args=" + JSON.stringify(args, null, 2));
+      if (i > 0) {
+        Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL && isMinusOne(arg)), "op=" + op + " args=" + JSON.stringify(args, null, 2));
+      }
+    })
     return {
       op: op,
       args: args
@@ -8276,29 +8277,29 @@ __webpack_require__.r(__webpack_exports__);
       var changed = false;
       var numers = {};
       var denoms = {};
-      let hasMinusOne;
+      let hasMinusOne = false;
       node.args.forEach(function(n, i) {
         var f;
-        if (isMinusOne(n)) {
-          hasMinusOne = !hasMinusOne;
-          changed = true;
-        } else {
-          var ff = factors(options, n, {}, false, true, true);
-          ff.forEach(function (f) {
-            var isDenom = f.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isNeg(f.args[1]);
-            var k = isDenom && isMinusOne(f.args[1]) && f.args[0] ||  // Strip exponent.
-                isDenom && newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [f.args[0], negate(f.args[1])]) || // Invert exponent.
-                f;
-            var mv = mathValue(options, k, true);
-            if (isOne(mv)) {
-              // Skip 1s.
-              return;
-            }
+        var ff = factors(options, n, {}, false, true, true);
+        ff.forEach(function (f) {
+          var isDenom = f.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW && isNeg(f.args[1]);
+          var k = isDenom && isMinusOne(f.args[1]) && f.args[0] ||  // Strip exponent.
+              isDenom && newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [f.args[0], negate(f.args[1])]) || // Invert exponent.
+              f;
+          var mv = mathValue(options, k, true);
+          if (isOne(mv)) {
+            // Skip 1s.
+            return;
+          }
+          if (isMinusOne(f)) {
+            hasMinusOne = !hasMinusOne;
+            changed = true;
+          } else {
             var key = mv !== null ? String(mv) : "nid$" + ast.intern(k);
             if (isDenom) {
-            if (!denoms[key]) {
-              denoms[key] = [];
-            }
+              if (!denoms[key]) {
+                denoms[key] = [];
+              }
               denoms[key].push(f);
             } else {
               if (!numers[key]) {
@@ -8306,33 +8307,11 @@ __webpack_require__.r(__webpack_exports__);
               }
               numers[key].push(f);
             }
-          });
-        }
+          }
+        });
       });
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!numers["1"] && !denoms["1"], "2000: Identity multiplication should be factored out by now.");
-      // if (numers["-1"]) {
-      //   if (numers["-1"].length % 2 === 0) {
-      //     delete numers["-1"];
-      //   } else {
-      //     if (denoms.length > 0) {
-      //       // If there are denoms, then Move -1 to denom.
-      //       delete numers["-1"];
-      //       denoms["-1"] = (denoms["-1"] || []).concat(binaryNode(Model.POW, [nodeMinusOne, nodeMinusOne]));
-      //     } else {
-      //       // Otherwise just keep -1 in the numer.
-      //       numers["-1"] = [].concat(numers["-1"][0]);
-      //     }
-      //   }
-      //   changed = true;
-      // }
-      if (denoms["-1"]) {
-        if (denoms["-1"].length % 2 === 0) {
-          delete denoms["-1"];
-        } else {
-          denoms["-1"] = [].concat(denoms["-1"][0]);
-        }
-        changed = true;
-      }
+      Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!numers["-1"] && !denoms["-1"], "2000: Negative multiplication should be factored out by now.");
       var nKeys = Object.keys(numers);
       var dKeys = Object.keys(denoms);
       if (nKeys.length === 0 || dKeys.length === 0 ||
@@ -8370,7 +8349,6 @@ __webpack_require__.r(__webpack_exports__);
           nargs.unshift(negate(nargs.shift()));
         }
       }
-
       var n, d;
       if (nargs.length) {
         n = multiplyNode(nargs, true);
@@ -8728,29 +8706,57 @@ __webpack_require__.r(__webpack_exports__);
       }
       var args = [];
       var addArgs = [];
+      let hasMinusOne = false;
       Object.keys(nn1).forEach(function (k) {
-        args = args.concat(nn1[k]);  // Save survivors.
+        nn1[k].forEach(n => {
+          if (isMinusOne(n)) {
+            hasMinusOne = !hasMinusOne;
+          } else {
+            args.push(n);  // Save survivors.
+          }
+        });
       });
+      if (hasMinusOne) {
+        if (args.length === 0) {
+          args.push(nodeMinusOne);
+        } else {
+          args.unshift(negate(args.shift(args)));
+        }
+      }
       if (args.length === 0) {
         n1 = nodeOne;
       } else if (args.length === 1) {
         n1 = args[0];
       } else {
-        n1 = multiplyNode(args);
+        n1 = multiplyNode(args, true);
       }
       addArgs.push(n1);
       nnn2.forEach(function (nn2) {
         var args = [];
         var n2;
+        let hasMinusOneTerm = false;
         Object.keys(nn2).forEach(function (k) {
-          args = args.concat(nn2[k]);
+          nn2[k].forEach(n => {
+            if (isMinusOne(n)) {
+              hasMinusOneTerm = !hasMinusOneTerm;
+            } else {
+              args.push(n);  // Save survivors.
+            }
+          });
         });
+        if (hasMinusOneTerm) {
+          if (args.length === 0) {
+            args.push(nodeMinusOne);
+          } else {
+            args.unshift(negate(args.shift(args)));
+          }
+        }
         if (args.length === 0) {
           n2 = nodeOne;
         } else if (args.length === 1) {
           n2 = args[0];
         } else {
-          n2 = multiplyNode(args);
+          n2 = multiplyNode(args, true);
         }
         addArgs.push(n2);
       });
@@ -8762,7 +8768,7 @@ __webpack_require__.r(__webpack_exports__);
         // No factors so return the original node.
         return node;
       }
-      return multiplyNode(args.concat(addNode(addArgs)));
+      return multiplyNode(args.concat(addNode(addArgs)), true);
     }
 
     function crossMultiply(options, n1, n2) {
@@ -9047,8 +9053,7 @@ __webpack_require__.r(__webpack_exports__);
       if (args.length === 0) {
         n1 = nodeOne;
       } else if (args.length === 1) {
-//        args.push(nodeOne);
-        n1 = newNode(n1.op, args);
+        n1 = args[0];
       } else {
         n1 = newNode(n1.op, args);
       }
@@ -9073,8 +9078,7 @@ __webpack_require__.r(__webpack_exports__);
       if (args.length === 0) {
         n2 = nodeOne;
       } else if (args.length === 1) {
-//        args.push(nodeOne);
-        n2 = newNode(n2.op, args);
+        n2 = args[0];
       } else {
         n2 = newNode(n2.op, args);
       }
@@ -9204,14 +9208,14 @@ __webpack_require__.r(__webpack_exports__);
             }
           });
           var isRepeatingFlag = node.isRepeating;
-          if (hasMinusOne) {
-            if (args.length === 0) {
-              node = nodeMinusOne;
-            } else {
-              args.unshift(negate(args.shift(args)));
-              node = sort(binaryNode(node.op, args, true));
-            }
-          } else {
+          // if (hasMinusOne) {
+          //   if (args.length === 0) {
+          //     node = nodeMinusOne;
+          //   } else {
+          //     args.unshift(negate(args.shift(args)));
+          //     node = sort(binaryNode(node.op, args, true));
+          //   }
+          // } else {
             if (args.length === 0) {
               node = nodeOne;
             } else if (args.length === 1) {
@@ -9219,9 +9223,12 @@ __webpack_require__.r(__webpack_exports__);
             } else {
               node = sort(binaryNode(node.op, args, true));
             }
-          }
+          // }
           if (hasPM) {
             node = unaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PM, [node]);
+          }
+          if (hasMinusOne) {
+            node = negate(node);
           }
           node.isRepeating = isRepeatingFlag;
           return node;
@@ -9576,10 +9583,10 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        console.log("normalize() nid=" + nid);
-        if (nid === 121 || nid === 123) {
-          console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
-        }
+        // console.log("normalize() nid=" + nid);
+        // if (nid === 38 || nid === 41) {
+        //   console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
+        // }
         node = normalize(options, node);
       }
       node.normalizeNid = nid;
@@ -10267,7 +10274,7 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, sort again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        console.log("sort() nid=" + nid);
+        // console.log("sort() nid=" + nid);
         node = sort(node);
       }
       node.sortNid = nid;
@@ -11526,6 +11533,7 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     function commonDenom(node) {
+      console.log(">> commonDenom() node=" + JSON.stringify(node, null, 2));      
       if (node.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD) {
         // Not additive so create and add node so we can have the following code
         // collect denom factors into a single node.
@@ -11556,8 +11564,17 @@ __webpack_require__.r(__webpack_exports__);
         if (denoms.length > 1 && deg < 3 ||
             (denoms.length === 1 && !isMinusOne(denoms[0]) && !isOne(denoms[0]))) {
           // We have a non-trivial common denominator.
-          var denominator = binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [multiplyNode(denoms, true), nodeMinusOne]);
-          var n2 = [];
+          let hasMinusOne = false;
+          let denomsNew = [];
+          denoms.forEach(denom => {
+            if (isMinusOne(denom)) {
+              hasMinusOne = !hasMinusOne;
+            } else if (!isOne(denom)) {
+              denomsNew.push(denom);
+            }
+          });
+          var denominator = binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [multiplyNode(denomsNew, true), nodeMinusOne]);
+          var numers = [];
           // For each term get the numerator based on the common denominator.
           n0.forEach(function (n1) {
             var d, n;
@@ -11565,11 +11582,19 @@ __webpack_require__.r(__webpack_exports__);
             // .5x+.2y -> (2x+5y)/10
             d = denom(n1, []);
             n = numer(n1, d[0], denoms);
-            n2 = n2.concat(n);
+            numers = numers.concat(n);
+          });
+          let numersNew = [];
+          numers.forEach(numer => {
+            if (isMinusOne(numer)) {
+              hasMinusOne = !hasMinusOne;
+            } else if (!isOne(numer)) {
+              numersNew.push(numer);
+            }
           });
           // Now add the numerator and multiply it by the denominator.
-          if (n2.length) {
-            n0 = binaryNode(node.op, n2);
+          if (numers.length > 0) {
+            n0 = binaryNode(node.op, numers);
             var mv;
             if ((mv = mathValue(options, n0))) {
               n0 = numberNode(options, mv);
@@ -11578,10 +11603,14 @@ __webpack_require__.r(__webpack_exports__);
           } else {
             node = denominator;
           }
+          if (hasMinusOne) {
+            node = negate(node);
+          }
         } else {
           // Just return the original node.
         }
       }
+      console.log("<< commonDenom() node=" + JSON.stringify(node, null, 2));
       return node;
     }
     function numer(n, d, denoms) {
@@ -11594,12 +11623,22 @@ __webpack_require__.r(__webpack_exports__);
       var ff = factors(options, n, {}, true, true);
       var hasNumer = false;
       var n0, nn = [];
+      let hasMinusOne = false;
       ff.forEach(function (n) {
-        if (n.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW || !isNeg(mathValue(options, n.args[1], true))) {
+        if (isMinusOne(n)) {
+          hasMinusOne = !hasMinusOne;
+        } else if (n.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW || !isNeg(mathValue(options, n.args[1], true))) {
           // Is a numerator.
           nn.push(n);
         }
       });
+      if (hasMinusOne) {
+        if (nn.length === 0) {
+          nn.unshift(nodeMinusOne);
+        } else {
+          nn.unshift(negate(nn.shift));
+        }
+      }          
       if (nn.length === 0 || nn.length === 1 && isOne(nn[0])) {
         // If no numerator or numerator of one, then use an empty array
         // that gets concat'd away. This happens when there are no factors
@@ -11625,8 +11664,9 @@ __webpack_require__.r(__webpack_exports__);
         denoms.splice(index, 1);
       }
       // Multiply top common denominator. Simplify to cancel factors.
-      if (n0.length || denoms.length) {
-        return multiplyNode([].concat(n0).concat(denoms), true);
+      if (n0.length !== 0 || denoms.length !== 0) {
+        let args = sortFactors(n0.concat(denoms));
+        return multiplyNode(args, true);
       }
       return nodeOne; // Otherwise everthing degenerates to 1.
     }
@@ -12357,10 +12397,10 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        console.log("simplify() nid=" + nid);
-        if (nid === 99 || nid === 106) {          
-          console.log("simplify() node=" + JSON.stringify(node, null, 2));
-        }
+        // console.log("simplify() nid=" + nid);
+        // if (nid === 125 || nid === 131) {
+        //   console.log("simplify() node=" + JSON.stringify(node, null, 2));
+        // }
         node = simplify(options, node, env);
       }
       node.simplifyNid = nid;
@@ -12797,6 +12837,26 @@ __webpack_require__.r(__webpack_exports__);
       return newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MATRIX, [newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ROW, rowArgs)]);
     }
 
+    function sortFactors(args) {
+      let argsNew = [];
+      let hasMinusOne = false;
+      args.forEach(arg => {
+        if (isMinusOne(arg)) {
+          hasMinusOne = !hasMinusOne;
+        } else if (!isOne(arg)) {  // Erase one.
+          argsNew.push(arg);
+        }
+      });
+      if (hasMinusOne) {
+        if (argsNew.length === 0) {
+          argsNew.unshift(nodeMinusOne);
+        } else {
+          argsNew.unshift(argsNew.shift());
+        }
+      }
+      return argsNew;
+    }
+      
     function multiplyTerms(lterms, rterms, expo) {
       var args = [];
       lterms.forEach(function (n0) {
@@ -12813,6 +12873,7 @@ __webpack_require__.r(__webpack_exports__);
           } else {
             args1.push(n1);
           }
+          args1 = sortFactors(args1);
           args.push(multiplyNode(args1));
         });
       });
@@ -13144,7 +13205,7 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again.
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        console.log("expand() nid=" + nid);
+        // console.log("expand() nid=" + nid);
         node = expand(options, node);
       }
       node.expandNid = nid;
@@ -13342,7 +13403,8 @@ __webpack_require__.r(__webpack_exports__);
       } else if (args.length === 1) {
         return args;
       }
-      return [multiplyNode(args)];
+      args = sortFactors(args);
+      return [multiplyNode(args, true)];
     }
 
     function makeTerm(args) {
@@ -13447,9 +13509,13 @@ __webpack_require__.r(__webpack_exports__);
           }
           var args = [];
           var mv2 = bigOne;
-          node.args.forEach(function (n) {
-            if ((mv = mathValue(options, multiplyNode([numberNode(options, mv2), n]), true))) {
-              mv2 = mv;
+          node.args.forEach(function (n, i) {
+            if ((mv = mathValue(options, n, true))) {
+              if (i === 0) {
+                mv2 = mv;
+              } else {
+                mv2.times(mv);
+              }
             } else if (isEmptyNode(n)) {
               // Erase.
             } else {
@@ -14916,9 +14982,9 @@ __webpack_require__.r(__webpack_exports__);
             func: "eval",
             expr: "(lambda" + params + ":" + " " + args + ")(" + symbols + ")",
           };
-          console.log("evalSympy() obj=" + JSON.stringify(obj, null, 2));
+          // console.log("evalSympy() obj=" + JSON.stringify(obj, null, 2));
           getSympy("/api/v1/eval", obj, function (err, data) {
-            console.log("evalSympy() err=" + JSON.stringify(err) + " data=" + JSON.stringify(data));
+            // console.log("evalSympy() err=" + JSON.stringify(err) + " data=" + JSON.stringify(data));
             var node;
             if (err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
@@ -16264,7 +16330,7 @@ let Model = (function () {
   let parse = function parse(options, src, env) {
     src = stripInvisible(src);
     function newNode(op, args) {
-      Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op !== Model.POW && args.length > 0 && isMinusOne(args[args.length - 1])), 'newNode() op=' + op + ' args=' + JSON.stringify(args, null, 2));
+      // assert(!(op !== Model.POW && args.length > 0 && isMinusOne(args[args.length - 1])), 'newNode() op=' + op + ' args=' + JSON.stringify(args, null, 2));
       // args.forEach((arg, i) => {
       //   if (i > 0) {
       //     assert(op !== Model.MUL || !isMinusOne(arg), "Model: " + JSON.stringify(args, null, 2));
