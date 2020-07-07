@@ -107,7 +107,7 @@ const RED = -1;
 const YELLOW = 0;
 
 getTests(GREEN, function (err, testData) {
-  testData = testData.slice(1900); // Slice off leading tests when wanting to get to a particular test.
+  testData = testData.slice(0, 100); // Slice off leading tests when wanting to get to a particular test.
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
@@ -152,7 +152,7 @@ function getTests(color, resume) {
     let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body).data;
     if (smoke) {
-      tests = shuffle(tests).slice(0, 100);
+      tests = shuffle(tests).slice(0, 1000);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);

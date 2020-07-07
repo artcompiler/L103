@@ -6295,16 +6295,21 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function newNode(op, args) {
+    // if (op === Model.MUL && args[args.length - 1].args[0] === "1.3") {
+    //   console.trace("newNode() op=" + op + " args=" + JSON.stringify(args, null, 2));
+    // }
+    // assert(!(op === Model.ADD && isZero(args[0])), op + ": " + JSON.stringify(args, null, 2)); 
+    // assert(!(op === Model.LE && isZero(args[1])), op + ": " + JSON.stringify(args, null, 2)); 
     // assert(!(op === Model.ADD && args[0].op === Model.MUL && isMinusOne(args[0].args[0]) && args[1].op === Model.MUL && isMinusOne(args[1].args[0])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.POW && args[0].op === Model.MUL && isMinusOne(args[0].args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.POW && isMinusOne(args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.MUL && isMinusOne(args[0]) && args[1].op === Model.POW && isMinusOne(args[1].args[1])), "op=" + op + " args=" + JSON.stringify(args, null, 2));
-    args.forEach((arg, i) => {
-//      assert(!(op === Model.MUL && arg.op === Model.MUL), "op=" + op + " args=" + JSON.stringify(args, null, 2));
-      if (i > 0) {
-        Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(!(op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL && isMinusOne(arg)), "op=" + op + " args=" + JSON.stringify(args, null, 2));
-      }
-    })
+    // args.forEach((arg, i) => {
+    //   assert(!(op === Model.MUL && arg.op === Model.MUL), "op=" + op + " args=" + JSON.stringify(args, null, 2));
+    //   if (i > 0) {
+    //     assert(!(op === Model.MUL && isMinusOne(arg)), "op=" + op + " args=" + JSON.stringify(args, null, 2));
+    //   }
+    // })
     return {
       op: op,
       args: args
@@ -8788,8 +8793,7 @@ __webpack_require__.r(__webpack_exports__);
         var base = node.args[0];
         var nthRoot = node.args[1];
         nthRoot.numberFormat = "integer";
-        node.op = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW;
-        node.args = newNode(node.op, [base, newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC, [nodeOne, nthRoot])]);
+        node = newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [base, newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC, [nodeOne, nthRoot])]);
       }
       var args = [];
       node.args.forEach(function (arg) {
@@ -9090,15 +9094,11 @@ __webpack_require__.r(__webpack_exports__);
     // the basic structure of the expression is preserved. Also, flattens binary
     // trees into N-ary nodes.
     var normalizedNodes = [];
-    // var normalizeLevel = 0;
+    var normalizeLevel = 0;
     function normalize(options, root) {
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(options);
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(root && root.args, "2000: Internal error. root=" + JSON.stringify(root) + " options=" + JSON.stringify(options));
       var nid = ast.intern(root);
-      // if (nid === 47) {
-      //   console.log("normalize() nid=" + nid);
-      //   console.log("normalize() root=" + JSON.stringify(root, null, 2))
-      // }
       if (root.normalizeNid === nid) {
         return root;
       }
@@ -9108,10 +9108,9 @@ __webpack_require__.r(__webpack_exports__);
       }
       var rootNid = nid;
       // if (normalizeLevel === 0) {
-      //   console.log("normalize() node: " + ast.toLaTex(root));
-      //   console.log("normalize() node: " + JSON.stringify(stripNids(root), null, 2));
+      //   console.log("normalize() node: " + JSON.stringify(stripMetadata(root), null, 2));
       // }
-      // normalizeLevel++;
+      normalizeLevel++;
       var node = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].create(options, visit(options, root, {
         name: "normalize",
         numeric: function (node) {
@@ -9208,22 +9207,14 @@ __webpack_require__.r(__webpack_exports__);
             }
           });
           var isRepeatingFlag = node.isRepeating;
-          // if (hasMinusOne) {
-          //   if (args.length === 0) {
-          //     node = nodeMinusOne;
-          //   } else {
-          //     args.unshift(negate(args.shift(args)));
-          //     node = sort(binaryNode(node.op, args, true));
-          //   }
-          // } else {
-            if (args.length === 0) {
-              node = nodeOne;
-            } else if (args.length === 1) {
-              node = args[0];
-            } else {
-              node = sort(binaryNode(node.op, args, true));
-            }
-          // }
+//          console.log("normalize() args=" + JSON.stringify(args, null, 2));
+          if (args.length === 0) {
+            node = nodeOne;
+          } else if (args.length === 1) {
+            node = args[0];
+          } else {
+            node = sort(binaryNode(node.op, sortFactors(args), true));
+          }
           if (hasPM) {
             node = unaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PM, [node]);
           }
@@ -9579,12 +9570,12 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         }
       }), root.location);
-      // normalizeLevel--;
+      normalizeLevel--;
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
         // console.log("normalize() nid=" + nid);
-        // if (nid === 38 || nid === 41) {
+        // if (nid === 28 || nid === 29) {
         //   console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
         // }
         node = normalize(options, node);
@@ -9664,9 +9655,9 @@ __webpack_require__.r(__webpack_exports__);
           return Object.assign({}, node, binaryNode(node.op, args, true));
         },
         unary: function(node) {
-          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0]) {
-            return normalizeSympy(options, node.args[0]);
-          }
+          // if (node.op === Model.PAREN && node.args.length === 1 && node.args[0]) {
+          //   return normalizeSympy(options, node.args[0]);
+          // }
           _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].flags.hasAbs =
             _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].flags.hasAbs ||
             node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ABS;
@@ -9877,6 +9868,8 @@ __webpack_require__.r(__webpack_exports__);
           });
           node = newNode(node.op, args);
           switch (node.op) {
+          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
+            return args[0];
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB:
             node = negate(args[0]);
             break;
@@ -10892,20 +10885,20 @@ __webpack_require__.r(__webpack_exports__);
       var cycles = Math.floor(toNumber(mv) / (2 * Math.PI));
       // shift is the angle minus the number of cycles times 2pi.
       // phase is shift modulo PI. Many identities depend on the phase.
-      var shift;
+      var shiftNode;
       if (cycles) {
-        shift = addNode(cp.concat(
-          negate(multiplyNode([nodeTwo, numberNode(options, cycles), nodePI]))
+        shiftNode = addNode(cp.concat(
+          negate(multiplyNode([numberNode(options, cycles), nodeTwo, nodePI]))
         ));
       } else {
-        shift = addNode(cp);
+        shiftNode = addNode(cp);
       }
       var phase = toNumber(mv) % (2 * Math.PI) / Math.PI;
       var node;
       var arg;
       if (vp.length > 0) {
         if (phase) {
-          arg = addNode(vp.concat(shift()));
+          arg = addNode(vp.concat(shiftNode));
         } else {
           arg = addNode(vp);
         }
@@ -11412,6 +11405,7 @@ __webpack_require__.r(__webpack_exports__);
       } else if (args.length === 1) {
         node = args[0];
       } else {
+        args = sortFactors(args);
         node = binaryNode(node.op, args);
       }
       node = sort(node);
@@ -11533,7 +11527,6 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     function commonDenom(node) {
-      console.log(">> commonDenom() node=" + JSON.stringify(node, null, 2));      
       if (node.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD) {
         // Not additive so create and add node so we can have the following code
         // collect denom factors into a single node.
@@ -11610,7 +11603,6 @@ __webpack_require__.r(__webpack_exports__);
           // Just return the original node.
         }
       }
-      console.log("<< commonDenom() node=" + JSON.stringify(node, null, 2));
       return node;
     }
     function numer(n, d, denoms) {
@@ -11636,9 +11628,9 @@ __webpack_require__.r(__webpack_exports__);
         if (nn.length === 0) {
           nn.unshift(nodeMinusOne);
         } else {
-          nn.unshift(negate(nn.shift));
+          nn.unshift(negate(nn.shift()));
         }
-      }          
+      }
       if (nn.length === 0 || nn.length === 1 && isOne(nn[0])) {
         // If no numerator or numerator of one, then use an empty array
         // that gets concat'd away. This happens when there are no factors
@@ -11886,7 +11878,7 @@ __webpack_require__.r(__webpack_exports__);
             Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(n0.length, "2000: Internal error.");
             node = n0[0];
           } else {
-            node = sort(flattenNestedNodes(multiplyNode(n0)));
+            node = sort(multiplyNode(n0, true));
           }
           return node;
           function fold(lnode, rnode) {
@@ -11945,7 +11937,7 @@ __webpack_require__.r(__webpack_exports__);
                   if (isMinusOne(lbase) || isMinusOne(rbase)) {
                     node = [lnode, rnode];
                   } else {
-                    node = multiplyNode([numberNode(options, lbase), numberNode(options, rbase)]);
+                    node = multiplyNode([numberNode(options, lbase), numberNode(options, rbase)], true);  // Flatten because numberNode creates mul nodes for negatives.
                     if ((mv = mathValue(options, node))) {
                       node = numberNode(options, mv);
                     }
@@ -12252,7 +12244,7 @@ __webpack_require__.r(__webpack_exports__);
                 return [expo, base];
               } else if (base.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW) {
                 // Flatten nested exponents.
-                return binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [base.args[0], multiplyNode([base.args[1], expo])]);
+                return binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [base.args[0], multiplyNode(sortFactors([base.args[1], expo]))]);
               } else if (isMinusOne(base) && isOddFraction(expo)) {
                 // Move the minus outside of the power unless its {-1}^{-1} which is a
                 // synthetic idiom for negative coefficients.
@@ -12261,7 +12253,7 @@ __webpack_require__.r(__webpack_exports__);
                 if (isMinusOne(expo)) {
                   return nodeMinusOne;
                 } else {
-                  return multiplyNode([nodeMinusOne, binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [negate(base), expo])]);
+                  return multiplyNode([nodeMinusOne, binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, sortFactors([negate(base), expo]))]);
                 }
               } else if (!option(options, "dontExpandPowers") && base.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL) {
                 // Expand factors.
@@ -12270,7 +12262,7 @@ __webpack_require__.r(__webpack_exports__);
                 base.args.forEach(function (n) {
                   if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW) {
                     // Flatten.
-                    args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [n.args[0], multiplyNode([n.args[1], expo])]));
+                    args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [n.args[0], multiplyNode(sortFactors([n.args[1], expo]))]));
                   } else if (isMinusOne(n) && isMinusOne(expo)) {
                     hasMinusOne = !hasMinusOne;
                   } else {
@@ -12398,7 +12390,7 @@ __webpack_require__.r(__webpack_exports__);
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
         // console.log("simplify() nid=" + nid);
-        // if (nid === 125 || nid === 131) {
+        // if (nid === 14 || nid === 16) {
         //   console.log("simplify() node=" + JSON.stringify(node, null, 2));
         // }
         node = simplify(options, node, env);
@@ -12851,12 +12843,12 @@ __webpack_require__.r(__webpack_exports__);
         if (argsNew.length === 0) {
           argsNew.unshift(nodeMinusOne);
         } else {
-          argsNew.unshift(argsNew.shift());
+          argsNew.unshift(negate(argsNew.shift()));
         }
       }
       return argsNew;
     }
-      
+
     function multiplyTerms(lterms, rterms, expo) {
       var args = [];
       lterms.forEach(function (n0) {
@@ -12899,7 +12891,7 @@ __webpack_require__.r(__webpack_exports__);
       }
       var rootNid = nid;
       // if (expandLevel === 0) {
-      //   console.log("expand(options, ) node: " + JSON.stringify(stripNids(root), null, 2));
+      //   console.log("expand() node: " + JSON.stringify(stripNids(root), null, 2));
       // }
       expandLevel++;
       var node = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].create(options, visit(options, root, {
@@ -13394,7 +13386,8 @@ __webpack_require__.r(__webpack_exports__);
       cfacts.forEach(function (i) {
         args.push(ast.node(i));
       });
-      return makeFactor(args)[0];
+      let node = makeFactor(args);
+      return node[0];
     }
 
     function makeFactor(args) {
@@ -14542,7 +14535,6 @@ __webpack_require__.r(__webpack_exports__);
     if (!(n1 instanceof Array)) {
       n1 = [n1];
     }
-    n2 = normalizeSyntax(options, n2);
     result = n1.some(function (n) {
       try {
         options.is_normal = true;
@@ -14552,6 +14544,8 @@ __webpack_require__.r(__webpack_exports__);
         throw e;
       }
       var n2n = normalizeSyntax(options, n2, n);
+      console.log("equivSyntax() n1n=" + JSON.stringify(n1n, null, 2));
+      console.log("equivSyntax() n2n=" + JSON.stringify(n2n, null, 2));
       return ast.intern(n1n) === ast.intern(n2n);
     });
     var input = "";
@@ -14655,7 +14649,8 @@ __webpack_require__.r(__webpack_exports__);
     } else if ((n1.isAlgebraic || n1.isNumeric) &&
                (n2.isAlgebraic || n2.isNumeric)) {
       // Cross multiply.
-      var nn = crossMultiply(options, normalize(options, n1), normalize(options, n2));
+//      var nn = crossMultiply(options, normalize(options, n1), normalize(options, n2));
+      var nn = crossMultiply(options, n1, n2);
       n1 = nn[0];
       n2 = nn[1];
     }
@@ -14718,8 +14713,8 @@ __webpack_require__.r(__webpack_exports__);
       return node;
     }
     function compare(n1, n2, resume) {
-      // console.log(">> equivSymbolic() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
-      // console.log(">> equivSymbolic() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
+      // console.log(">> compare() n1=" + JSON.stringify(n1, null, 2));
+      // console.log(">> compare() n2=" + JSON.stringify(n2, null, 2));
       try {
         if (!strict) {
           var n1o = JSON.parse(JSON.stringify(n1));
@@ -14834,12 +14829,36 @@ __webpack_require__.r(__webpack_exports__);
               n2 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))));
             }
           }
-          // console.log("<< equivSymbolic() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
-          // console.log("<< equivSymbolic() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
+          // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+          // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
           var nid1 = ast.intern(n1);
           var nid2 = ast.intern(n2);
           var result = nid1 === nid2;
-          if (false) {} else {
+          if (!result) {
+            if (isComparison(n1.op)) {
+              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+              nid1 = ast.intern(n1);
+              nid2 = ast.intern(n2);
+              result = nid1 === nid2;
+              result = inverseResult ? !result : result;
+              option(options, "ignoreUnits", ignoreUnits);
+              resume([], result);
+            } else if (!isComparison(n2.op) && !isAggregate(n1) && !isAggregate(n2)) {
+              n1 = addNode([n1o, negate(n2o)]);
+              n2 = nodeZero;
+              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+              nid1 = ast.intern(n1);
+              nid2 = ast.intern(n2);
+              result = nid1 === nid2;
+              result = inverseResult ? !result : result;
+              option(options, "ignoreUnits", ignoreUnits);
+              resume([], result);
+            } else {
+              resume([], result);
+            }
+          } else {
             result = inverseResult ? !result : result;
             option(options, "ignoreUnits", ignoreUnits);
             resume([], result);
@@ -14870,7 +14889,10 @@ __webpack_require__.r(__webpack_exports__);
           config.sympyPort ||
           "443"
       ),
-      path: "/sympy-service",
+      path: (
+        config.sympyPath ||
+        "/sympy-service"
+      ),
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': encodedData.length
@@ -14969,7 +14991,7 @@ __webpack_require__.r(__webpack_exports__);
           break;
         }
       });
-//      console.log("evalSympy() expr=" + JSON.stringify(expr, null, 2));
+      console.log("evalSympy() expr=" + JSON.stringify(expr, null, 2));
       texToSympy(options, expr, function (err, v) {
         // TRIG sin ( TRIG cos (x) + 2)
         if (err && err.length) {
@@ -14982,9 +15004,9 @@ __webpack_require__.r(__webpack_exports__);
             func: "eval",
             expr: "(lambda" + params + ":" + " " + args + ")(" + symbols + ")",
           };
-          // console.log("evalSympy() obj=" + JSON.stringify(obj, null, 2));
+          console.log("evalSympy() obj=" + JSON.stringify(obj, null, 2));
           getSympy("/api/v1/eval", obj, function (err, data) {
-            // console.log("evalSympy() err=" + JSON.stringify(err) + " data=" + JSON.stringify(data));
+            console.log("evalSympy() err=" + JSON.stringify(err) + " data=" + JSON.stringify(data));
             var node;
             if (err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
