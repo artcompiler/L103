@@ -1,5 +1,5 @@
 /*
- * Mathcore unversioned - 08db676
+ * Mathcore unversioned - 5bfbca8
  * Copyright 2014 Learnosity Ltd. All Rights Reserved.
  *
  */
@@ -12191,8 +12191,6 @@ var Model = function() {
       n1 = sortLiteral(n1);
       n2 = sortLiteral(n2)
     }
-    console.log("equivLiteral() n1=" + JSON.stringify(stripNids(n1), null, 2));
-    console.log("equivLiteral() n2=" + JSON.stringify(stripNids(n2), null, 2));
     var nid1 = ast.intern(n1);
     var nid2 = ast.intern(n2);
     var result = nid1 === nid2;
@@ -12475,12 +12473,10 @@ var Model = function() {
     }
   };
   var config = require("../" + process.env.ARTCOMPILER_CONFIG || "../config.json");
-  console.log("config=" + JSON.stringify(config, null, 2));
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
     var options = {method:"GET", host:config.sympyHost || "e2r3izczp3.execute-api.us-east-2.amazonaws.com", port:config.sympyPort || "443", path:config.sympyPath || "/sympy-service", headers:{"Content-Type":"application/json", "Content-Length":encodedData.length}};
-    console.log("getSympy() options=" + JSON.stringify(options, null, 2));
     var protocol = config.sympyProtocol === "http" && http || https;
     var req = protocol.request(options, function(res) {
       var data = "";
@@ -12568,7 +12564,6 @@ var Model = function() {
             break
         }
       });
-      console.log("evalSympy() node=" + JSON.stringify(expr, null, 2));
       texToSympy(expr, function(err, v) {
         if(err && err.length) {
           console.log("[1] ERROR evalSympy() err=" + JSON.stringify(err));
