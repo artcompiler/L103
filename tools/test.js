@@ -15,6 +15,10 @@ let scraped = {};
 let RETRIES = 1;
 let passed = 0;
 let failed = 0;
+function appendLine(str) {
+  readline.cursorTo(process.stdout, 40);
+  process.stdout.write(str);
+}
 function updateLine(str) {
   readline.clearLine(process.stdout);
   readline.cursorTo(process.stdout, 0);
@@ -72,6 +76,7 @@ function batchScrape(scale, force, ids, index, resume) {
   }
 }
 function getCompile(host, id, resume) {
+  appendLine("trying " + id);
   const hostUrl = new url.URL(host);
   hostUrl.searchParams.set('id', id);
   hostUrl.searchParams.set('refresh', 'true');
@@ -107,7 +112,7 @@ const RED = -1;
 const YELLOW = 0;
 
 getTests(GREEN, function (err, testData) {
-  testData = testData.slice(0, 100); // Slice off leading tests when wanting to get to a particular test.
+  testData = testData.slice(0); // Slice off leading tests when wanting to get to a particular test.
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
   let t0 = new Date;
@@ -152,7 +157,7 @@ function getTests(color, resume) {
     let smoke = process.argv.indexOf('--smoke') > 0;
     let tests = JSON.parse(body).data;
     if (smoke) {
-      tests = shuffle(tests).slice(0, 1000);
+      tests = shuffle(tests).slice(0, 100);
     } else {
       // Uncommment and use slice to narrow the test cases run with 'make test'.
       // tests = tests.slice(200, 250);
