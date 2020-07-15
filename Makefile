@@ -20,4 +20,4 @@ test:
 test-bugs:
 	npm run test-bugs
 
-.PHONY: $(SUBPROJ) init clean test
+.PHONY: $(SUBPROJ) init clean test build
