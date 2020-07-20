@@ -54,10 +54,12 @@ function batchScrape(scale, force, ids, index, resume) {
           updateLine("PASS " +
                      (index + 1) + "/" + ids.length + ", " + id +
                      " in " + (new Date() - t0) + "ms");
+//                     " in " + (new Date() - t0) + "ms\n");
         } else {
           updateLine("FAIL " +
                      (index + 1) + "/" + ids.length + ", " + id +
                      " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || "") + "\n");
+//                     " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || ""));
         }
         while (pending < scale && index < ids.length) {
           index = index + 1;

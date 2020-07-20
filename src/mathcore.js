@@ -9652,7 +9652,7 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        // console.log("normalize() nid=" + nid);
+        console.log("normalize() nid=" + nid);
         // if (nid === 31 || nid === 29) {
         //   console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
         // }
@@ -12478,7 +12478,7 @@ __webpack_require__.r(__webpack_exports__);
       // If the node has changed, simplify again
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
-        // console.log("simplify() nid=" + nid);
+        console.log("simplify() nid=" + nid);
         // if (nid === 175 || nid === 178) {
         //   console.log("simplify() node=" + JSON.stringify(node, null, 2));
         // }
@@ -14795,26 +14795,31 @@ __webpack_require__.r(__webpack_exports__);
       // console.log(">> compare() n1=" + JSON.stringify(n1, null, 2));
       // console.log(">> compare() n2=" + JSON.stringify(n2, null, 2));
       try {
-        if (true) {
-          var n1o = JSON.parse(JSON.stringify(n1));
-          var n2o = JSON.parse(JSON.stringify(n2));
-          // If strict mode, take the slow path for better testing code coverage.
-          option(options, "normalizeArithmetic", true);
-          try {
-            var result = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].fn.equivLiteral(n1, n2, options);
-          } catch (e) {
-            throw e;
-          }
-          if (result) {
-            // Got a match. We're done.
-            if (resume) {
-              resume([], inverseResult ? false : true);
-            }
-            return true;
-          }
-          n1 = n1o;
-          n2 = n2o;
-        }
+        // if (true || !strict) {
+        //   var n1o = JSON.parse(JSON.stringify(n1));
+        //   var n2o = JSON.parse(JSON.stringify(n2));
+        //   // If strict mode, take the slow path for better testing code coverage.
+        //   option(options, "normalizeArithmetic", true);
+        //   let inverseResult = option(options, "inverseResult", false); // Turn it off temporarily.
+        //   try {
+        //     var result = Model.fn.equivLiteral(n1, n2, options);
+        //   } catch (e) {
+        //     throw e;
+        //   }
+        //   if (result) {
+        //     // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+        //     // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
+        //     // console.log("<< compare() inverseResult=" + inverseResult + " result=" + result);
+        //     // Got a match. We're done.
+        //     if (resume) {
+        //       resume([], inverseResult ? false : true);
+        //     }
+        //     return true;
+        //   }
+        //   n1 = n1o;
+        //   n2 = n2o;
+        //   option(options, "inverseResult", inverseResult);
+        // }
         if (isComparison(n1.op) && n1.op === n2.op) {
           // See if we can eliminate one side.
           var n1a0 = n1.args[0];
@@ -14903,41 +14908,52 @@ __webpack_require__.r(__webpack_exports__);
               n1 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n1))))));
               n2 = scale(options, expand(options, normalize(options, simplify(options, expand(options, normalize(options, n2))))));
             }
-            // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
-            // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
             nid1 = ast.intern(n1);
             nid2 = ast.intern(n2);
             result = nid1 === nid2;
           }
-          if (!result) {
-            if (isComparison(n1.op)) {
-              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
-              nid1 = ast.intern(n1);
-              nid2 = ast.intern(n2);
-              result = nid1 === nid2;
-              result = inverseResult ? !result : result;
-              option(options, "ignoreUnits", ignoreUnits);
-              resume([], result);
-            } else if (!isComparison(n2.op) && !isAggregate(n1) && !isAggregate(n2)) {
-              n1 = addNode([n1o, negate(n2o)]);
-              n2 = nodeZero;
-              n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
-              n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
-              nid1 = ast.intern(n1);
-              nid2 = ast.intern(n2);
-              result = nid1 === nid2;
-              result = inverseResult ? !result : result;
-              option(options, "ignoreUnits", ignoreUnits);
-              resume([], result);
-            } else {
-              resume([], result);
-            }
-          } else {
+          // if (!result) {
+          //   if (isComparison(n1.op)) {
+          //     n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+          //     n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+          //     nid1 = ast.intern(n1);
+          //     nid2 = ast.intern(n2);
+          //     result = nid1 === nid2;
+          //     result = inverseResult ? !result : result;
+          //     option(options, "ignoreUnits", ignoreUnits);
+          //     // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+          //     // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
+          //     // console.log("<< compare() result=" + result);
+          //     resume([], result);
+          //   } else if (!isComparison(n2.op) && !isAggregate(n1) && !isAggregate(n2)) {
+          //     n1 = addNode([n1o, negate(n2o)]);
+          //     n2 = nodeZero;
+          //     n1 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n1)))));
+          //     n2 = scale(options, normalize(options, simplify(options, expand(options, normalize(options, n2)))));
+          //     nid1 = ast.intern(n1);
+          //     nid2 = ast.intern(n2);
+          //     result = nid1 === nid2;
+          //     result = inverseResult ? !result : result;
+          //     option(options, "ignoreUnits", ignoreUnits);
+          //     // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+          //     // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
+          //     // console.log("<< compare() result=" + result);
+          //     resume([], result);
+          //   } else {
+          //     result = inverseResult ? !result : result;
+          //     // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+          //     // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
+          //     // console.log("<< compare() result=" + result);
+          //     resume([], result);
+          //   }
+          // } else {
             result = inverseResult ? !result : result;
             option(options, "ignoreUnits", ignoreUnits);
+            // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+            // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
+            // console.log("<< compare() result=" + result);
             resume([], result);
-          }
+          // }
         }
       } catch (x) {
         console.log("compare() x=" + x.stack);
@@ -15066,7 +15082,7 @@ __webpack_require__.r(__webpack_exports__);
           break;
         }
       });
-      // console.log("evalSympy() expr=" + JSON.stringify(expr, null, 2));
+      console.log("evalSympy() expr=" + JSON.stringify(expr, null, 2));
       texToSympy(options, expr, function (err, v) {
         // TRIG sin ( TRIG cos (x) + 2)
         if (err && err.length) {
@@ -18950,7 +18966,7 @@ let Model = (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sympyRules", function() { return sympyRules; });
-var sympyRules={"words":{"\\infty":"oo","\\pi":"pi","e":"E","i":"I","\\emptyset":"EmptySet()","S":"_S","$":"_dollar"},"types":{"integerPosNeg":["(\\type{integerPosNeg})","\\type{integer}","-\\type{integer}"],"integerExpr":["\\type{integerPosNeg}","(\\type{integerExpr})","\\type{integerExpr}\\times\\type{integerExpr}","\\type{integerExpr}+\\type{integerExpr}","\\type{integerExpr}-\\type{integerExpr}","\\type{integerExpr}^\\type{integerExpr}"],"commonFraction":["\\frac{\\type{integer}}{2}","\\frac{\\type{integer}}{3}","\\frac{\\type{integer}}{4}","\\frac{\\type{integer}}{5}","\\frac{\\type{integer}}{6}","\\frac{\\type{integer}}{7}","\\frac{\\type{integer}}{8}","\\frac{\\type{integer}}{9}","\\frac{\\type{integer}}{10}"],"simpleExpression":["\\type{commonFraction}","\\type{number}","-\\type{number}","-\\type{variable}","\\type{variable}","\\type{variable}\\type{variable}","\\type{number}\\type{variable}"],"matrix":["\\begin{bmatrix}?&?&?\\end{bmatrix}"],"indexiSum":["\\sum_{i=?}^? ?"],"functionName":["f","g","h","F","G","H"]},"rules":{"\\operatorname{CALC}?":["%2"],"\\operatorname{REL}?":["%2"],"\\operatorname{MATRIX}?":["simplify(%2)"],"\\operatorname{INTERVAL}?":["%2"],"\\operatorname{NUM}?":["N(expand(%2, complex=True))"],"\\operatorname{TRIG}?":["TR2(TR1(trigsimp(%2, method='fu')))"],"\\operatorname{HYPER}?":["trigsimp(%2)"],"\\operatorname{LOG}?":["expand(%2)"],"\\operatorname{EXPO}?":["expand(simplify(%2))"],"\\operatorname{FRAC}?":["cancel(%2) if S(%2).is_rational_function() else simplify(%2)"],"\\operatorname{DEFAULT}?":["expand(%2)"],"\\type{functionName}(?)":["%1(%2)"],"\\mathbb{N}":["Naturals"],"\\mathbb{Z}":["Integers"],"\\mathbb{R}":["Reals"],"\\mathbb{C}":["Complexes"],"[?]":[{"(%1)":{"?,?":"Interval(%1,%2)"}}],"\\{?\\}":["FiniteSet(%1)"],"?\\cup?":[{"Union(%1,%2)":{"(?)":{"%1":{"?,?":"Interval.open(%1,%2)"}}}}],"?\\cap?":[{"Intersection(%1,%2)":{"(?)":{"%1":{"?,?":"Interval.open(%1,%2)"}}}}],"?\\backslash?":[{"Complement(%1,%2)":{"(?)":{"%1":{"?,?":"Interval.open(%1,%2)"}}}}],"\\ln{?}":["ln(factor(%2))"],"\\log{?}":["log(factor(%2),%1)"],"\\log_?{?}":["log(factor(%2),%1)"],"\\type{matrix}":[{"Matrix([%1])":{"\\type{row}":"[%*],","\\type{column}":"%*,"}}],"\\frac{d^?}{d?^?}?":["Derivative(%1, (%2,%3))"],"\\int \\int ? d? d?":["Integral %1 %2 %3"],"\\int_?^? ? d?":["Integral(%3,(%4,%1,%2))"],"\\int ? d?":["Integral(%1,%2)"],"\\lim_? ?":[{"Limit(%2, %1, '+-')":{"? \\rightarrow ?":"%1, %2","? \\to ?":"%1, %2","(?,?)":"(%1, %2)"}}],"\\type{indexiSum}":[{"summation(%3,(%1,%2))":{"i":"i","? = ?":{"%1,%2":{"i":"i"}}}}],"\\sum_?^? ?":[{"summation(%3,(%1,%2))":{"? = ?":"%1,%2"}}],"\\sin{?}":["sin(%1)"],"\\cos{?}":["cos(%1)"],"\\tan{?}":["tan(%1)"],"\\cot{?}":["cot(%1)"],"\\sec{?}":["sec(%1)"],"\\csc{?}":["csc(%1)"],"\\sin^{-1}{?}":["asin(%1)"],"\\cos^{-1}{?}":["acos(%1)"],"\\tan^{-1}{?}":["atan(%1)"],"\\cot^{-1}{?}":["acot(%1)"],"\\sec^{-1}{?}":["asec(%1)"],"\\csc^{-1}{?}":["acsc(%1)"],"\\sinh{?}":["sinh(%1)"],"\\cosh{?}":["cosh(%1)"],"\\tanh{?}":["tanh(%1)"],"\\coth{?}":["coth(%1)"],"\\sech{?}":["sech(%1)"],"\\csch{?}":["csch(%1)"],"\\sinh^{-1}{?}":["asinh(%1)"],"\\cosh^{-1}{?}":["acosh(%1)"],"\\tanh^{-1}{?}":["atanh(%1)"],"\\coth^{-1}{?}":["acoth(%1)"],"\\sech^{-1}{?}":["asech(%1)"],"\\csch^{-1}{?}":["acsch(%1)"],"\\type{repeatingDecimal}":[{"S('%1[%2]')":{"\\type{decimal}":"%1"}}],"\\type{decimal}":["Rational('%1')"],"?%":["(S(1)/100*%1)"],"?!":["factorial(%1)"],"\\frac{\\type{integerExpr}}{\\type{integerExpr}}":["(S(%1)/%2)"],"\\frac{?}{?}":["(%1/%2)"],"|?|":["Abs(%1)"],"\\abs{?}":["Abs(%1)"],"\\angle ?":["angle_%2%3%4"],"?\\degree":["rad(%1)"],"\\type{integerExpr}^\\type{integerExpr}":["S(%1)**%2"],"?^?":["factor(%1)**%2"],"\\sqrt{?}":["sqrt(factor(%1))"],"\\sqrt[?]{?}":["real_root(factor(%1),%2)"],"-?":["-%1"],"?+?":["(%1+%2)"],"?-?":["(%1-%2)"],"?*?":["(%1*%2)"],"?\\cdot?":["(%1*%2)"],"\\type{integerExpr}\\div\\type{integerExpr}":["(S(%1)/%2)"],"?\\div?":["(%1/%2)"],"\\type{integerExpr}:\\type{integerExpr}":["(S(%1)/%2)"],"?:?":["(%1/%2)"],"?<?":["Lt(simplify(%1-%2),0,evaluate=False)"],"?\\nless?":["Ge(simplify(%1-%2),0,evaluate=False)"],"?\\le?":["Le(simplify(%1-%2),0,evaluate=False)"],"?>?":["Gt(simplify(%1-%2),0,evaluate=False)"],"?\\ge?":["Ge(simplify(%1-%2),0,evaluate=False)"],"?\\ngtr?":["Le(simplify(%1-%2),0,evaluate=False)"],"?=?":["Eq(simplify(%1-%2),0,evaluate=False)"],"?\\ne?":["Ne(simplify(%1-%2),0,evaluate=False)"],"?\\approx?":["Eq(simplify(%1-%2),evaluate=False)"],"?_?":[{"%1_%2":{"S":"S"}}],"(\\type{simpleExpression})":["%1"],"(?)":["(%1)"],"? ?":["(%1*%2)"],"?,?":["%1,%2"],"?":["%1"]}}
+var sympyRules={"words":{"\\infty":"oo","\\pi":"pi","e":"E","i":"I","\\emptyset":"EmptySet()","S":"_S","$":"_dollar"},"types":{"integerPosNeg":["(\\type{integerPosNeg})","\\type{integer}","-\\type{integer}"],"integerExpr":["\\type{integerPosNeg}","(\\type{integerExpr})","\\type{integerExpr}\\times\\type{integerExpr}","\\type{integerExpr}+\\type{integerExpr}","\\type{integerExpr}-\\type{integerExpr}","\\type{integerExpr}^\\type{integerExpr}"],"commonFraction":["\\frac{\\type{integer}}{2}","\\frac{\\type{integer}}{3}","\\frac{\\type{integer}}{4}","\\frac{\\type{integer}}{5}","\\frac{\\type{integer}}{6}","\\frac{\\type{integer}}{7}","\\frac{\\type{integer}}{8}","\\frac{\\type{integer}}{9}","\\frac{\\type{integer}}{10}"],"simpleExpression":["\\type{commonFraction}","\\type{number}","-\\type{number}","-\\type{variable}","\\type{variable}","\\type{variable}\\type{variable}","\\type{number}\\type{variable}"],"matrix":["\\begin{bmatrix}?&?&?\\end{bmatrix}"],"indexiSum":["\\sum_{i=?}^? ?"]},"rules":{"\\operatorname{CALC}?":["%2"],"\\operatorname{REL}?":["%2"],"\\operatorname{MATRIX}?":["simplify(%2)"],"\\operatorname{INTERVAL}?":["%2"],"\\operatorname{NUM}?":["N(expand(%2, complex=True))"],"\\operatorname{TRIG}?":["expand(factor(TR6(together(TR2(TR1(trigsimp(TR22(%2), method='fu')))))),frac=True, max_degree=10)"],"\\operatorname{HYPER}?":["expand(factor(trigsimp(%2)), max_degree=10)"],"\\operatorname{LOG}?":["expand(factor(%2), max_degree=10)"],"\\operatorname{EXPO}?":["expand(factor(simplify(%2)), max_degree=10)"],"\\operatorname{DEFAULT}?":["expand(factor(%2), max_degree=10)"],"\\mathbb{N}":["Naturals"],"\\mathbb{Z}":["Integers"],"\\mathbb{R}":["Reals"],"\\mathbb{C}":["Complexes"],"(?,?]":[{"%1":{"?,?":"Interval.Lopen(%1,%2)"}}],"[?,?)":[{"%1":{"?,?":"Interval.Ropen(%1,%2)"}}],"[?]":[{"(%1)":{"?,?":"Interval(%1,%2)"}}],"\\{?\\}":["FiniteSet(%1)"],"?\\cup?":[{"Union(%1,%2)":{"(?)":{"%1":{"?,?":"Interval.open(%1,%2)"}}}}],"?\\cap?":[{"Intersection(%1,%2)":{"(?)":{"%1":{"?,?":"Interval.open(%1,%2)"}}}}],"?\\backslash?":[{"Complement(%1,%2)":{"(?)":{"%1":{"?,?":"Interval.open(%1,%2)"}}}}],"\\ln{?}":["ln(factor(%2))"],"\\log{?}":["log(factor(%2),%1)"],"\\log_?{?}":["log(factor(%2),%1)"],"\\type{matrix}":[{"Matrix([%1])":{"\\type{row}":"[%*],","\\type{column}":"%*,"}}],"\\frac{d^?}{d?^?}?":["Derivative(%1, (%2,%3))"],"\\int \\int ? d? d?":["Integral %1 %2 %3"],"\\int_?^? ? d?":["Integral(%3,(%4,%1,%2))"],"\\int ? d?":["Integral(%1,%2)"],"\\lim_? ?":[{"Limit(%2, %1, '+-')":{"? \\rightarrow ?":"%1, %2","? \\to ?":"%1, %2","(?,?)":"(%1, %2)"}}],"\\type{indexiSum}":[{"summation(%3,(%1,%2))":{"i":"i","? = ?":{"%1,%2":{"i":"i"}}}}],"\\sum_?^? ?":[{"summation(%3,(%1,%2))":{"? = ?":"%1,%2"}}],"\\sin{?}":["sin(%1)"],"\\cos{?}":["cos(%1)"],"\\tan{?}":["tan(%1)"],"\\cot{?}":["cot(%1)"],"\\sec{?}":["sec(%1)"],"\\csc{?}":["csc(%1)"],"\\sin^{-1}{?}":["asin(%1)"],"\\cos^{-1}{?}":["acos(%1)"],"\\tan^{-1}{?}":["atan(%1)"],"\\cot^{-1}{?}":["acot(%1)"],"\\sec^{-1}{?}":["asec(%1)"],"\\csc^{-1}{?}":["acsc(%1)"],"\\sinh{?}":["sinh(%1)"],"\\cosh{?}":["cosh(%1)"],"\\tanh{?}":["tanh(%1)"],"\\coth{?}":["coth(%1)"],"\\sech{?}":["sech(%1)"],"\\csch{?}":["csch(%1)"],"\\sinh^{-1}{?}":["asinh(%1)"],"\\cosh^{-1}{?}":["acosh(%1)"],"\\tanh^{-1}{?}":["atanh(%1)"],"\\coth^{-1}{?}":["acoth(%1)"],"\\sech^{-1}{?}":["asech(%1)"],"\\csch^{-1}{?}":["acsch(%1)"],"\\type{repeatingDecimal}":[{"S('%1[%2]')":{"\\type{decimal}":"%1"}}],"\\type{decimal}":["Rational('%1')"],"?%":["(S(1)/100*%1)"],"?!":["factorial(%1)"],"\\frac{\\type{integerExpr}}{\\type{integerExpr}}":["(S(%1)/%2)"],"\\frac{?}{?}":["(%1/%2)"],"|?|":["Abs(%1)"],"\\abs{?}":["Abs(%1)"],"\\angle ?":["angle_%2%3%4"],"?\\degree":["rad(%1)"],"\\type{integerExpr}^\\type{integerExpr}":["S(%1)**%2"],"?^?":["factor(%1,deep=True)**%2"],"\\sqrt{?}":["sqrt(factor(%1))"],"\\sqrt[?]{?}":["real_root(factor(%1),%2)"],"-?":["-%1"],"?+?":["(%1+%2)"],"?-?":["(%1-%2)"],"?*?":["(%1*%2)"],"?\\cdot?":["(%1*%2)"],"\\type{integerExpr}\\div\\type{integerExpr}":["(S(%1)/%2)"],"?\\div?":["(%1/%2)"],"\\type{integerExpr}:\\type{integerExpr}":["(S(%1)/%2)"],"?:?":["(%1/%2)"],"?<?":["Lt(simplify(%1-%2),0,evaluate=False)"],"?\\nless?":["Ge(simplify(%1-%2),0,evaluate=False)"],"?\\le?":["Le(simplify(%1-%2),0,evaluate=False)"],"?>?":["Gt(simplify(%1-%2),0,evaluate=False)"],"?\\ge?":["Ge(simplify(%1-%2),0,evaluate=False)"],"?\\ngtr?":["Le(simplify(%1-%2),0,evaluate=False)"],"?=?":["Eq(simplify(%1-%2),0,evaluate=False)"],"?\\ne?":["Ne(simplify(%1-%2),0,evaluate=False)"],"?\\approx?":["Eq(simplify(%1-%2),0,evaluate=False)"],"?_?":[{"%1_%2":{"S":"S"}}],"(\\type{simpleExpression})":["%1"],"(?)":["(%1)"],"? ?":["(%1*%2)"],"?,?":["%1,%2"],"?":["%1"]}}
 
 /***/ }),
 
