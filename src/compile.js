@@ -1,6 +1,6 @@
 /* Copyright (c) 2016, Art Compiler LLC */
 const MATHJAX = false;
-import {assert, message, messages, reserveCodeRange} from "./assert.js"
+import {assert, message, messages, reserveCodeRange} from "./assert.ts"
 /* MATHJAX
 import * as mjAPI from "mathjax-node/lib/main.js";
 */
@@ -2037,20 +2037,21 @@ function messageFromErrors(errs) {
   ) && message || "Internal error";
 }
 
-export let compiler = (function () {
-  exports.langID = 107;
-  exports.version = "v0.3.0";
-  exports.compile = function compile(code, data, config, resume) {
-    // Compiler takes an AST in the form of a node pool (code) and transforms it
-    // into an object to be rendered on the client by the viewer for this
-    // language.
-    const transform = transformer();
-    try {
-      let options = {
-        data: data,
-        config: config,
-      };
-      transform(code, options, function (err, val) {
+export const compiler = (function () {
+  return {
+    langID: 107,
+    version: "v0.3.0",
+    compile: function compile(code, data, config, resume) {
+      // Compiler takes an AST in the form of a node pool (code) and transforms it
+      // into an object to be rendered on the client by the viewer for this
+      // language.
+      const transform = transformer();
+      try {
+        let options = {
+          data: data,
+          config: config,
+        };
+        transform(code, options, function (err, val) {
         if (err && err.length) {
           console.log("compile() err=" + JSON.stringify(err));
           resume([{
@@ -2062,14 +2063,15 @@ export let compiler = (function () {
             resume(err, val);
           });
         }
-      });
-    } catch (x) {
-      console.log("ERROR with code");
-      console.log(x.stack);
-      resume([{
+        });
+      } catch (x) {
+        console.log("ERROR with code");
+        console.log(x.stack);
+        resume([{
         statusCode: 500,
-        error: "Compiler error"
-      }]);
-    }
+          error: "Compiler error"
+        }]);
+      }
+    },
   };
 })();

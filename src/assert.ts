@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* @flow */
 /*
   ASSERTS AND MESSAGES
 
@@ -77,8 +76,8 @@
 
 */
 
-const messages = {};
-const reservedCodes = [];
+const messages: {[index: string]:string} = {};
+const reservedCodes: any[] = [];
 let ASSERT = true;
 let assert = (function () {
   return !ASSERT ?
