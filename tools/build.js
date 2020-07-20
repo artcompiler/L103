@@ -50,20 +50,15 @@ function compile() {
 
 function bundle() {
   console.log("Bundling...");
-  exec("cp ./src/lexicon.js ./pub");
-  exec("cp ./src/style.css ./pub");
   exec("npx webpack --config ./webpack.config.js");
   let sha = exec("git rev-parse HEAD | cut -c 1-7").toString().replace("\n", "");
   exec("cat ./tools/license.js | sed 's/{{sha}}/" + sha + "/' >> ./dist/compile.js");
+  exec("cp ./src/lexicon.js ./pub");
+  exec("cp ./src/style.css ./pub");
+  exec("cp ./dist/viewer.js ./pub");
 }
 
 function rules() {
-  console.log("Fetching latex to latex rules " + latexRulesID);
-  exec('curl -L "https://gc.acx.ac/data?id=' + latexRulesID + '" -o "./data.txt"');
-  var data = JSON.parse(fs.readFileSync("./data.txt", "utf8"));
-  delete data.options.data; // Cleanup
-  fs.writeFileSync("src/latexRules.js", "export var latexRules=" + JSON.stringify(data.options), "utf8");
-
   console.log("Fetching latex to sympy rules " + sympyRulesID);
   exec('curl -L "https://gc.acx.ac/data?id=' + sympyRulesID + '" -o "./data.txt"');
   var data = JSON.parse(fs.readFileSync("./data.txt", "utf8"));
@@ -74,7 +69,7 @@ function rules() {
 function build(debug) {
   let t0 = Date.now();
   clean();
-//  rules();
+  rules();
   compile();
   bundle(debug);
   console.log("Build completed in " + (Date.now() - t0) + " ms");
