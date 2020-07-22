@@ -80,7 +80,7 @@ function batchScrape(scale, force, ids, index, resume) {
   }
 }
 function getCompile(host, id, resume) {
-  appendLine("trying " + id);
+  // appendLine("trying " + id);
   const hostUrl = new url.URL(host);
   hostUrl.searchParams.set('id', id);
   hostUrl.searchParams.set('refresh', 'true');

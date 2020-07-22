@@ -15072,9 +15072,9 @@ __webpack_require__.r(__webpack_exports__);
             func: "eval",
             expr: "(lambda" + params + ":" + " " + args + ")(" + symbols + ")",
           };
-          console.log("evalSympy() obj=" + JSON.stringify(obj, null, 2));
+          // console.log("evalSympy() obj=" + JSON.stringify(obj, null, 2));
           getSympy("/api/v1/eval", obj, function (err, data) {
-            console.log("evalSympy() err=" + JSON.stringify(err) + " data=" + JSON.stringify(data));
+            // console.log("evalSympy() err=" + JSON.stringify(err) + " data=" + JSON.stringify(data));
             var node;
             if (err && err.length) {
               console.log("[2] ERROR evalSympy() err=" + JSON.stringify(err));
