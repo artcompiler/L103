@@ -10,7 +10,7 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
   * `$ git clone git@github.com:artcompiler/L107.git`
   * `$ cd L107`
   * `$ npm i`
-* Get and build mathcore and translatex (see below)
+* Get mathcore and translatex (see below)
 * Build L107
   * `$ npm run build`
 * Start the compiler as a local service to make sure that all is well.
@@ -19,7 +19,7 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
   * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`
   * See https://www.graffiticode.com/form?id=y5vHZqdQc0 in the form view.
 
-### Getting and building mathcore and translatex
+### Getting mathcore and translatex
 
 * Clone and build mathcore (while in the L107 root directory.)
   * `$ git clone git@github.com:artcompiler/mathcore.git`
