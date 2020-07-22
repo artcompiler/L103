@@ -21,12 +21,12 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
 
 ### Getting mathcore and translatex
 
-* Clone and build mathcore (while in the L107 root directory.)
+* Clone mathcore (while in the L107 root directory.)
   * `$ git clone git@github.com:artcompiler/mathcore.git`
   * `$ cd mathcore`
   * `$ git checkout L107`
   * `$ npm i`
-* Clone and build translatex (while still in the L107/mathcore directory.)
+* Clone translatex (while still in the L107/mathcore directory.)
   * `$ git clone git@github.com:artcompiler/translatex.git`
   * `$ cd translatex`
   * `$ npm i`
