@@ -59,6 +59,12 @@ function bundle() {
 }
 
 function rules() {
+  console.log("Fetching latex to latex rules " + latexRulesID);
+  exec('curl -L "https://gc.acx.ac/data?id=' + latexRulesID + '" -o "./data.txt"');
+  var data = JSON.parse(fs.readFileSync("./data.txt", "utf8"));
+  delete data.options.data; // Cleanup
+  fs.writeFileSync("src/latexRules.js", "export var latexRules=" + JSON.stringify(data.options), "utf8");
+
   console.log("Fetching latex to sympy rules " + sympyRulesID);
   exec('curl -L "https://gc.acx.ac/data?id=' + sympyRulesID + '" -o "./data.txt"');
   var data = JSON.parse(fs.readFileSync("./data.txt", "utf8"));

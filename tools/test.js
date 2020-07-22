@@ -51,15 +51,17 @@ function batchScrape(scale, force, ids, index, resume) {
           failed++;
         }
         if (result) {
-          updateLine("PASS " +
-                     (index + 1) + "/" + ids.length + ", " + id +
-                     " in " + (new Date() - t0) + "ms");
-//                     " in " + (new Date() - t0) + "ms\n");
+          updateLine(
+            "PASS " +
+              (index + 1) + "/" + ids.length + ", " + id +
+              (color === 'grey' && " in " + (new Date() - t0) + "ms\n" || " in " + (new Date() - t0) + "ms")
+          );
         } else {
-          updateLine("FAIL " +
-                     (index + 1) + "/" + ids.length + ", " + id +
-                     " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || "") + "\n");
-//                     " in " + (new Date() - t0) + "ms" + (err && " [" + err + "]" || ""));
+          updateLine(
+            "FAIL " +
+              (index + 1) + "/" + ids.length + ", " + id +
+              (color === 'grey' && " in " + (new Date() - t0) + "ms" || " in " + (new Date() - t0) + "ms\n")
+          );
         }
         while (pending < scale && index < ids.length) {
           index = index + 1;
@@ -112,8 +114,9 @@ const PURPLE = 3;
 const GREY = 4;
 const RED = -1;
 const YELLOW = 0;
+const color = process.argv[process.argv.length - 1] || GREEN;
 
-getTests(GREEN, function (err, testData) {
+getTests(function (err, testData) {
   testData = testData.slice(0); // Slice off leading tests when wanting to get to a particular test.
   console.log("Testing " + TEST_GATEWAY);
   console.log("Compiling " + testData.length + " tests");
@@ -123,9 +126,8 @@ getTests(GREEN, function (err, testData) {
   });
 });
 
-function getTests(color, resume) {
+function getTests(resume) {
   console.log(JSON.stringify(process.argv));
-  color = process.argv[process.argv.length - 1] || color;
   let mark;
   switch (color) {
   case 'grey':
@@ -138,7 +140,6 @@ function getTests(color, resume) {
     mark = BLUE;
     break;
   default:
-    color = "green";
     mark = GREEN;
     break;
   }
