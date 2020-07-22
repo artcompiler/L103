@@ -9,7 +9,8 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
 * Clone and initialize L107.
   * `$ git clone git@github.com:artcompiler/L107.git`
   * `$ cd L107`
-  * `$ npm install`
+  * `$ npm i`
+* Get and build mathcore and translatex (see below)
 * Build L107
   * `$ npm run build`
 * Start the compiler as a local service to make sure that all is well.
@@ -18,21 +19,18 @@ A language for writing math scorers. Uses a remote SymPy service (https://github
   * Paste into the code view: `rubric [ symbolic "1+2" ] in [ "3" ]..`
   * See https://www.graffiticode.com/form?id=y5vHZqdQc0 in the form view.
 
-### Getting and rebuilding mathcore and latexsympy
+### Getting and building mathcore and translatex
 
 * Clone and build mathcore (while in the L107 root directory.)
   * `$ git clone git@github.com:artcompiler/mathcore.git`
   * `$ cd mathcore`
   * `$ git checkout L107`
-  * `$ npm install`
-  * `$ make`
-  * `$ cd ..`
-* Clone and build latexsympy (while in the L107 root directory.)
-  * `$ git clone git@github.com:artcompiler/latexsympy.git`
-  * `$ cd latexsympy`
-  * `$ npm install`
-  * `$ make`
-  * `$ cd ..`
+  * `$ npm i`
+* Clone and build translatex (while still in the L107/mathcore directory.)
+  * `$ git clone git@github.com:artcompiler/translatex.git`
+  * `$ cd translatex`
+  * `$ npm i`
+  * `$ cd ../..`
 * Build and start the compiler as a local service to make sure that all is well.
   * `$ make`
   * Visit your local GC server (e.g. http://localhost:3000/lang?id=107) to test.
