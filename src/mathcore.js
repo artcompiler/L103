@@ -9709,6 +9709,11 @@ __webpack_require__.r(__webpack_exports__);
           node.args.forEach(function (n) {
             args = args.concat(normalizeSympy(options, n));
           });
+          // if (node.isRepeating) {
+          //   // Strip leading '0.' from repeating part.
+          //   assert(args[1].op === Model.NUM && args[1].args[0].charAt(0) === '0' && args[1].args[0].charAt(1) === '.');
+          //   args[1].args[0] = args[1].args[0].slice(2);
+          // }
           return Object.assign({}, node, newNode(node.op, args));
         },
         multiplicative: function(node) {
@@ -16504,7 +16509,7 @@ let Model = (function () {
       let lastSeparatorIndex, lastSignificantIndex;
       let separatorCount = 0;
       let numberFormat = "integer";
-      let hasLeadingZero, hasTrailingZero;
+      let hasLeadingZero = 0, hasTrailingZero;
       if (n0 === ".") {
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false, message(1004, [n0, n0.charCodeAt(0)]));
       }
@@ -16535,6 +16540,12 @@ let Model = (function () {
               lastSignificantIndex = n2.length;
             }
           }
+          if (n2.indexOf('0') === 0 && numberFormat !== 'decimal') {
+            hasLeadingZero++;
+            if (ch !== '.') {
+              n2 = '';
+            }
+          }
           n2 += ch;
         }
       }
@@ -16556,7 +16567,6 @@ let Model = (function () {
         }
       }
       // Count leading zeros.
-      hasLeadingZero = 0;
       var done = false;
       n2.split("").forEach(function (d) {
         if (+d === 0 && !done) {
@@ -17794,32 +17804,8 @@ let Model = (function () {
     }
     function isRepeatingDecimal(args) {
       // "3." "\overline{..}"
-      // "3." "(..)"
       // "3." "\dot{..}"
       let expr, n0, n1;
-      // if (args[0].isRepeating) {
-      //   // We already have a repeating decimal so append additional digits to it.
-      //   let n = args[0].op === Model.ADD && args[0].args[1].op === Model.NUM
-      //     ? args[0].args[1]
-      //     : args[0];
-      //   console.log("isRepeating() n=" + JSON.stringify(n, null, 2));
-      //   assert(n.op === Model.NUM || n.op === Model.VAR && n.args[0] === "?");
-      //   let arg1;
-      //   if (args[1].op === Model.CDOT) {
-      //     assert(args[1].args[0].op === Model.NUM);
-      //     arg1 = numberNode(n.args[0] + args[1].args[0].args[0]);
-      //   } else {
-      //     assert(args[1].op === Model.NUM);
-      //     arg1 = numberNode(n.args[0] + args[1].args[0]);
-      //   }
-      //   arg1.isRepeating = true;
-      //   if (args[0].op === Model.ADD) {
-      //     args[0].args[1] = arg1;
-      //     expr = args[0];
-      //   } else {
-      //     expr = arg1;
-      //   }
-      // } else
       if (!args[0].lbrk &&
           (args[0].op === Model.NUM && args[0].numberFormat === "decimal" ||
            args[0].op === Model.VAR && args[0].args[0] === "?" ||
@@ -17828,30 +17814,23 @@ let Model = (function () {
         if (args[1].lbrk === 40 &&
             (isInteger(args[1]) ||
              args[1].op === Model.TYPE && args[1].args[0].op === Model.VAR && args[1].args[0].args[0] === "integer")) {
+          // 0.(06) => 0. +(0.06, repeating)
           n0 = args[0];
           n1 = args[1];
         } else if (!args[1].lbrk && args[1].op === Model.OVERLINE) {
           // 3.\overline{12} --> 3.0+(0.12, repeating)
           // 0.3\overline{12} --> 0.3+0.1*(.12, repeating)
           n0 = args[0];
-          n1 = args[1];
+          n1 = args[1].args[0];
         } else {
           return null;
         }
-        // n1 = numberNode("." + n1.args[0]);
-        n1.isRepeating = true;
-        // if (n0.args[0].indexOf(".") >= 0) {
-        //   let decimalPlaces = n0.args[0].length - n0.args[0].indexOf(".")- 1;
-        //   n1 = multiplyNode([n1, binaryNode(Model.POW, [numberNode("10"), numberNode("-" + decimalPlaces)])]);
-        // }
-        // if (n0.op === Model.NUM && +n0.args[0] === 0) {
-        //   // 0.\overline{..} or 0.00\overline{..}. Leading zero, so don't add it.
-        //   expr = n1;
-        // } else {
-          expr = binaryNode(Model.ADD, [n0, n1]);
-        // }
+        let zeros = new Array(n1.hasLeadingZero).fill(0).join();
+        n1 = newNode(Model.NUM, [zeros + new decimal_js__WEBPACK_IMPORTED_MODULE_2__["Decimal"](n1.args[0]).toFixed()]);  // Don't use numberNode because it will format the arg.
+        n1.isRepeating = args[1].op;
+        expr = binaryNode(Model.ADD, [n0, n1]);
         expr.numberFormat = "decimal";
-        expr.isRepeating = true;
+        expr.isRepeating = args[1].op;
       } else {
         expr = null;
       }
