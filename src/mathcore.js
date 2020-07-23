@@ -6323,7 +6323,7 @@ __webpack_require__.r(__webpack_exports__);
     }
     var aa = [];
     args.forEach(function(n) {
-      if (flatten && n.op === op) {
+      if (flatten && n.op === op && (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD)) {
         aa = aa.concat(n.args);
       } else {
         aa.push(n);

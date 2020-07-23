@@ -107,7 +107,7 @@ function getTimeStr(ms) {
   return mins && mins + " minutes " + (secs % 60) + " seconds" || secs + " seconds";
 }
 
-const SCALE = 3;
+const SCALE = 1;
 const GREEN = 1;
 const BLUE = 2;
 const PURPLE = 3;
