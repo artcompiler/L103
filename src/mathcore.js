@@ -10410,7 +10410,7 @@ __webpack_require__.r(__webpack_exports__);
             if (isMinusOne(n)) {
               isNeg = !isNeg;
             } else {
-              args.push(sort(n));
+              args.push(sortLiteral(n));
             }
           });
           node = isNeg && negate(binaryNode(node.op, args)) || binaryNode(node.op, args);
@@ -10426,7 +10426,7 @@ __webpack_require__.r(__webpack_exports__);
             n1 = node.args[i + 1];
             id0 = ast.intern(n0);
             id1 = ast.intern(n1);
-            if (id0 < id1) {
+            if (id0 > id1) {
               // Swap adjacent elements
               node.args[i] = n1;
               node.args[i + 1] = n0;
@@ -10587,7 +10587,6 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         unary: function(node) {
-          // console.log("[1] normalizeLiteral() unary node=" + JSON.stringify(node, null, 2))
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0]) {
             return normalizeLiteral(options, node.args[0]);
           }
@@ -10598,10 +10597,8 @@ __webpack_require__.r(__webpack_exports__);
           if (_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "ignoreOrder") && node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
             Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(args.length === 1, "2000: Internal error.");
             node = negate(args[0], true);
-            // console.log("[2] normalizeLiteral() unary node=" + JSON.stringify(node, null, 2))
             return node;
           }
-          // console.log("[3] normalizeLiteral() unary node=" + JSON.stringify(node, null, 2))
           switch (node.op) {
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
             // Strip gratuitous +.
@@ -14345,8 +14342,6 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].fn.equivValue = function equivValue(n1, n2, options, op) {
-    console.log("equivValue() n1=" + JSON.stringify(n1, null, 2));
-    console.log("equivValue() n2=" + JSON.stringify(n2, null, 2));
     Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(options);
     options = options || {};
     var env = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].env;
@@ -14639,8 +14634,8 @@ __webpack_require__.r(__webpack_exports__);
   // literally equivalent if and only if they have the same AST. ASTs with the
   // same structure intern to the same pool index.
   _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].fn.equivLiteral = function equivLiteral(n1, n2, options) {
-    // console.log("[1] equivLiteral() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
-    // console.log("[1] equivLiteral() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
+    // console.log("[1] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
+    // console.log("[1] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
     var inverseResult = option(options, "inverseResult");
     if (terms(n1).length !== terms(n2).length &&
         (!(n1.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL && isMinusOne(n1.args[0])) &&
@@ -14653,8 +14648,8 @@ __webpack_require__.r(__webpack_exports__);
     }
     n1 = normalizeLiteral(options, n1);
     n2 = normalizeLiteral(options, n2);
-    // console.log("[2] equivLiteral() n1=" + JSON.stringify(stripMetadata(n1), null, 2));
-    // console.log("[2] equivLiteral() n2=" + JSON.stringify(stripMetadata(n2), null, 2));
+    // console.log("[2] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
+    // console.log("[2] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
     if (option(options, "normalizeArithmetic")) {
       // Includes:
       // ignoreCoefficientOne (parsing, tbd)
