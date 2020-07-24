@@ -6216,7 +6216,6 @@ __webpack_require__.r(__webpack_exports__);
     return node;
   }
   function stripMetadata(node) {
-    node = JSON.parse(JSON.stringify(node));
     // Strip metadata such as nids.
     if (!node.op) {
       return node;
@@ -6304,7 +6303,7 @@ __webpack_require__.r(__webpack_exports__);
     // assert(!(op === Model.ADD && args[0].op === Model.MUL && isMinusOne(args[0].args[0])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.POW && args[0].op === Model.MUL && isMinusOne(args[0].args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
     // assert(!(op === Model.POW && isMinusOne(args[0]) && isMinusOne(args[1])), op + ": " + JSON.stringify(args, null, 2));
-    // assert(!(op === Model.MUL && isMinusOne(args[0]) && args[1] && args[1].op === Model.POW && args[1].args[0].op === Model.ADD), "op=" + op + " args=" + JSON.stringify(args, null, 2));
+    // assert(!(op === Model.MUL && isMinusOne(args[0]) && args[1] && args[1].op === Model.NUM && args[1].args[0] === "4"), "op=" + op + " args=" + JSON.stringify(args, null, 2));
     // assert(!(op === Model.MUL && isMinusOne(args[args.length - 1])), "op=" + op + " args=" + JSON.stringify(args, null, 2));
     // args.forEach((arg, i) => {
     //   assert(!(op === Model.MUL && arg.op === Model.MUL), "op=" + op + " args=" + JSON.stringify(args, null, 2));
@@ -6360,7 +6359,7 @@ __webpack_require__.r(__webpack_exports__);
     }
     if (n.op) {
       if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW || isAdditive(n)) {
-        n = n.args[0]; // If base is neg or is additive then assume power is negative.
+        n = n.args[0]; // If base is neg or is additive and leading term is negative, then assume expression is negative.
       }
       var cp = constantPart(n);
       mv = mathValue(options, cp, true);
@@ -9662,8 +9661,8 @@ __webpack_require__.r(__webpack_exports__);
       while (nid !== ast.intern(node)) {
         nid = ast.intern(node);
         // console.log("normalize() nid=" + nid);
-        // if (nid === 31 || nid === 29) {
-        //   console.log("normalize() node=" + JSON.stringify(stripMetadata(node), null, 2))
+        // if (nid === 91 || nid === 94) {
+        //   console.log("normalize() node=" + JSON.stringify(stripMetadata(JSON.parse(JSON.stringify(node))), null, 2))
         // }
         node = normalize(options, node);
       }
@@ -10531,6 +10530,11 @@ __webpack_require__.r(__webpack_exports__);
       var node = visit(options, root, {
         name: "normalizeLiteral",
         numeric: function (node) {
+          if (node.args.length === 1 && node.args[0] === '0.') {
+            node = nodeZero;
+          } else if (node.args[0].charAt(node.args[0].length - 1) === '.') {
+            node = numberNode(node.args[0].slice(0, node.args[0].length - 1));
+          }
           return node;
         },
         additive: function (node) {
@@ -12904,9 +12908,6 @@ __webpack_require__.r(__webpack_exports__);
       args.forEach(arg => {
         if (isMinusOne(arg)) {
           hasMinusOne = !hasMinusOne;
-        } else if (isNeg(arg)) {  // Erase one.
-          hasMinusOne = !hasMinusOne;
-          argsNew.push(negate(arg));
         } else if (!isOne(arg)) {  // Erase one.
           argsNew.push(arg);
         }
@@ -14344,6 +14345,8 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].fn.equivValue = function equivValue(n1, n2, options, op) {
+    console.log("equivValue() n1=" + JSON.stringify(n1, null, 2));
+    console.log("equivValue() n2=" + JSON.stringify(n2, null, 2));
     Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(options);
     options = options || {};
     var env = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].env;
@@ -15390,9 +15393,9 @@ __webpack_require__.r(__webpack_exports__);
     var result = false;
     if (u1.length ===  0 && u2.length === 0 && n2.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NONE) {
       result = true;  // Make degenerate case true (e.g. isUnit "10" "20").
-    } else if (u2.length) {
+    } else if (u2.length > 0) {
       result = u2.every(function (v1) {
-        return n1.some(function (v2) {
+        return u1.some(function (v2) {
           return ast.intern(v1) === ast.intern(v2);
         });
       });
@@ -18758,9 +18761,6 @@ let Model = (function () {
           lexeme = "0.";
         }
         curIndex--;
-        // if (lexeme === ".") {
-        //   return TK_PERIOD;
-        // }
         return TK_NUM;
       }
       // Recognize x, cm, kg.
