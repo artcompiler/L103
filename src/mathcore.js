@@ -10773,9 +10773,9 @@ __webpack_require__.r(__webpack_exports__);
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(isRepeating(node), "2000: Internal error.");
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM, "2000: Internal error.");
       var decimalPart = node.args[0].args[0];
-      var repeatingPart = node.args[1].args[0].args[0];
+      var repeatingPart = node.args[1].args[0];
       var decimalPos = decimalPart.indexOf(".");
-      var leadingZeros = node.args[1].args[0].hasLeadingZero || 0;
+      var leadingZeros = node.args[1].hasLeadingZero || 0;
       repeatingPart = findRepeatingPattern(repeatingPart);
       var decimalPlaces = decimalPart.length - decimalPos - 1; // Don't count '.'.
       var repeatingPlaces = repeatingPart.length + leadingZeros;
