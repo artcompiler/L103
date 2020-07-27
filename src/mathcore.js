@@ -13582,13 +13582,13 @@ __webpack_require__.r(__webpack_exports__);
             return node;
           }
           var args = [];
-          var mv2 = bigOne;
+          var mv2;
           node.args.forEach(function (n, i) {
             if ((mv = mathValue(options, n, true))) {
-              if (i === 0) {
+              if (mv2 === undefined) {
                 mv2 = mv;
               } else {
-                mv2.times(mv);
+                mv2 = mv2.times(mv);
               }
             } else if (isEmptyNode(n)) {
               // Erase.
