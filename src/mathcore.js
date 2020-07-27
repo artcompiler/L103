@@ -10530,10 +10530,17 @@ __webpack_require__.r(__webpack_exports__);
       var node = visit(options, root, {
         name: "normalizeLiteral",
         numeric: function (node) {
-          if (node.args.length === 1 && node.args[0] === '0.') {
+          const ignoreTrailingZeros = option(options, 'ignoreTrailingZeros');
+          const hasTrailingZeros = node.hasTrailingZeros && !ignoreTrailingZeros;
+          const hasDecimalSeparator = node.args[0].indexOf('.') >= 0;
+          if (hasTrailingZeros) {
+            // Use newNode since numberNode messes with the trailing zeros.
+            const zeros = new Array(hasTrailingZeros).fill(0).join('');
+            node = newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM, [node.args[0] + (!hasDecimalSeparator && '.' || '') + zeros]);
+          } else if (node.args.length === 1 && node.args[0] === '0.') {
             node = nodeZero;
           } else if (node.args[0].charAt(node.args[0].length - 1) === '.') {
-            node = numberNode(node.args[0].slice(0, node.args[0].length - 1));
+            node = numberNode(options, node.args[0].slice(0, node.args[0].length - 1));
           }
           return node;
         },
@@ -16507,7 +16514,7 @@ let Model = (function () {
       let lastSeparatorIndex, lastSignificantIndex;
       let separatorCount = 0;
       let numberFormat = "integer";
-      let hasLeadingZero = 0, hasTrailingZero;
+      let hasLeadingZero = 0, hasTrailingZeros = 0;
       if (n0 === ".") {
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false, message(1004, [n0, n0.charCodeAt(0)]));
       }
@@ -16553,15 +16560,14 @@ let Model = (function () {
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false, message(1005));
       }
       if (lastSignificantIndex !== undefined) {
-        if (lastSignificantIndex + 1 < n2.length) {
-          hasTrailingZero = true;
-        }
         if (ignoreTrailingZeros) {
           n2 = n2.substring(0, lastSignificantIndex + 1);
           if (n2 === ".") {
             // ".0" -> "." -> "0"
             n2 = "0";
           }
+        } else if (lastSignificantIndex < n2.length - 1) {
+          hasTrailingZeros = n2.length - lastSignificantIndex - 1;
         }
       }
       // Count leading zeros.
@@ -16573,7 +16579,7 @@ let Model = (function () {
           done = true;
         }
       });
-      const hasTrailingDot = !hasTrailingZero && n2.indexOf('.') === n2.length - 1;
+      const hasTrailingDot = !hasTrailingZeros && n2.indexOf('.') === n2.length - 1;
       n2 = new decimal_js__WEBPACK_IMPORTED_MODULE_2__["Decimal"](n2);   // Normalize representation.
       if (doScale) {
         let scale = option("decimalPlaces")
@@ -16590,7 +16596,7 @@ let Model = (function () {
         hasThousandsSeparator: separatorCount !== 0,
         numberFormat: numberFormat,
         hasLeadingZero: hasLeadingZero,
-        hasTrailingZero: hasTrailingZero
+        hasTrailingZeros: hasTrailingZeros,
       }
     }
     function multiplyNode(args, flatten) {
@@ -17823,7 +17829,7 @@ let Model = (function () {
         } else {
           return null;
         }
-        let zeros = new Array(n1.hasLeadingZero).fill(0).join();
+        let zeros = new Array(n1.hasLeadingZero).fill(0).join('');
         n1 = newNode(Model.NUM, [zeros + new decimal_js__WEBPACK_IMPORTED_MODULE_2__["Decimal"](n1.args[0]).toFixed()]);  // Don't use numberNode because it will format the arg.
         n1.isRepeating = args[1].op;
         expr = binaryNode(Model.ADD, [n0, n1]);
