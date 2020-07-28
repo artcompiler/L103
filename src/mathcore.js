@@ -15256,7 +15256,7 @@ __webpack_require__.r(__webpack_exports__);
         return isExpanded(n, options);
       }) && !hasLikeFactorsOrTerms(normalize(options, node));
     } else {
-      var dontExpandPowers = option(options, "dontExpandPowers", true);
+      var dontExpandPowers = option(options, "dontExpandPowers", false);
       var dontFactorDenominators = option(options, "dontFactorDenominators", true);
       var dontFactorTerms = option(options, "dontFactorTerms", true);
       var doingSimplified = option(options, "doingSimplified", true);
