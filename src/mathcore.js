@@ -15394,7 +15394,7 @@ __webpack_require__.r(__webpack_exports__);
       option(options, "inverseResult", false);  // Clear in case we call isSimplified() recursively.
       option(options, "ignoreOrder", true);
       result = nid1 === nid2 ||
-        !(subexprs(options, n2) < subexprs(options, n1)) &&
+        !(subexprs(options, n2).length < subexprs(options, n1).length) &&
         ((!mathValue(options, node, true) && (isAdditive(node) || isMultiplicative(node)) &&
           (!hasLikeFactors(options, node) && isFactorised(options, node) ||
            !hasLikeFactorsOrTerms(options, node) && isExpanded(options, node))) ||
@@ -17317,7 +17317,6 @@ let Model = (function () {
         return expo;
       } else {
         let node = args[0];
-        Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(node.op, JSON.stringify(node));
         node.isPolynomial = isPolynomial(node);
         return node;
       }
