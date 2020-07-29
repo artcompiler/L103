@@ -5201,24 +5201,25 @@ let Ast = (function () {
     this.nodeMap = {};
   }
 
-  // Create a node for operation 'op'
+  // Create a node for operation 'op'.
   Ast.prototype.create = function create(op, args) {
-    // Create a node that inherits from Ast
-    let node = create(this);
-    if (typeof op === "string") {
-      node.op = op;
-      if (args instanceof Array) {
-        node.args = args;
-      } else {
-        node.args = [];
-      }
-    } else if (op !== null && typeof op === "object") {
-      let obj = op;
-      Object(_backward_js__WEBPACK_IMPORTED_MODULE_0__["forEach"])(keys(obj), function (v, i) {
-        node[v] = obj[v];
-      });
-    }
-    return node;
+    Object(_assert_js__WEBPACK_IMPORTED_MODULE_1__["assert"])(false, "Should not get here");
+    // // Create a node that inherits from Ast
+    // let node = create(this);
+    // if (typeof op === "string") {
+    //   node.op = op;
+    //   if (args instanceof Array) {
+    //     node.args = args;
+    //   } else {
+    //     node.args = [];
+    //   }
+    // } else if (op !== null && typeof op === "object") {
+    //   let obj = op;
+    //   forEach(keys(obj), function (v, i) {
+    //     node[v] = obj[v];
+    //   });
+    // }
+    // return node;
   }
 
   // Append node to this node's args.
@@ -5943,6 +5944,7 @@ let MathCore = (function MathCore () {
       assert(false, message(3007, [p, v]));
       break;
     case "env":
+    case "ast":
       if (typeof v === "undefined" ||
           typeof v === "object") {
         break;
@@ -5976,6 +5978,7 @@ let MathCore = (function MathCore () {
     var method = spec.method;
     var value = spec.value;
     var options = spec.options;
+    options.ast = new _ast_js__WEBPACK_IMPORTED_MODULE_1__["Ast"];
     _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].configEnv = spec.config;
     _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation("spec");
     validateOptions(options);
@@ -6175,7 +6178,6 @@ __webpack_require__.r(__webpack_exports__);
   messages[2016] = "Exponents should be wrapped in braces.";
   messages[2017] = "Units with different base units not allowed in a single expression. Found: %1";
 
-  var visitor = new Visitor(ast);
   var bigZero = new decimal_js__WEBPACK_IMPORTED_MODULE_4__["Decimal"]("0");
   var bigOne = new decimal_js__WEBPACK_IMPORTED_MODULE_4__["Decimal"]("1");
   var bigTwo = new decimal_js__WEBPACK_IMPORTED_MODULE_4__["Decimal"]("2");
@@ -6189,7 +6191,6 @@ __webpack_require__.r(__webpack_exports__);
   var nodeTwo = numberNode(options, "2");
   var nodeThree = numberNode(options, "3");
   var nodeMinusOne = numberNode(options, "-1");
-  var nidMinusOne = ast.intern(nodeMinusOne);
   var nodePositiveInfinity = numberNode(options, "Infinity");
   var nodeNegativeInfinity = numberNode(options, "-Infinity");
   var nodeOneHalf = binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].POW, [nodeTwo, nodeMinusOne]);
@@ -14025,27 +14026,32 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function degree(node, notAbsolute) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.degree(node, notAbsolute);
   }
 
   function constantPart(node) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.constantPart(node);
   }
 
   function variables(node) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.variables(node);
   }
 
   function hint(node) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.hint(node);
   }
 
   function variablePart(node) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.variablePart(node);
   }
 
   function sort(node) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14056,7 +14062,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function sortLiteral(node) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14067,7 +14073,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function normalize(options, node) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14077,7 +14083,7 @@ __webpack_require__.r(__webpack_exports__);
     return result;
   }
   function normalizeSympy(options, node) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14089,6 +14095,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function normalizeLiteral(options, node) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14099,6 +14106,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function normalizeSyntax(options, node, ref) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14109,6 +14117,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function normalizeExpanded(node) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14119,11 +14128,13 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function normalizeCalculate(options, node) {
+    var visitor = new Visitor(options.ast || ast);
     var result = visitor.normalizeCalculate(options, node);
     return result;
   }
 
   function mathValue(options, node, env, allowDecimal, normalizeUnits) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14134,6 +14145,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function units(node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14144,7 +14156,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function formatMath(options, n1, n2, env) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (n2.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(n2.location);
@@ -14155,7 +14167,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function simplify(options, node, env) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14166,6 +14178,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function hasLikeFactors(node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14176,6 +14189,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function hasLikeFactorsOrTerms(node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14186,7 +14200,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function expand(options, node, env) {
-    var visitor = new Visitor(ast);
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14197,6 +14211,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function terms(node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14207,6 +14222,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function subexprs(node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14217,6 +14233,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function factorGroupingKey(node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14227,6 +14244,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function factors(options, node, env, ignorePrimeFactors, preserveNeg, factorAdditive) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14237,6 +14255,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function isFactorised(options, node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14247,6 +14266,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function isExpanded(options, node, env) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14257,6 +14277,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function scale(options, node) {
+    var visitor = new Visitor(options.ast || ast);
     var prevLocation = _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].location;
     if (node.location) {
       _assert_js__WEBPACK_IMPORTED_MODULE_0__["Assert"].setLocation(node.location);
@@ -14267,10 +14288,12 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function eraseCommonExpressions(options, n1, n2) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.eraseCommonExpressions(options, n1, n2);
   }
 
   function crossMultiply(options, n1, n2) {
+    var visitor = new Visitor(options.ast || ast);
     return visitor.crossMultiply(options, n1, n2);
   }
 
