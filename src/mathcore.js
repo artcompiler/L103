@@ -7813,7 +7813,7 @@ __webpack_require__.r(__webpack_exports__);
               node.numberFormat === "integer") {
             if (length === undefined ||
                 length === 0 && node.args[0].indexOf(".") === -1 ||
-                length === node.args[0].substring(node.args[0].indexOf(".") + 1).length) {
+                length === node.args[0].substring(node.args[0].indexOf(".") + 1).length + (node.hasTrailingZeros || 0)) {
               // If there is no size or if the size matches the value...
               return true;
             }
@@ -7834,7 +7834,7 @@ __webpack_require__.r(__webpack_exports__);
             var brk = node.args[0].indexOf(".");
             if (length === undefined ||
                 length === 0 && brk === -1 ||
-                brk >= 0 && length === node.args[0].substring(brk + 1).length) {
+                brk >= 0 && length === node.args[0].substring(brk + 1).length + (node.hasTrailingZeros || 0)) {
               // If there is no size or if the size matches the value...
               return true;
             }
@@ -7845,7 +7845,7 @@ __webpack_require__.r(__webpack_exports__);
             var coeff = node.args[0].args[0];
             if (length === undefined ||
                 length === 0 && coeff.indexOf(".") === -1 ||
-                length === coeff.substring(coeff.indexOf(".") + 1).length) {
+                length === coeff.substring(coeff.indexOf(".") + 1).length + (node.hasTrailingZeros || 0)) {
               // If there is no size or if the size matches the value...
               return true;
             }
@@ -17685,7 +17685,6 @@ let Model = (function () {
             let t = args.pop();
             if (!t.isPolynomialTerm) {
               if (t.op === Model.MUL && t.args[t.args.length-1].isPolynomialTerm) {
-                // FIXME group vars so ignoreOrder works.
                 Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(t.args.length === 2);
                 let prefix = t.args[0];
                 let suffix = t.args[1];
@@ -17777,18 +17776,24 @@ let Model = (function () {
       return false;
     }
 
+    function isPolynomialPart(n) {
+      return (
+        n.op === Model.NUM ||
+        isVar(n) ||
+        n.op === Model.FORMAT &&
+        n.args[0].op === Model.VAR &&
+        ['\\integer', '\\decimal', '\\number', '\\variable'].includes(n.args[0].args[0])
+      );
+    }
+
     function isPolynomialTerm(n0, n1) {
       // 3x but not 3(x)
       if (n0.op === Model.SUB && n0.args.length === 1) {
         n0 = n0.args[0];
       }
       if (!n0.lbrk && !n1.lbrk &&
-          (n0.op === Model.NUM && isVar(n1) ||
-           isVar(n0) && n1.op === Model.NUM ||
-           n0.op === Model.NUM && n1.op === Model.NUM ||
-           isVar(n0) && isVar(n1) ||
-           n0.op === Model.MUL && n0.args[n0.args.length-1].isPolynomialTerm &&
-           (isVar(n1) || n1.op === Model.NUM))) {
+          (isPolynomialPart(n0) && isPolynomialPart(n1) ||
+           n0.op === Model.MUL && n0.args[n0.args.length-1].isPolynomialTerm && isPolynomialPart(n1))) {
         return true;
       }
       return false;
