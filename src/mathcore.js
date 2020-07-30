@@ -10416,6 +10416,7 @@ __webpack_require__.r(__webpack_exports__);
           });
           node = isNeg && negate(binaryNode(node.op, args)) || binaryNode(node.op, args);
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC ||
+              node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV ||
               node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF) {
             // Don't sort numerators and denominator or coefficients
             return node;
@@ -10575,8 +10576,11 @@ __webpack_require__.r(__webpack_exports__);
             if (_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compatibility") === "v1.37") {
               args.push(normalizeLiteral(options, n));
             } else {
-              if (n.isPolynomial && args.length > 0 && node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM) {
-                args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF, [args.pop(), normalizeLiteral(options, n)], flatten));
+              if (n.isPolynomial && args.length > 0 &&
+                  (node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM ||
+                   node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && node.args[0].args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM)) {
+                let t = multiplyNode([args.pop(), normalizeLiteral(options, n)], true);
+                args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF, t.args));
               } else if (n.isImplicit && args.length > 0) {
                 // Bind implicit mult tighter than explicit.
                 args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL, [args.pop(), normalizeLiteral(options, n)], flatten));
