@@ -10565,7 +10565,7 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         multiplicative: function (node) {
-          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || (option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV))) {
+          if (option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV)) {
             node = normalizeMul(node);
           }
           var args = [];
