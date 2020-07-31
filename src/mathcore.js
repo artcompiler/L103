@@ -10556,7 +10556,7 @@ __webpack_require__.r(__webpack_exports__);
             Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(args.length === 2, "2000: Internal error.");
             node = addNode([args[0], negate(args[1], true)]);
           } else {
-            node = binaryNode(node.op, args);
+            node = binaryNode(node.op, args, true);  // Flatten in case there was redundant grouping.
           }
           if (compareGrouping) {
             // Reconstitute brackets
@@ -10576,7 +10576,7 @@ __webpack_require__.r(__webpack_exports__);
             if (_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compatibility") === "v1.37") {
               args.push(normalizeLiteral(options, n));
             } else {
-              if (n.isPolynomial && args.length > 0 &&
+              if (n.isPolynomialTerm && args.length > 0 &&
                   (node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM ||
                    node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && node.args[0].args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM)) {
                 let t = multiplyNode([args.pop(), normalizeLiteral(options, n)], true);
@@ -14685,15 +14685,6 @@ __webpack_require__.r(__webpack_exports__);
     // console.log("[1] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
     // console.log("[1] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
     var inverseResult = option(options, "inverseResult");
-    if (terms(options, n1).length !== terms(options, n2).length &&
-        (!(n1.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL && isMinusOne(n1.args[0])) &&
-         !(n2.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL && isMinusOne(n2.args[0])) &&
-         !(n1.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && n1.args.length === 1) &&
-         !(n2.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && n2.args.length === 1))) {
-      // Fail fast. No way these are equivLiteral if they have different
-      // number of terms.
-      return inverseResult ? true : false;
-    }
     n1 = normalizeLiteral(options, n1);
     n2 = normalizeLiteral(options, n2);
     // console.log("[2] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
