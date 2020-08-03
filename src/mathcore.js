@@ -10565,7 +10565,8 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         multiplicative: function (node) {
-          if (option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV)) {
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT && !isAggregate(node.args[0]) && !isAggregate(node.args[1]) ||
+              option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV)) {
             node = normalizeMul(node);
           }
           var args = [];
@@ -15157,6 +15158,7 @@ __webpack_require__.r(__webpack_exports__);
     if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA ||
         node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].LIST ||
         node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MATRIX ||
+        node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].VEC ||
         node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].INTERVAL ||
         node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].INTERVALOPEN ||
         node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].INTERVALLEFTOPEN ||
