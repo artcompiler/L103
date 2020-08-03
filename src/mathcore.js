@@ -8872,7 +8872,24 @@ __webpack_require__.r(__webpack_exports__);
       return [n10n21, n11n20];
     }
 
+    function getFlags(node) {
+      const flags = {};
+      Object.keys(node).forEach(key => {
+        if (key !== 'op' && key !== 'args') {
+          flags[key] = node[key];
+        }
+      });
+      return flags;
+    }
+
+    function setFlags(node, flags) {
+      Object.keys(flags).forEach(key => {
+        node[key] = flags[key];
+      });
+    }
+
     function radicalToPower(options, node) {
+      const flags = getFlags(node);
       if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SQRT) {
         var base = node.args[0];
         var nthRoot = node.args[1];
@@ -8887,6 +8904,7 @@ __webpack_require__.r(__webpack_exports__);
         args.push(arg);
       });
       node = newNode(node.op, args);
+      setFlags(node, flags);
       return node;
     }
 
@@ -8977,7 +8995,7 @@ __webpack_require__.r(__webpack_exports__);
           node = newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC, [newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB, [numer]), denom]);
         }
       }
-      if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD) {
+      if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && !node.isRepeating) {
         var numers = [];
         var denoms = [];
         var hasFraction;
@@ -14753,7 +14771,6 @@ __webpack_require__.r(__webpack_exports__);
     if ((n1.flags.isAlgebraic && (n2.flags.isAlgebraic || n2.flags.isNumeric)) ||
         (n2.flags.isAlgebraic && (n1.flags.isAlgebraic || n1.flags.isNumeric))) {
       // Cross multiply.
-//      var nn = crossMultiply(options, normalize(options, n1), normalize(options, n2));
       var nn = crossMultiply(options, n1, n2);
       n1 = nn[0];
       n2 = nn[1];
@@ -15046,7 +15063,6 @@ __webpack_require__.r(__webpack_exports__);
   function evalSympy(expr, options, resume) {
     var errs = [];
     var result;
-//    var syms = variables(options, normalize(options, expr));
     var syms = variables(options, expr);
     var symNode = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].create(options, String(syms));
     var assumption;
@@ -17520,7 +17536,6 @@ let Model = (function () {
     }
     // Parse 'a \times b', 'a * b'
     function isOneOrMinusOne(node) {
-      console.log("isOneOrMinusOne() node=" + JSON.stringify(node));
       return isOne(node) || isMinusOne(node);
     }
     function isOne(node) {
@@ -17850,6 +17865,11 @@ let Model = (function () {
     function isRepeatingDecimal(args) {
       // "3." "\overline{..}"
       // "3." "\dot{..}"
+      let prefix;
+      if (args[0].op === Model.MUL && args[0].args[args[0].args.length - 1].numberFormat === "decimal") {
+        prefix = args[0].args.slice(0, args[0].args.length - 1);
+        args = args[0].args.slice(args[0].args.length - 1).concat(args[1]);
+      }
       let expr, n0, n1;
       if (!args[0].lbrk &&
           (args[0].op === Model.NUM && args[0].numberFormat === "decimal" ||
@@ -17876,6 +17896,9 @@ let Model = (function () {
         expr = binaryNode(Model.ADD, [n0, n1]);
         expr.numberFormat = "decimal";
         expr.isRepeating = args[1].op;
+        if (prefix) {
+          expr = multiplyNode(prefix.concat(expr));
+        }
       } else {
         expr = null;
       }
