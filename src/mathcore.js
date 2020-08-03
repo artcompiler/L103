@@ -17520,10 +17520,12 @@ let Model = (function () {
     }
     // Parse 'a \times b', 'a * b'
     function isOneOrMinusOne(node) {
+      console.log("isOneOrMinusOne() node=" + JSON.stringify(node));
       return isOne(node) || isMinusOne(node);
     }
     function isOne(node) {
-      return node.op === Model.NUM && node.args[0] === "1"
+      return node.op === Model.NUM &&
+        (node.args[0] === "1" || node.args[0] === '1.');
     }
     function isMinusOne(node) {
       return node.op === Model.SUB && node.args.length === 1 && isOne(node.args[0]);
