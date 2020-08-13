@@ -6323,7 +6323,8 @@ __webpack_require__.r(__webpack_exports__);
     }
     var aa = [];
     args.forEach(function(n) {
-      if (flatten && n.op === op && (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD)) {
+      if (flatten && n.op === op &&
+         (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD)) {
         aa = aa.concat(n.args);
       } else {
         aa.push(n);
@@ -9517,7 +9518,6 @@ __webpack_require__.r(__webpack_exports__);
               node.args[1].args[0].indexOf("'") === 0) {
             // Merge primes. We use POW to encode primes.
             node = variableNode(node.args[0].args[0] + node.args[1].args[0]);
-            node.isImplicit = node.args[0].isImplicit;
             return node;
           }
           var isUnit = false;
@@ -10555,7 +10555,7 @@ __webpack_require__.r(__webpack_exports__);
           const hasDecimalSeparator = node.args[0].indexOf('.') >= 0;
           if (hasTrailingZeros) {
             // Use newNode since numberNode messes with the trailing zeros.
-            const zeros = new Array(hasTrailingZeros).fill(0).join('');
+            const zeros = new Array(node.hasTrailingZeros).fill(0).join('');
             node = newNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM, [node.args[0] + (!hasDecimalSeparator && '.' || '') + zeros]);
           } else if (node.args.length === 1 && node.args[0] === '0.') {
             node = nodeZero;
@@ -10583,8 +10583,7 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         multiplicative: function (node) {
-          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT && !isAggregate(node.args[0]) && !isAggregate(node.args[1]) ||
-              option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV)) {
+          if (option(options, 'normalizeArithmetic') && (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].FRAC || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].DIV)) {
             node = normalizeMul(node);
           }
           var args = [];
@@ -10600,16 +10599,18 @@ __webpack_require__.r(__webpack_exports__);
                    node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && node.args[0].args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NUM)) {
                 let t = multiplyNode([args.pop(), normalizeLiteral(options, n)], true);
                 args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF, t.args));
-              } else if (n.isImplicit && args.length > 0) {
-                // Bind implicit mult tighter than explicit.
-                args.push(binaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL, [args.pop(), normalizeLiteral(options, n)], flatten));
               } else {
                 args.push(normalizeLiteral(options, n));
               }
             }
           });
-          // Only have explicit mul left, so convert to times.
-          var op = /*node.op === Model.MUL ? Model.TIMES :*/ node.op;
+          let op;
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT && (!isAggregate(node.args[0]) || !isAggregate(node.args[1]))) {
+            // Convert explicit multiplication to times.
+            op = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES;
+          } else {
+            op = node.op;
+          }
           node = binaryNode(op, args, flatten);
           if (compareGrouping) {
             // Reconstitute brackets
@@ -10651,7 +10652,6 @@ __webpack_require__.r(__webpack_exports__);
               node.args[1].args[0].indexOf("'") === 0) {
             // Merge primes.
             node = variableNode(node.args[0].args[0] + node.args[1].args[0]);
-            node.isImplicit = node.args[0].isImplicit;
           } else {
             var args = [];
             node.args.forEach(function (n) {
@@ -16366,6 +16366,7 @@ let Model = (function () {
   const TK_RIGHTCMD = 0x172;
   const TK_LEFTBRACESET = 0x173;
   const TK_RIGHTBRACESET = 0x174;
+  const TK_TIMES = 0x175;
   let T0 = TK_NONE, T1 = TK_NONE;
 
   // Define mapping from token to operator
@@ -16382,6 +16383,7 @@ let Model = (function () {
   tokenToOperator[TK_UNDERSCORE] = OpStr.SUBSCRIPT;
   tokenToOperator[TK_MUL] = OpStr.MUL;
   tokenToOperator[TK_CDOT] = OpStr.CDOT;
+  tokenToOperator[TK_TIMES] = OpStr.TIMES;
   tokenToOperator[TK_DIV] = OpStr.DIV;
   tokenToOperator[TK_SIN] = OpStr.SIN;
   tokenToOperator[TK_COS] = OpStr.COS;
@@ -16473,7 +16475,6 @@ let Model = (function () {
   tokenToOperator[TK_UNDERSET] = OpStr.UNDERSET;
   tokenToOperator[TK_BACKSLASH] = OpStr.BACKSLASH;
   tokenToOperator[TK_MATHBF] = OpStr.MATHBF;
-  tokenToOperator[TK_CDOT] = OpStr.CDOT;
   tokenToOperator[TK_MATHFIELD] = OpStr.MATHFIELD;
   tokenToOperator[TK_DELTA] = OpStr.DELTA;
 
@@ -17549,6 +17550,7 @@ let Model = (function () {
       return t === TK_MUL ||
         t === TK_DIV ||
         t === TK_SLASH ||
+        t === TK_TIMES ||
         t === TK_CDOT;  // / is only multiplicative for parsing
     }
     function isDerivative(n) {
@@ -17626,7 +17628,7 @@ let Model = (function () {
         if (isDerivative(expr)) {
           expr = derivativeExpr(expr);
         }
-        if (t === TK_DIV || t === TK_CDOT) {
+        if (t === TK_DIV || t === TK_CDOT || t === TK_TIMES) {
           expr = newNode(tokenToOperator[t], [args.pop(), expr]);
         }
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(explicitOperator ||
@@ -17672,7 +17674,6 @@ let Model = (function () {
                      expr.args[0].args[0].indexOf("'") === 0) {
             // Merge previous var with current ' and raise to the power.
             expr = newNode(Model.POW, [binaryNode(Model.POW, [args.pop(), expr.args[0]])].concat(expr.args.slice(1)));
-            expr.isImplicit = expr.args[0].args[0].isImplicit;
           } else if (Model.option(options, "ignoreCoefficientOne") &&
                      args.length === 1 && isOneOrMinusOne(args[0]) &&
                      isPolynomialTerm(args[0], expr)) {
@@ -17691,7 +17692,7 @@ let Model = (function () {
             // 1E2, 1E-2, 1e2
             let tmp = args.pop();
             expr = binaryNode(Model.POW, [numberNode("10"), unaryExpr()]);
-            expr = binaryNode(Model.MUL, [tmp, expr]);
+            expr = binaryNode(Model.TIMES, [tmp, expr]);
             expr.isScientific = true;
           } else if (!isChemCore() && isPolynomialTerm(args[args.length-1], expr)) {
             // 2x, -3y but not CH (in chem)
@@ -17703,16 +17704,12 @@ let Model = (function () {
                 let prefix = t.args[0];
                 let suffix = t.args[1];
                 expr.isPolynomialTerm = suffix.isPolynomialTerm = false;
-                expr.isImplicit = true;
                 expr = binaryNode(Model.MUL, [prefix, binaryNode(Model.MUL, [suffix, expr], true)]);
                 expr.args[1].isPolynomialTerm = true;
-                expr.args[1].isImplicit = true;
                 // ...
               } else {
                 expr = binaryNode(Model.MUL, [t, expr]);
               }
-              expr.isImplicit = t.isImplicit;
-              t.isImplicit = undefined;
             }
           } else if (args[args.length - 1].op === Model.DERIV) {
             // Fold expr into derivative expr.
@@ -17720,31 +17717,12 @@ let Model = (function () {
             let e = arg.args[0];
             e = isOne(e) && expr || multiplyNode([e, expr]);
             expr = newNode(Model.DERIV, [e].concat(arg.args.slice(1)));
-          } else {
-            // 2(x), (y+1)z
-            expr.isImplicit = true;
           }
-        } else if (t === TK_MUL && args.length > 0 &&
-                   isScientific([args[args.length-1], expr])) {
+        } else if (t === TK_TIMES && isScientific(expr.args)) {
           // 1.2 \times 10 ^ {-3}
-          t = args.pop();
-          if (isNeg(t)) {
-            expr = binaryNode(Model.MUL, [nodeMinusOne, expr]);
-          }
-          expr = binaryNode(Model.MUL, [t, expr]);
           expr.isScientific = true;
         }
-        if (expr.op === Model.MUL &&
-            !expr.isScientific &&
-            !expr.isBinomial && args.length &&
-            !args[args.length-1].isImplicit &&
-            !args[args.length-1].isPolynomialTerm &&
-            expr.isImplicit &&
-            expr.isPolynomialTerm) {
-          args = args.concat(expr.args);
-        } else {
-          args.push(expr);
-        }
+        args.push(expr);
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(loopCount++ < 1000, "1000: Stuck in loop in multiplicativeExpr()");
       }
       if (args.length > 1) {
@@ -18272,7 +18250,7 @@ let Model = (function () {
       let lexemeToToken = {
         "\\Delta": TK_DELTA,
         "\\cdot": TK_CDOT,
-        "\\times": TK_MUL,
+        "\\times": TK_TIMES,
         "\\div": TK_DIV,
         "\\dfrac": TK_FRAC,
         "\\frac": TK_FRAC,
@@ -18391,7 +18369,6 @@ let Model = (function () {
         "\\backslash": TK_BACKSLASH,
         "\\mathbf": TK_MATHBF,
         "\\abs": TK_ABS,
-        "\\cdot": TK_CDOT,
         "\\MathQuillMathField": TK_MATHFIELD,
         "\\ldots": TK_VAR,  // ... and var are close syntactic alternatives
         "\\vdots": TK_VAR,
@@ -18717,7 +18694,7 @@ let Model = (function () {
               curIndex++;
               return TK_CARET;
             }
-            return TK_MUL;
+            return TK_TIMES;
           case 45:  // dash
           case 0x2212:  // unicode minus
             if (src.charCodeAt(curIndex) === 62) {
