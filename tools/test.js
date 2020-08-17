@@ -54,13 +54,13 @@ function batchScrape(scale, force, ids, index, resume) {
           updateLine(
             "PASS " +
               (index + 1) + "/" + ids.length + ", " + id +
-              (color === 'grey' && " in " + (new Date() - t0) + "ms\n" || " in " + (new Date() - t0) + "ms")
+              ((color === 'grey' || color === 'red') && " in " + (new Date() - t0) + "ms\n" || " in " + (new Date() - t0) + "ms")
           );
         } else {
           updateLine(
             "FAIL " +
               (index + 1) + "/" + ids.length + ", " + id +
-              (color === 'grey' && " in " + (new Date() - t0) + "ms" || " in " + (new Date() - t0) + "ms\n")
+              ((color === 'grey' || color === 'red') && " in " + (new Date() - t0) + "ms" || " in " + (new Date() - t0) + "ms\n")
           );
         }
         while (pending < scale && index < ids.length) {
@@ -138,6 +138,9 @@ function getTests(resume) {
     break;
   case 'blue':
     mark = BLUE;
+    break;
+  case 'red':
+    mark = RED;
     break;
   default:
     mark = GREEN;
