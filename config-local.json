@@ -1,6 +1,6 @@
 {
   "sympyHost": "localhost",
-  "sympyPort": "5000",
+  "sympyPort": "8000",
   "sympyProtocol": "http",
   "sympyPath": "/api/v1/eval"
 }
