@@ -8284,13 +8284,16 @@ __webpack_require__.r(__webpack_exports__);
               checkNumberFormat(ref.args[0], node)) {
             return normalNumber;
           }
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF) {
+            node = multiplyNode(node.args);
+          }
           node.args.forEach(function (n, i) {
             n = normalizeSyntax(options, n, ref.args[i]);
             if (!isMinusOne(n)) {
               args.push(n);
             }
           });
-          return multiplyNode(args);
+          return binaryNode(node.op, args);
         },
         unary: function(node) {
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA) {
@@ -17487,7 +17490,8 @@ let Model = (function () {
           frac.isImplicit = true;
         }
       }
-      while ((t=hd())===TK_SLASH || t === TK_COLON) {
+      while ((t === undefined || t === hd()) &&
+             ((t = hd()) === TK_SLASH || t === TK_COLON || t === TK_DIV)) {
         next();
         node = newNode(tokenToOperator[t], [node, subscriptExpr()]);
         node.isFraction = isSimpleFraction(node);
@@ -17617,7 +17621,7 @@ let Model = (function () {
         if (isDerivative(expr)) {
           expr = derivativeExpr(expr);
         }
-        if (t === TK_DIV || t === TK_CDOT || t === TK_TIMES) {
+        if (t === TK_CDOT || t === TK_TIMES) {
           expr = newNode(tokenToOperator[t], [args.pop(), expr]);
         }
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(explicitOperator ||
