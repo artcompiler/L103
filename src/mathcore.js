@@ -10428,7 +10428,7 @@ __webpack_require__.r(__webpack_exports__);
           let args = [];
           let negs = 0;
           node.args.forEach(function (n) {
-            if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB &&
+            if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && n.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB &&
                 (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL ||
                  node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF ||
                  node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT ||
@@ -10453,7 +10453,7 @@ __webpack_require__.r(__webpack_exports__);
             n1 = node.args[i + 1];
             id0 = ast.intern(n0);
             id1 = ast.intern(n1);
-            if (id0 > id1) {
+            if (id0 < id1) {
               // Swap adjacent elements
               node.args[i] = n1;
               node.args[i + 1] = n0;
