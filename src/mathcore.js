@@ -6441,11 +6441,7 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function unaryNode(op, args) {
-    if (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD) {
-      return args[0];
-    } else {
-      return newNode(op, args);
-    }
+    return newNode(op, args);
   }
 
   function variableNode(name) {
@@ -10649,15 +10645,17 @@ __webpack_require__.r(__webpack_exports__);
             }
             break;
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
-            // Strip gratuitous +.
-            return args[0];
+            // Strip gratuitous +, unless followed by + or -.
+            if (node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
+              return args[0];
+            }
+            break;
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN:
             const compareGrouping = node.lbrk && _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compareGrouping");
             if (!compareGrouping) {
               return args[0];
             }
-            // Else, fall through.
-          default:
+            break;
           }
           return newNode(node.op, args);
         },
@@ -19153,7 +19151,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) *
 /******/ });
 });
 /*
- * translatex commit d2889f6
+ * translatex commit 2413474
  * Copyright 2020 Artcompiler Inc. All Rights Reserved.
  * Copyright 2020 Learnosity Ltd. All Rights Reserved.
  *
