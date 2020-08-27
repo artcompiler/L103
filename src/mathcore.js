@@ -14729,13 +14729,13 @@ __webpack_require__.r(__webpack_exports__);
   // literally equivalent if and only if they have the same AST. ASTs with the
   // same structure intern to the same pool index.
   _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].fn.equivLiteral = function equivLiteral(n1, n2, options) {
-    console.log("[1] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
-    console.log("[1] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
+    // console.log("[1] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
+    // console.log("[1] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
     var inverseResult = option(options, "inverseResult");
     n1 = normalizeLiteral(options, n1);
     n2 = normalizeLiteral(options, n2);
-    console.log("[2] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
-    console.log("[2] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
+    // console.log("[2] equivLiteral() n1=" + JSON.stringify(n1, null, 2));
+    // console.log("[2] equivLiteral() n2=" + JSON.stringify(n2, null, 2));
     if (option(options, "normalizeArithmetic")) {
       // Includes:
       // ignoreCoefficientOne (parsing, tbd)
@@ -14750,8 +14750,8 @@ __webpack_require__.r(__webpack_exports__);
     }
     var nid1 = ast.intern(n1);
     var nid2 = ast.intern(n2);
-    console.log("[3] equivLiteral() nid1=" + nid1 + " n1=" + JSON.stringify(n1, null, 2));
-    console.log("[3] equivLiteral() nid2=" + nid2 + " n2=" + JSON.stringify(n2, null, 2));
+    // console.log("[3] equivLiteral() nid1=" + nid1 + " n1=" + JSON.stringify(n1, null, 2));
+    // console.log("[3] equivLiteral() nid2=" + nid2 + " n2=" + JSON.stringify(n2, null, 2));
     var result = inverseResult ? !(nid1 === nid2) : nid1 === nid2;
     // console.log("[4] equivLiteral() inverseResult=" + inverseResult + " result=" + result);
     return result;
