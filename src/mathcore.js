@@ -10639,8 +10639,9 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         unary: function(node) {
-          const compareGrouping = node.lbrk && _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compareGrouping");
-          if (isGrouping(node) && node.args.length === 1 &&
+          const compareGrouping = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compareGrouping");
+          if (isGrouping(node) &&
+              node.args.length === 1 &&
               node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA &&
               !compareGrouping) {
             return normalizeLiteral(options, node.args[0]);
@@ -10661,12 +10662,6 @@ __webpack_require__.r(__webpack_exports__);
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
             // Strip gratuitous +, unless followed by + or -.
             if (node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
-              return args[0];
-            }
-            break;
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN:
-            const compareGrouping = node.lbrk && _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compareGrouping");
-            if (!compareGrouping) {
               return args[0];
             }
             break;
