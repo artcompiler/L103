@@ -10646,7 +10646,7 @@ __webpack_require__.r(__webpack_exports__);
               node.args.length === 1 &&
               node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA &&
               !compareGrouping &&
-              normalizeLiteralLevel > 1) {
+              (normalizeLiteralLevel > 1 || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN)) {
             return normalizeLiteral(options, node.args[0]);
           }
           var args = [];
