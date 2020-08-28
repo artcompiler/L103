@@ -6324,7 +6324,8 @@ __webpack_require__.r(__webpack_exports__);
     var aa = [];
     args.forEach(function(n) {
       if (flatten && n.op === op &&
-         (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD)) {
+          n.args.length > 1 &&   // Don't flatten unary nodes.
+          (op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].TIMES || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CDOT || op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD)) {
         aa = aa.concat(n.args);
       } else {
         aa.push(n);
@@ -10649,27 +10650,27 @@ __webpack_require__.r(__webpack_exports__);
               (normalizeLiteralLevel > 1 || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN)) {
             return normalizeLiteral(options, node.args[0]);
           }
+          switch (node.op) {
+          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB:
+            if (isMultiplicative(node.args[0])) {
+              // Push unary minus down to first factor.
+              let arg = node.args[0];
+              return binaryNode(arg.op, [unaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB, [arg.args.shift()])].concat(arg.args));
+            }
+            break;
+          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
+            // Strip redundant +, unless followed by + or -.
+            if (node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
+              return normalizeLiteral(options, node.args[0]);
+            }
+            break;
+          }
           var args = [];
           node.args.forEach(function (n) {
             args.push(normalizeLiteral(options, n));
           });
-          switch (node.op) {
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB:
-            if (isMultiplicative(args[0])) {
-              // Push unary minus down to first factor.
-              let arg = args[0];
-              node = binaryNode(arg.op, [unaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB, [arg.args.shift()])].concat(arg.args));
-              return node;
-            }
-            break;
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
-            // Strip gratuitous +, unless followed by + or -.
-            if (node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
-              return args[0];
-            }
-            break;
-          }
-          return newNode(node.op, args);
+          node = newNode(node.op, args);
+          return node;
         },
         exponential: function (node) {
           if (node.args.length === 2 &&
@@ -16669,7 +16670,8 @@ let Model = (function () {
       }
       let aa = [];
       args.forEach(function(n) {
-        if (flatten && n.op === op) {
+        if (flatten && n.op === op && n.args.length > 1) {
+          // Flatten binary nodes of the same operator, not unaries.
           aa = aa.concat(n.args);
         } else {
           aa.push(n);
