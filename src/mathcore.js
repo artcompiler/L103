@@ -10561,12 +10561,14 @@ __webpack_require__.r(__webpack_exports__);
       );
     }
 
+    let normalizeLiteralLevel = 0;
     function normalizeLiteral(options, root) {
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(root && root.args, "2000: Internal error.");
       var nid = ast.intern(root);
       if (root.normalizeLiteralNid === nid) {
         return root;
       }
+      normalizeLiteralLevel++;
       var node = visit(options, root, {
         name: "normalizeLiteral",
         numeric: function (node) {
@@ -10643,7 +10645,8 @@ __webpack_require__.r(__webpack_exports__);
           if (isGrouping(node) &&
               node.args.length === 1 &&
               node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA &&
-              !compareGrouping) {
+              !compareGrouping &&
+              normalizeLiteralLevel > 1) {
             return normalizeLiteral(options, node.args[0]);
           }
           var args = [];
@@ -10717,6 +10720,7 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         }
       });
+      normalizeLiteralLevel--;
       node.normalizeLiteralNid = ast.intern(node);
       return node;
     }
