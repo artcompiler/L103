@@ -14817,13 +14817,13 @@ __webpack_require__.r(__webpack_exports__);
       } else {
         var n = val;
         Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(n && n.op && n.args && n.args.length);
-        if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && n.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].LIST ||
-            n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && n.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA) {
+        if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && n.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA ||
+            n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].INTERVALOPEN && n.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA) {
           var result;
           var n1 = n.args[0].args[0];
           var n2 = n.args[0].args[1];
           compare(n1, n2, function (err, val) {
-            resume(err, val)
+            resume(err, val);
           });
         } else {
           compare(n1o, n2o, function (err, val) {
