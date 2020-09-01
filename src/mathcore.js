@@ -9339,6 +9339,9 @@ __webpack_require__.r(__webpack_exports__);
           return node;
         },
         unary: function(node) {
+          if (isGrouping(node, normalizeLevel)) {
+            return normalize(options, node.args[0]);
+          }
           const normalizeArithmetic = option(options, 'normalizeArithmetic');
           switch (node.op) {
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUBSCRIPT:
@@ -9366,10 +9369,6 @@ __webpack_require__.r(__webpack_exports__);
           });
           node = newNode(node.op, args);
           switch (node.op) {
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN:
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].BRACKET:
-            node = node.args[0];
-            break;
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUBSCRIPT:
             if (node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].EVALAT) {
             }
@@ -9754,10 +9753,7 @@ __webpack_require__.r(__webpack_exports__);
           return Object.assign({}, node, binaryNode(node.op, args, true));
         },
         unary: function(node) {
-          if (isGrouping(node) &&
-              node.args.length === 1 &&
-              node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA &&
-              (normalizeSympyLevel > 1 || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN)) {
+          if (isGrouping(node, normalizeSympyLevel)) {
             return normalizeSympy(options, node.args[0]);
           }
           if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN && node.args.length === 1 && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA) {
@@ -10560,11 +10556,12 @@ __webpack_require__.r(__webpack_exports__);
       return node;
     }
 
-    function isGrouping(node) {
+    function isGrouping(node, level) {
       return (
-        node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN ||
-        node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].BRACE ||
-        node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].BRACKET
+        (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].BRACE || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].BRACKET) &&
+        node.args.length === 1 &&
+        node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA &&
+        (level > 1 || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN)
       );
     }
 
@@ -10649,11 +10646,7 @@ __webpack_require__.r(__webpack_exports__);
         },
         unary: function(node) {
           const compareGrouping = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].option(options, "compareGrouping");
-          if (isGrouping(node) &&
-              node.args.length === 1 &&
-              node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COMMA &&
-              !compareGrouping &&
-              (normalizeLiteralLevel > 1 || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].PAREN)) {
+          if (isGrouping(node, normalizeLiteralLevel)) {
             return normalizeLiteral(options, node.args[0]);
           }
           switch (node.op) {
@@ -12590,8 +12583,8 @@ __webpack_require__.r(__webpack_exports__);
     // Return the math value of an expression, or null if the expression does
     // not have a math value.
 
+    let mathValueLevel = 0;
     function mathValue(options, root, env, allowDecimal, normalizeUnits) {
-      // console.trace("mathValue() root=" + JSON.stringify(stripMetadata(root), null, 2));
       if (!root || !root.args) {
         return null;
       }
@@ -12603,6 +12596,7 @@ __webpack_require__.r(__webpack_exports__);
         allowDecimal = env;
         env = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].env;
       }
+      mathValueLevel++;
       let node = visit(options, root, {
         name: "mathValue",
         numeric: function (node) {
@@ -12617,7 +12611,6 @@ __webpack_require__.r(__webpack_exports__);
           }
           // Simplify each side.
           var val = bigZero;
-//          console.log("mathValue() node=" + JSON.stringify(stripMetadata(node)));
           node.args.forEach(function (n) {
             var mv = mathValue(options, n, env, true, normalizeUnits);
             if (mv && val) {
@@ -12630,7 +12623,6 @@ __webpack_require__.r(__webpack_exports__);
               val = null;
             }
           });
-//          console.log("mathValue() val=" + val);
           if (allowDecimal || isInteger(val)) {
             return val;
           } else {
@@ -12661,6 +12653,9 @@ __webpack_require__.r(__webpack_exports__);
           return null;
         },
         unary: function(node) {
+          if (isGrouping(node, mathValueLevel)) {
+            return mathValue(options, node.args[0], env, allowDecimal, normalizeUnits);
+          }
           switch (node.op) {
           case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB:
             var val = mathValue(options, node.args[0], env, allowDecimal, normalizeUnits);
@@ -12782,6 +12777,7 @@ __webpack_require__.r(__webpack_exports__);
           return null;
         }
       });
+      mathValueLevel--;
       return node;
       function exponent(node) {
         // FIXME this is brittle. need way to handle general exponents
