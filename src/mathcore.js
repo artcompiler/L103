@@ -14858,32 +14858,32 @@ __webpack_require__.r(__webpack_exports__);
       // console.log(">> compare() n1=" + JSON.stringify(n1, null, 2));
       // console.log(">> compare() n2=" + JSON.stringify(n2, null, 2));
       try {
-        if (true) {
-          var n1o = JSON.parse(JSON.stringify(n1));
-          var n2o = JSON.parse(JSON.stringify(n2));
-          // If strict mode, take the slow path for better testing code coverage.
-          option(options, "ignoreOrder", true);
-          let inverseResult = option(options, "inverseResult", false); // Turn it off temporarily.
-          try {
-            var result = _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].fn.equivLiteral(n1, n2, options);
-          } catch (e) {
-            throw e;
-          }
-          if (result) {
-            // console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
-            // console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
-            // console.log("<< compare() inverseResult=" + inverseResult + " result=" + result);
-            // Got a match. We're done.
-            if (resume) {
-              resume([], inverseResult ? false : true);
-            }
-            return true;
-          }
-          n1 = n1o;
-          n2 = n2o;
-          option(options, "inverseResult", inverseResult);
-          option(options, "ignoreOrder", undefined);
-        }
+        // if (true || !strict) {
+        //   var n1o = JSON.parse(JSON.stringify(n1));
+        //   var n2o = JSON.parse(JSON.stringify(n2));
+        //   // If strict mode, take the slow path for better testing code coverage.
+        //   option(options, "ignoreOrder", true);
+        //   let inverseResult = option(options, "inverseResult", false); // Turn it off temporarily.
+        //   try {
+        //     var result = Model.fn.equivLiteral(n1, n2, options);
+        //   } catch (e) {
+        //     throw e;
+        //   }
+        //   if (result) {
+        //     console.log("<< compare() n1=" + JSON.stringify(n1, null, 2));
+        //     console.log("<< compare() n2=" + JSON.stringify(n2, null, 2));
+        //     console.log("<< compare() inverseResult=" + inverseResult + " result=" + result);
+        //     // Got a match. We're done.
+        //     if (resume) {
+        //       resume([], inverseResult ? false : true);
+        //     }
+        //     return true;
+        //   }
+        //   n1 = n1o;
+        //   n2 = n2o;
+        //   option(options, "inverseResult", inverseResult);
+        //   option(options, "ignoreOrder", undefined);
+        // }
         if (isComparison(n1.op) && n1.op === n2.op) {
           // See if we can eliminate one side.
           var n1a0 = n1.args[0];
