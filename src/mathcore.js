@@ -5844,11 +5844,8 @@ let MathCore = (function MathCore () {
       var msg = parseMessage(e.message);
       var stack = e.stack;
       var location = e.location;
-      console.log("ERROR evaluateVerbose errorCode=" + errorCode + " stack=" + stack);
-      resume([{
-        error: e.message,
-        statusCode: +errorCode === 2000 && 500 || 400,
-      }], {
+      console.log("ERROR evaluateVerbose stack=" + stack);
+      resume([e.message], {
         errorCode: errorCode,
         msg: msg,
       });
@@ -9749,7 +9746,6 @@ __webpack_require__.r(__webpack_exports__);
           return Object.assign({}, node, binaryNode(node.op, args, true));
         },
         unary: function(node) {
-          Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(node.op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].NONE, Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["message"])(2002));
           if (isGrouping(options, node, normalizeSympyLevel)) {
             return normalizeSympy(options, node.args[0]);
           }
@@ -10474,6 +10470,21 @@ __webpack_require__.r(__webpack_exports__);
             args.push(sortLiteral(n));
           });
           node = unaryNode(node.op, args);
+          if (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CAP || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].CUP) {
+            var id0, id1;
+            var n0, n1;
+            for (var i = 0; i < node.args.length - 1; i++) {
+              n0 = node.args[i];
+              n1 = node.args[i + 1];
+              id0 = ast.intern(n0);
+              id1 = ast.intern(n1);
+              if (id0 < id1) {
+                // Swap adjacent elements
+                node.args[i] = n1;
+                node.args[i + 1] = n0;
+              }
+            }
+          }
           return node;
         },
         exponential: function (node) {
