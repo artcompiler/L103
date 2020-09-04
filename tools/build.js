@@ -3,7 +3,7 @@ import {execSync} from 'child_process';
 
 // Current best rule sets
 const latexRulesID = "epLtg4YeVh5";
-const sympyRulesID = '3LgCjO4yzI0'; //'nKdI2WB77SV';
+const sympyRulesID = "Vp8t8e3rdiJ";
 const debug = true;
 function rmdir(path) {
   try { var files = fs.readdirSync(path); }
