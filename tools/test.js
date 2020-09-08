@@ -142,14 +142,17 @@ function getTests(resume) {
   case 'red':
     mark = RED;
     break;
-  default:
+  case 'green':
     mark = GREEN;
+    break;
+  default:
+    mark = GREEN + ',' + BLUE;
     break;
   }
   console.log("Getting " + color + " tests...");  
   const hostUrl = new url.URL(DATA_GATEWAY);
   hostUrl.searchParams.set('table', 'items');
-  hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark=' + mark);
+  hostUrl.searchParams.set('where', 'langid=' + LANG_ID + ' and mark in (' + mark + ')');
   hostUrl.searchParams.set('fields', ['itemid']);
   hostUrl.pathname = '/items';
   request(hostUrl.toString(), function(err, res, body) {
