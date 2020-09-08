@@ -96,17 +96,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
-/***/ "../config.json":
-/*!**********************!*\
-  !*** ../config.json ***!
-  \**********************/
-/*! exports provided: sympyHost, sympyPort, sympyProtocol, sympyPath, unused, default */
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"sympyHost\":\"e2r3izczp3.execute-api.us-east-2.amazonaws.com\",\"sympyPort\":\"443\",\"sympyProtocol\":\"https\",\"sympyPath\":\"/sympy-service\",\"unused\":true}");
-
-/***/ }),
-
 /***/ "./node_modules/decimal.js/decimal.mjs":
 /*!*********************************************!*\
   !*** ./node_modules/decimal.js/decimal.mjs ***!
@@ -6120,10 +6109,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var https__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(https__WEBPACK_IMPORTED_MODULE_5__);
 /* harmony import */ var http__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! http */ "http");
 /* harmony import */ var http__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(http__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_7__);
 /*
  * Copyright 2016 Learnosity Ltd. All Rights Reserved.
  *
  */
+
 
 
 
@@ -14978,7 +14970,7 @@ __webpack_require__.r(__webpack_exports__);
       }
     };
   }
-  var config = __webpack_require__(/*! ../../config.json */ "../config.json");
+  const config = JSON.parse(fs__WEBPACK_IMPORTED_MODULE_7___default.a.readFileSync(process.env.ARTCOMPILER_CONFIG || 'config.json', 'utf8'));
   function getSympy(path, data, resume) {
     path = path.trim().replace(/ /g, "+");
     var encodedData = JSON.stringify(data);
@@ -19170,6 +19162,17 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) *
  */
 
 
+
+/***/ }),
+
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("fs");
 
 /***/ }),
 
