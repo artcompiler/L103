@@ -6454,7 +6454,6 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function negateFactors(args) {
-//    console.log(">> negateFactors() args=" + JSON.stringify(args, null, 2));
     // Handle leading coefficients
     if (args.length === 0) {
       args.unshift(nodeMinusOne);
@@ -6476,15 +6475,9 @@ __webpack_require__.r(__webpack_exports__);
       });
       args = argsNew;
       if (!didNegate) {
-        // if (args[0].op === Model.POW && isMinusOne(args[0].args[1])) {
-        //   args.unshift(negate(args.shift()));
-        //   didNegate = true;
-        // } else {
-          args.unshift(nodeMinusOne);
-        // }
+        args.unshift(nodeMinusOne);
       }
     }
-//    console.log("<< negateFactors() args=" + JSON.stringify(args, null, 2));
     return args;
   }
 
@@ -6502,7 +6495,6 @@ __webpack_require__.r(__webpack_exports__);
   }
 
   function negate(n, isNormalizing) {
-//    console.log(">> negate() n=" + JSON.stringify(n, null, 2));
     let node;
     if (typeof n === "number") {
       Object(_assert_js__WEBPACK_IMPORTED_MODULE_0__["assert"])(false);
@@ -6512,49 +6504,6 @@ __webpack_require__.r(__webpack_exports__);
       var args = n.args.slice(0); // copy
       args = negateFactors(args);
       node = binaryNode(n.op, args, true);
-      // if (isMinusOne(n.args[0])) {
-      //   args.shift();
-      //   return binaryNode(n.op, args, true);
-      // } else {
-      //   var didNegate = false;
-      //   done:
-      //   for (var i = 0; i < args.length; i++) {
-      //     if (isMinusOne(args[i])) {
-      //       if (i === 0) {
-      //         args.shift();
-      //       } else if (i === args.length - 1) {
-      //         args.pop();
-      //       } else {
-      //         args = args.slice(0, i).concat(args.slice(i + 1));
-      //       }
-      //       i--;
-      //       didNegate = true;
-      //       break done;
-      //     } else if (isNeg(options, args[i])) {
-      //       args[i] = negate(args[i]);
-      //       didNegate = true;
-      //       break done;
-      //     }
-      //   }
-      //   if (!didNegate) {
-      //     let newArgs = [];
-      //     args.forEach(n => {
-      //       // Look for a denominator to negate first.
-      //       if (!didNegate && n.op === Model.POW && isMinusOne(n.args[1])) {
-      //         newArgs.push(negate(n));
-      //         didNegate = true;
-      //       } else {
-      //         newArgs.push(n);
-      //       }
-      //     });
-      //     args = newArgs;
-      //     if (!didNegate) {
-      //       // If still not negated, then negate the first factor.
-      //       args.unshift(negate(args.shift()));
-      //     }
-      //   }
-      //   return binaryNode(n.op, args, true);
-      // }
     } else if (n.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && !isNormalizing) {
       if (isNeg(options, leadingCoeff(n))) {
         // If has a negative leading coefficient, then negate each term.
@@ -6576,7 +6525,6 @@ __webpack_require__.r(__webpack_exports__);
       } else if (n.args[0] === "-Infinity") {
         return nodePositiveInfinity;
       } else if (n.args[0].charAt(0) === "-") {
-//        return unaryNode(Model.SUB, [n]);
         node = numberNode(options, n.args[0].slice(1));
       } else {
         node = numberNode(options, "-" + n.args[0]);
@@ -6593,7 +6541,6 @@ __webpack_require__.r(__webpack_exports__);
     } else {
       node = multiplyNode([nodeMinusOne, n], true);
     }
-//    console.log("<< negate() node=" + JSON.stringify(node, null, 2));
     return node;
   }
 
@@ -10665,26 +10612,36 @@ __webpack_require__.r(__webpack_exports__);
           if (isGrouping(options, node, normalizeLiteralLevel)) {
             return normalizeLiteral(options, node.args[0]);
           }
-          switch (node.op) {
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB:
-            if (isMultiplicative(node.args[0])) {
-              // Push unary minus down to first factor.
-              let arg = node.args[0];
-              return binaryNode(arg.op, [unaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB, [arg.args.shift()])].concat(arg.args));
-            }
-            break;
-          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
-            // Strip redundant +, unless followed by + or -.
-            if (node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
-              return normalizeLiteral(options, node.args[0]);
-            }
-            break;
+          if (node.args[0].args.length === 1 &&
+              (node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD || node.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) &&
+              (node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD || node.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB)) {
+            // Don't strip redundant + or - inside another unary + or -.
+            node.args[0].args[0] = normalizeLiteral(options, node.args[0].args[0]);
+            return node;
           }
           var args = [];
           node.args.forEach(function (n) {
             args.push(normalizeLiteral(options, n));
           });
           node = newNode(node.op, args);
+          switch (node.op) {
+          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB:
+            if (isMultiplicative(node.args[0])) {
+              // Push unary minus down to first factor.
+              let arg = node.args[0];
+              let op =
+                  arg.args[0].op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB && arg.op === _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].COEFF && _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].MUL ||
+                  arg.op;  // If double SUB then use MUL for COEFF.
+              return binaryNode(op, [unaryNode(_model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB, [arg.args.shift()])].concat(arg.args));
+            }
+            break;
+          case _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD:
+            // Strip redundant +, unless followed by unary + or -.
+            if (node.args[0].args.length > 1 || node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].ADD && node.args[0].op !== _model_js__WEBPACK_IMPORTED_MODULE_2__["Model"].SUB) {
+              return normalizeLiteral(options, node.args[0]);
+            }
+            break;
+          }
           return node;
         },
         exponential: function (node) {
