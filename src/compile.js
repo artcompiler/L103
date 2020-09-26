@@ -490,9 +490,26 @@ let transformer = (function() {
 
   function color(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      console.log("color() val1=" + JSON.stringify(val1));
       resume([].concat(err1).concat(err1), {
         'color': val1
+      });
+    });
+  }
+
+  function triangle(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val0) {
+      visit(node.elts[1], options, function (err1, val1) {
+        visit(node.elts[2], options, function (err1, val2) {
+          visit(node.elts[3], options, function (err1, val3) {
+            visit(node.elts[4], options, function (err1, val4) {
+              visit(node.elts[5], options, function (err1, val5) {
+                resume([].concat(err1).concat(err1), {
+                  'triangle': [val0, val1, val2, val3, val4, val5]
+                });
+              });
+            });
+          });
+        });
       });
     });
   }
@@ -534,6 +551,7 @@ let transformer = (function() {
     "SIZE" : size,
     "BACKGROUND": background,
     "COLOR": color,
+    "TRIANGLE": triangle,
   };
   return transform;
 });
@@ -584,6 +602,7 @@ export const compiler = (function () {
           }], val);
         } else {
           render(val, options, function (err, val) {
+            val = !(val instanceof Array) && [val] || val;
             resume(err, val);
           });
         }

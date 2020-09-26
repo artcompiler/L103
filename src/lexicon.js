@@ -1,6 +1,7 @@
 /* @flow */
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
+  "triangle" : { "tk": 1, "name": "TRIANGLE", "cls": "function", "length": 6, "arity": 6 },
   "size" : { "tk": 1, "name": "SIZE", "cls": "function", "length": 2, "arity": 2 },
   "color" : { "tk": 1, "name": "COLOR", "cls": "function", "length": 1, "arity": 1 },
   "background" : { "tk": 1, "name": "BACKGROUND", "cls": "function", "length": 1, "arity": 1 },

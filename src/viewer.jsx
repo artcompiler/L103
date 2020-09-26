@@ -33,7 +33,9 @@ window.gcexports.viewer = (function () {
   }
   var Viewer = React.createClass({
     componentDidMount: function() {
-      this.p5x = new p5();
+      const p5x = this.p5x = new p5();
+      const canvas = p5x.createCanvas(100, 100);
+      canvas.parent('sketch');
       this.componentDidUpdate();
     },
     componentDidUpdate: function() {
@@ -43,8 +45,9 @@ window.gcexports.viewer = (function () {
         const name = Object.keys(v)[0];
         const args = v[name] instanceof Array && v[name] || [v[name]];
         switch(name) {
+        case 'triangle':
         case 'background':
-          p5x.background(...args);
+          p5x[name](...args);
           break;
         case 'size':
           const canvas = p5x.createCanvas(...args);
