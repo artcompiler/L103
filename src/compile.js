@@ -469,6 +469,42 @@ let transformer = (function() {
       resume(err, val);
     });
   }
+
+  function size(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      val1 = +val1;
+      if (isNaN(val1)) {
+        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        val2 = +val2;
+        if (isNaN(val2)) {
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), {
+          'size': [val1, val2]
+        });
+      });
+    });
+  }
+
+  function color(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      console.log("color() val1=" + JSON.stringify(val1));
+      resume([].concat(err1).concat(err1), {
+        'color': val1
+      });
+    });
+  }
+
+  function background(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume([].concat(err1).concat(err1), {
+        'background': val1
+      });
+    });
+  }
+
   let table = {
     "PROG" : program,
     "EXPRS" : exprs,
@@ -495,6 +531,9 @@ let transformer = (function() {
     "PAREN" : paren,
     "APPLY" : apply,
     "MAP" : map,
+    "SIZE" : size,
+    "BACKGROUND": background,
+    "COLOR": color,
   };
   return transform;
 });

@@ -33,14 +33,25 @@ window.gcexports.viewer = (function () {
   }
   var Viewer = React.createClass({
     componentDidMount: function() {
-      const p5x = new p5();
-      const canvas = p5x.createCanvas(100, 100);
-      canvas.parent('sketch');
-      p5x.frameRate(30);
-      p5x.background(255,44,44);
-      p5x.line(15, 25, 70, 90);
+      this.p5x = new p5();
+      this.componentDidUpdate();
     },
     componentDidUpdate: function() {
+      const p5x = this.p5x;
+      const steps = this.props.obj || [];
+      steps.forEach((v, i) => {
+        const name = Object.keys(v)[0];
+        const args = v[name] instanceof Array && v[name] || [v[name]];
+        switch(name) {
+        case 'background':
+          p5x.background(...args);
+          break;
+        case 'size':
+          const canvas = p5x.createCanvas(...args);
+          canvas.parent('sketch');
+          break;
+        }
+      });
     },
     render: function () {
       var props = this.props;
