@@ -33,38 +33,25 @@ window.gcexports.viewer = (function () {
   }
   var Viewer = React.createClass({
     componentDidMount: function() {
-      const p5x = this.p5x = new p5();
-      const canvas = p5x.createCanvas(100, 100);
-      canvas.parent('sketch');
       this.componentDidUpdate();
     },
     componentDidUpdate: function() {
-      const p5x = this.p5x;
-      const steps = this.props.obj || [];
-      steps.forEach((v, i) => {
-        const name = Object.keys(v)[0];
-        const args = v[name] instanceof Array && v[name] || [v[name]];
-        switch(name) {
-        case 'triangle':
-        case 'background':
-          p5x[name](...args);
-          break;
-        case 'size':
-          const canvas = p5x.createCanvas(...args);
-          canvas.parent('sketch');
-          break;
-        }
-      });
+      d3.select('#sketch').html('');  // Clear any previous ink.
+      const setupBody = this.props.obj.join(';');
+      const drawBody = undefined;
+      const fn = p => {
+        p.setup = () => { new Function('p', setupBody)(p) };
+        p.draw = () => new Function('p', '');
+      }
+      new p5(fn, 'sketch');
     },
     render: function () {
       var props = this.props;
       var obj = props.obj || {};
-      var elts = render(obj);
       return (
         <div>
         <div className="L102">
         <div id="sketch" className="section">
-          {elts}
         </div>
         </div>
         </div>

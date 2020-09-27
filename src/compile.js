@@ -259,9 +259,6 @@ let transformer = (function() {
         });
       });
     } else if (node.elts && node.elts.length > 0) {
-      if (clearSettings) {
-        options.settings = {};  // Reset for each scorer.
-      }
       visit(node.elts[0], options, function (err1, val1) {
         let val = [val1];
         resume([].concat(err1), val);
@@ -481,18 +478,20 @@ let transformer = (function() {
         if (isNaN(val2)) {
           err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
         }
-        resume([].concat(err1).concat(err2), {
-          'size': [val1, val2]
-        });
+        resume(
+          [].concat(err1).concat(err2),
+          `p.createCanvas(${val1},${val2})`
+        );
       });
     });
   }
 
   function color(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      resume([].concat(err1).concat(err1), {
-        'color': val1
-      });
+      resume(
+        [].concat(err1).concat(err1),
+        `p.color(${val1})`
+      );
     });
   }
 
@@ -503,9 +502,10 @@ let transformer = (function() {
           visit(node.elts[3], options, function (err1, val3) {
             visit(node.elts[4], options, function (err1, val4) {
               visit(node.elts[5], options, function (err1, val5) {
-                resume([].concat(err1).concat(err1), {
-                  'triangle': [val0, val1, val2, val3, val4, val5]
-                });
+                resume(
+                  [].concat(err1).concat(err1),
+                  `p.triangle(${val0},${val1},${val2},${val3},${val4},${val5})`
+                );
               });
             });
           });
@@ -514,11 +514,31 @@ let transformer = (function() {
     });
   }
 
+  function rect(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      console.log("rect() val1=" + val1);
+      resume(
+        [].concat(err1).concat(err1),
+        `p.rect(${val1})`
+      );
+    });
+  }
+
+  function ellipse(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(
+        [].concat(err1).concat(err1),
+        `p.ellipse(${val1})`
+      );
+    });
+  }
+
   function background(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      resume([].concat(err1).concat(err1), {
-        'background': val1
-      });
+      resume(
+        [].concat(err1).concat(err1),
+        `p.background(${val1})`
+      );
     });
   }
 
@@ -552,6 +572,8 @@ let transformer = (function() {
     "BACKGROUND": background,
     "COLOR": color,
     "TRIANGLE": triangle,
+    "RECT": rect,
+    "ELLIPSE": ellipse,
   };
   return transform;
 });
@@ -592,20 +614,21 @@ export const compiler = (function () {
         let options = {
           data: data,
           config: config,
+          result: '',
         };
         transform(code, options, function (err, val) {
-        if (err && err.length) {
-          console.log("compile() err=" + JSON.stringify(err));
-          resume([{
-            statusCode: statusCodeFromErrors(err),
-            error: messageFromErrors(err),
-          }], val);
-        } else {
-          render(val, options, function (err, val) {
-            val = !(val instanceof Array) && [val] || val;
-            resume(err, val);
-          });
-        }
+          if (err && err.length) {
+            console.log("compile() err=" + JSON.stringify(err));
+            resume([{
+              statusCode: statusCodeFromErrors(err),
+              error: messageFromErrors(err),
+            }], val);
+          } else {
+            render(val, options, function (err, val) {
+              val = !(val instanceof Array) && [val] || val;
+              resume(err, val);
+            });
+          }
         });
       } catch (x) {
         console.log("ERROR with code");
