@@ -1,6 +1,9 @@
 /* @flow */
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
+  "stroke-weight" : { "tk": 1, "name": "STROKE-WEIGHT", "cls": "function", "length": 1, "arity": 1 },
+  "stroke" : { "tk": 1, "name": "STROKE", "cls": "function", "length": 1, "arity": 1 },
+  "fill" : { "tk": 1, "name": "FILL", "cls": "function", "length": 1, "arity": 1 },
   "ellipse" : { "tk": 1, "name": "ELLIPSE", "cls": "function", "length": 1, "arity": 1 },
   "rect" : { "tk": 1, "name": "RECT", "cls": "function", "length": 1, "arity": 1 },
   "triangle" : { "tk": 1, "name": "TRIANGLE", "cls": "function", "length": 6, "arity": 6 },

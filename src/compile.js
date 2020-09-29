@@ -514,12 +514,39 @@ let transformer = (function() {
     });
   }
 
+  function strokeWeight(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(
+        [].concat(err1).concat(err1),
+        `p.strokeWeight(${val1})`
+      );
+    });
+  }
+
+  function stroke(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(
+        [].concat(err1).concat(err1),
+        `p.stroke(${val1})`
+      );
+    });
+  }
+
   function rect(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       console.log("rect() val1=" + val1);
       resume(
         [].concat(err1).concat(err1),
         `p.rect(${val1})`
+      );
+    });
+  }
+
+  function fill(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(
+        [].concat(err1).concat(err1),
+        `p.fill(${val1})`
       );
     });
   }
@@ -574,6 +601,9 @@ let transformer = (function() {
     "TRIANGLE": triangle,
     "RECT": rect,
     "ELLIPSE": ellipse,
+    "FILL": fill,
+    "STROKE": stroke,
+    "STROKE-WEIGHT": strokeWeight,
   };
   return transform;
 });
