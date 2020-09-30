@@ -102,16 +102,8 @@ let transformer = (function() {
   }
   function add(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
-      val1 = +val1;
-      if (isNaN(val1)) {
-        err1 = err1.concat(error("Argument 1 must be a number.", node.elts[0]));
-      }
       visit(node.elts[1], options, function (err2, val2) {
-        val2 = +val2;
-        if (isNaN(val2)) {
-          err2 = err2.concat(error("Argument 2 must be a number.", node.elts[1]));
-        }
-        resume([].concat(err1).concat(err2), val1 + val2);
+        resume([].concat(err1).concat(err2), `${val1} + ${val2}`);
       });
     });
   }
@@ -551,6 +543,13 @@ let transformer = (function() {
     });
   }
 
+  function noFill(node, options, resume) {
+    resume(
+      [],
+      `p.noFill()`
+    );
+  }
+
   function ellipse(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       resume(
@@ -565,6 +564,34 @@ let transformer = (function() {
       resume(
         [].concat(err1).concat(err1),
         `p.background(${val1})`
+      );
+    });
+  }
+
+  function arc(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      console.log("arc() val1=" + val1);
+      resume(
+        [].concat(err1).concat(err1),
+        `p.arc(${val1})`
+      );
+    });
+  }
+
+  function onSetup(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(
+        [].concat(err1).concat(err1),
+        `${val1}`,
+      );
+    });
+  }
+
+  function onDraw(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      resume(
+        [].concat(err1).concat(err1),
+        `onDraw(p, "${val1}")`,
       );
     });
   }
@@ -601,9 +628,13 @@ let transformer = (function() {
     "TRIANGLE": triangle,
     "RECT": rect,
     "ELLIPSE": ellipse,
+    "NO_FILL": noFill,
     "FILL": fill,
     "STROKE": stroke,
     "STROKE-WEIGHT": strokeWeight,
+    "ARC": arc,
+    "ON_SETUP": onSetup,
+    "ON_DRAW": onDraw,
   };
   return transform;
 });

@@ -1,8 +1,16 @@
 /* @flow */
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
+  "onSetup" : { "tk": 1, "name": "ON_SETUP", "cls": "function", "length": 1, "arity": 1 },
+  "onDraw" : { "tk": 1, "name": "ON_DRAW", "cls": "function", "length": 1, "arity": 1 },
+  "TWO_PI" : { "tk": 1, "name": "TWO_PI", "cls": "const", "val": "p.TWO_PI"},
+  "QUARTER_PI" : { "tk": 1, "name": "QUARTER_PI", "cls": "const", "val": "p.QUARTER_PI" },
+  "HALF_PI" : { "tk": 1, "name": "HALF_PI", "cls": "const", "val": "p.HALF_PI" },
+  "PI" : { "tk": 1, "name": "PI", "cls": "const", "val": "p.PI" },
+  "arc" : { "tk": 1, "name": "ARC", "cls": "function", "length": 1, "arity": 1 },
   "strokeWeight" : { "tk": 1, "name": "STROKE-WEIGHT", "cls": "function", "length": 1, "arity": 1 },
   "stroke" : { "tk": 1, "name": "STROKE", "cls": "function", "length": 1, "arity": 1 },
+  "noFill" : { "tk": 1, "name": "NO_FILL", "cls": "function", "length": 0, "arity": 0 },
   "fill" : { "tk": 1, "name": "FILL", "cls": "function", "length": 1, "arity": 1 },
   "ellipse" : { "tk": 1, "name": "ELLIPSE", "cls": "function", "length": 1, "arity": 1 },
   "rect" : { "tk": 1, "name": "RECT", "cls": "function", "length": 1, "arity": 1 },
