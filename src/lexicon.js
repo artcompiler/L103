@@ -1,6 +1,7 @@
 /* @flow */
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
+  "frameCount" : { "tk": 1, "name": "FRAME_COUNT", "cls": "function", "length": 0, "arity": 0 },
   "onSetup" : { "tk": 1, "name": "ON_SETUP", "cls": "function", "length": 1, "arity": 1 },
   "onDraw" : { "tk": 1, "name": "ON_DRAW", "cls": "function", "length": 1, "arity": 1 },
   "TWO_PI" : { "tk": 1, "name": "TWO_PI", "cls": "const", "val": "p.TWO_PI"},

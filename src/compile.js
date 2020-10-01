@@ -78,6 +78,7 @@ let transformer = (function() {
     } else {
       node = nodePool[nid];
     }
+    console.log("visit() nid=" + nid + " node=" + JSON.stringify(node, null, 2));
     assert(node, message(1001, [nid]));
     assert(node.tag, message(1001, [nid]));
     assert(typeof table[node.tag] === "function", message(1004, [JSON.stringify(node.tag)]));
@@ -373,7 +374,7 @@ let transformer = (function() {
       });
       visit(node.elts[1], options, function (err, val) {
         exitEnv(options);
-        resume([].concat(err0).concat(err).concat(err), val)
+        resume([].concat(err0).concat(err).concat(err), val);
       });
     });
   }
@@ -588,12 +589,20 @@ let transformer = (function() {
   }
 
   function onDraw(node, options, resume) {
+    console.log("onDraw() node=" + JSON.stringify(node, null, 2));
     visit(node.elts[0], options, function (err1, val1) {
       resume(
         [].concat(err1).concat(err1),
         `onDraw(p, "${val1}")`,
       );
     });
+  }
+
+  function frameCount(node, options, resume) {
+    resume(
+      [],
+      `p.frameCount`,
+    );
   }
 
   let table = {
@@ -635,6 +644,7 @@ let transformer = (function() {
     "ARC": arc,
     "ON_SETUP": onSetup,
     "ON_DRAW": onDraw,
+    "FRAME_COUNT": frameCount,
   };
   return transform;
 });
@@ -667,6 +677,7 @@ export const compiler = (function () {
     langID: 102,
     version: "v0.0.0",
     compile: function compile(code, data, config, resume) {
+      console.log("compile() code=" + JSON.stringify(code, null, 2));
       // Compiler takes an AST in the form of a node pool (code) and transforms it
       // into an object to be rendered on the client by the viewer for this
       // language.
