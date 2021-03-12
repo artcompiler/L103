@@ -1,36 +1,6 @@
 /* @flow */
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
-  "frameCount" : { "tk": 1, "name": "FRAME_COUNT", "cls": "function", "length": 0, "arity": 0 },
-  "onSetup" : { "tk": 1, "name": "ON_SETUP", "cls": "function", "length": 1, "arity": 1 },
-  "onDraw" : { "tk": 1, "name": "ON_DRAW", "cls": "function", "length": 1, "arity": 1 },
-  "TWO_PI" : { "tk": 1, "name": "TWO_PI", "cls": "const", "val": "p.TWO_PI"},
-  "QUARTER_PI" : { "tk": 1, "name": "QUARTER_PI", "cls": "const", "val": "p.QUARTER_PI" },
-  "HALF_PI" : { "tk": 1, "name": "HALF_PI", "cls": "const", "val": "p.HALF_PI" },
-  "PI" : { "tk": 1, "name": "PI", "cls": "const", "val": "p.PI" },
-  "arc" : { "tk": 1, "name": "ARC", "cls": "function", "length": 1, "arity": 1 },
-  "strokeWeight" : { "tk": 1, "name": "STROKE-WEIGHT", "cls": "function", "length": 1, "arity": 1 },
-  "stroke" : { "tk": 1, "name": "STROKE", "cls": "function", "length": 1, "arity": 1 },
-  "noFill" : { "tk": 1, "name": "NO_FILL", "cls": "function", "length": 0, "arity": 0 },
-  "fill" : { "tk": 1, "name": "FILL", "cls": "function", "length": 1, "arity": 1 },
-  "ellipse" : { "tk": 1, "name": "ELLIPSE", "cls": "function", "length": 1, "arity": 1 },
-  "rect" : { "tk": 1, "name": "RECT", "cls": "function", "length": 1, "arity": 1 },
-  "triangle" : { "tk": 1, "name": "TRIANGLE", "cls": "function", "length": 6, "arity": 6 },
-  "size" : { "tk": 1, "name": "SIZE", "cls": "function", "length": 2, "arity": 2 },
-  "color" : { "tk": 1, "name": "COLOR", "cls": "function", "length": 1, "arity": 1 },
-  "background" : { "tk": 1, "name": "BACKGROUND", "cls": "function", "length": 1, "arity": 1 },
-  "add" : { "tk": 1, "name": "ADD", "cls": "function", "length": 2 , "arity": 2 },
-  "sub" : { "tk": 1, "name": "SUB", "cls": "function", "length": 2 , "arity": 2 },
-  "mul" : { "tk": 1, "name": "MUL", "cls": "function", "length": 2 , "arity": 2 },
-  "div" : { "tk": 1, "name": "DIV", "cls": "function", "length": 2 , "arity": 2 },
-  "pow" : { "tk": 1, "name": "POW", "cls": "function", "length": 2 , "arity": 2 },
-  "style" : { "tk": 1, "name": "STYLE", "cls": "function", "length": 2, "arity": 2 },
-  "concat" : { "tk": 1, "name": "CONCAT", "cls": "function", "length": 1 , "arity": 1 },
-  "val" : { "tk": 1, "name": "VAL", "cls": "function", "length": 2 , "arity": 2 },
-  "key" : { "tk": 1, "name": "KEY", "cls": "function", "length": 2 , "arity": 2 },
-  "len" : { "tk": 1, "name": "LEN", "cls": "function", "length": 1 , "arity": 1 },
-  "map" : { "tk": 1, "name": "MAP", "cls": "function", "length": 2, "arity": 2 },
-  "apply" : { "tk": 1, "name": "APPLY", "cls": "function", "length": 2, "arity": 2 },
-  "in" : { "tk": 1, "name": "IN", "cls": "function", "length": 1, "arity": 1 },
-  "arg" : { "tk": 1, "name": "ARG", "cls": "function", "length": 1, "arity": 1 }
+  "h3" : { "tk": 1, "name": "H3", "cls": "function", "length": 1, "arity": 1 },
+  "div" : { "tk": 1, "name": "DIV", "cls": "function", "length": 2, "arity": 2 }
 }

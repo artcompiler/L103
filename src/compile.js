@@ -138,7 +138,7 @@ let transformer = (function() {
       });
     });
   }
-  function div(node, options, resume) {
+  function divide(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       val1 = +val1;
       if (isNaN(val1)) {
@@ -460,152 +460,31 @@ let transformer = (function() {
     });
   }
 
-  function size(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      val1 = +val1;
-      if (isNaN(val1)) {
-        err1 = err1.concat(error("Argument must be a number.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        val2 = +val2;
-        if (isNaN(val2)) {
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
-        }
-        resume(
-          [].concat(err1).concat(err2),
-          `p.createCanvas(${val1},${val2})`
-        );
+  function h3(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      const err = [].concate(e0);
+      const val = {
+        type: 'h3',
+        elts: [v0],
+      };
+      resume(err, val);
+    });
+  }
+  function div(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "div",
+          clss: v0,
+          elts: v1,
+        };
+        resume(err, val);
       });
     });
   }
 
-  function color(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `p.color(${val1})`
-      );
-    });
-  }
-
-  function triangle(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val0) {
-      visit(node.elts[1], options, function (err1, val1) {
-        visit(node.elts[2], options, function (err1, val2) {
-          visit(node.elts[3], options, function (err1, val3) {
-            visit(node.elts[4], options, function (err1, val4) {
-              visit(node.elts[5], options, function (err1, val5) {
-                resume(
-                  [].concat(err1).concat(err1),
-                  `p.triangle(${val0},${val1},${val2},${val3},${val4},${val5})`
-                );
-              });
-            });
-          });
-        });
-      });
-    });
-  }
-
-  function strokeWeight(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `p.strokeWeight(${val1})`
-      );
-    });
-  }
-
-  function stroke(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `p.stroke(${val1})`
-      );
-    });
-  }
-
-  function rect(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      console.log("rect() val1=" + val1);
-      resume(
-        [].concat(err1).concat(err1),
-        `p.rect(${val1})`
-      );
-    });
-  }
-
-  function fill(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `p.fill(${val1})`
-      );
-    });
-  }
-
-  function noFill(node, options, resume) {
-    resume(
-      [],
-      `p.noFill()`
-    );
-  }
-
-  function ellipse(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `p.ellipse(${val1})`
-      );
-    });
-  }
-
-  function background(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `p.background(${val1})`
-      );
-    });
-  }
-
-  function arc(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      console.log("arc() val1=" + val1);
-      resume(
-        [].concat(err1).concat(err1),
-        `p.arc(${val1})`
-      );
-    });
-  }
-
-  function onSetup(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `${val1}`,
-      );
-    });
-  }
-
-  function onDraw(node, options, resume) {
-    console.log("onDraw() node=" + JSON.stringify(node, null, 2));
-    visit(node.elts[0], options, function (err1, val1) {
-      resume(
-        [].concat(err1).concat(err1),
-        `onDraw(p, "${val1}")`,
-      );
-    });
-  }
-
-  function frameCount(node, options, resume) {
-    resume(
-      [],
-      `p.frameCount`,
-    );
-  }
-
-  let table = {
+  const table = {
     "PROG" : program,
     "EXPRS" : exprs,
     "STR": str,
@@ -626,25 +505,13 @@ let transformer = (function() {
     "LEN" : len,
     "ARG" : arg,
     "DATA" : inData,
-    "IN" : inData,
     "LAMBDA" : lambda,
     "PAREN" : paren,
     "APPLY" : apply,
     "MAP" : map,
-    "SIZE" : size,
-    "BACKGROUND": background,
-    "COLOR": color,
-    "TRIANGLE": triangle,
-    "RECT": rect,
-    "ELLIPSE": ellipse,
-    "NO_FILL": noFill,
-    "FILL": fill,
-    "STROKE": stroke,
-    "STROKE-WEIGHT": strokeWeight,
-    "ARC": arc,
-    "ON_SETUP": onSetup,
-    "ON_DRAW": onDraw,
-    "FRAME_COUNT": frameCount,
+
+    'H3': h3,
+    'DIV': div,
   };
   return transform;
 });

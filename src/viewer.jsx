@@ -2,39 +2,37 @@
 import {assert, message, messages, reserveCodeRange} from "./assert";
 import * as React from "react";
 import * as d3 from "d3";
-import p5 from 'p5';
 
 window.gcexports.viewer = (function () {
-  const onSetup = window.onSetup = function onSetup(p, body) {
-    p.setup = () => {
-      new Function('p', body)(p)
-    };
-  }
-  const onDraw = window.onDraw = function onDraw(p, body) {
-    p.draw = () => {
-      new Function('p', body)(p)
-    };
-  }
-  var Viewer = React.createClass({
-    componentDidMount: function() {
-      this.componentDidUpdate();
-    },
-    componentDidUpdate: function() {
-      d3.select('#sketch').html(''); // Erase any existing ink.
-      const body = this.props.obj.join(';');
-      const fn = p => {
-        p.setup = () => { new Function('p', body)(p) };
+  function renderElts(data) {
+    data = [].concat(data);
+    const elts = [];
+    let key = 1;
+    data.forEach(d => {
+      switch(d.type) {
+      case 'div':
+        elts.push(<div key={key++} className={d.clss}>{renderElts(d.elts)}</div>);
+        break;
+      case 'h3':
+        elts.push(<h3 key={key++} className={d.clss}>{renderElts(d.elts)}</h3>);
+        break;
+      default:
+        elts.push(data);
+        break;
       }
-      new p5(fn, 'sketch');
-    },
-    render: function () {
-      var props = this.props;
-      var obj = props.obj || {};
+    });
+    return elts;
+  }
+  const Viewer = React.createClass({
+    render() {
+      const props = this.props;
+      const data = this.props.obj || [];
+      const elts = renderElts(data);
       return (
         <div>
-          <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-          <div className="L103 viewer">
-          {elts}
+          <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+          <div key='1' className="L103 viewer">
+            {elts}
           </div>
         </div>
       );
