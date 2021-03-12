@@ -9,14 +9,14 @@ messages[1002] = "Invalid tag in node with Node ID %1.";
 messages[1003] = "No async callback provided.";
 messages[1004] = "No visitor method defined for '%1'.";
 function getGCHost() {
-  if (global.port === 5102) {
+  if (global.port === 5103) {
     return "localhost";
   } else {
-    return "www.graffiticode.com";
+    return "gc.acx.ac";
   }
 }
 function getGCPort() {
-  if (global.port === 5102) {
+  if (global.port === 5103) {
     return "3000";
   } else {
     return "80";
@@ -674,7 +674,7 @@ function messageFromErrors(errs) {
 
 export const compiler = (function () {
   return {
-    langID: 102,
+    langID: 103,
     version: "v0.0.0",
     compile: function compile(code, data, config, resume) {
       console.log("compile() code=" + JSON.stringify(code, null, 2));

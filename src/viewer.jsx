@@ -32,9 +32,10 @@ window.gcexports.viewer = (function () {
       var obj = props.obj || {};
       return (
         <div>
-        <div className="L102">
-        <div id="sketch" className="section" />
-        </div>
+          <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+          <div className="L103 viewer">
+          {elts}
+          </div>
         </div>
       );
     },
