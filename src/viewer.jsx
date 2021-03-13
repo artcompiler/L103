@@ -13,8 +13,14 @@ window.gcexports.viewer = (function () {
       case 'div':
         elts.push(<div key={key++} className={d.clss}>{renderElts(d.elts)}</div>);
         break;
+      case 'span':
+        elts.push(<span key={key++} className={d.clss}>{renderElts(d.elts)}</span>);
+        break;
       case 'h3':
-        elts.push(<h3 key={key++} className={d.clss}>{renderElts(d.elts)}</h3>);
+        elts.push(<h3 key={key++}>{renderElts(d.elts)}</h3>);
+        break;
+      case 'p':
+        elts.push(<p key={key++} className={d.clss}>{renderElts(d.elts)}</p>);
         break;
       default:
         elts.push(data);

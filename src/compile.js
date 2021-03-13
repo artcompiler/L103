@@ -460,16 +460,45 @@ let transformer = (function() {
     });
   }
 
+  function span(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "span",
+          clss: v0,
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
+  function p(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "p",
+          clss: v0,
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
   function h3(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
-      const err = [].concate(e0);
+      const err = [].concat(e0);
       const val = {
-        type: 'h3',
-        elts: [v0],
+        type: "h3",
+        elts: v0,
       };
       resume(err, val);
     });
   }
+
   function div(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
       visit(node.elts[1], options, function (e1, v1) {
@@ -510,6 +539,8 @@ let transformer = (function() {
     "APPLY" : apply,
     "MAP" : map,
 
+    'SPAN': span,
+    'P': p,
     'H3': h3,
     'DIV': div,
   };
