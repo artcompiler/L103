@@ -36,7 +36,6 @@ window.gcexports.viewer = (function () {
       const elts = renderElts(data);
       return (
         <div>
-          <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
           <div key='1' className="L103 viewer">
             {elts}
           </div>
