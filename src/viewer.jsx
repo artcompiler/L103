@@ -10,6 +10,9 @@ window.gcexports.viewer = (function () {
     let key = 1;
     data.forEach(d => {
       switch(d.type) {
+      case 'title':
+        document.title = renderElts(d.elts);
+        break;
       case 'div':
         elts.push(<div key={key++} className={d.clss}>{renderElts(d.elts)}</div>);
         break;

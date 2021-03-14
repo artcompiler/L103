@@ -499,6 +499,20 @@ let transformer = (function() {
     });
   }
 
+  function title(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        v1.elts.unshift({
+          type: "title",
+          elts: v0,
+        });
+        const err = [].concat(e0).concat(e1);
+        const val = v1;
+        resume(err, val);
+      });
+    });
+  }
+
   function div(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
       visit(node.elts[1], options, function (e1, v1) {
@@ -539,6 +553,7 @@ let transformer = (function() {
     "APPLY" : apply,
     "MAP" : map,
 
+    'TITLE': title,
     'SPAN': span,
     'P': p,
     'H3': h3,
