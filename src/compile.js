@@ -78,7 +78,6 @@ let transformer = (function() {
     } else {
       node = nodePool[nid];
     }
-    console.log("visit() nid=" + nid + " node=" + JSON.stringify(node, null, 2));
     assert(node, message(1001, [nid]));
     assert(node.tag, message(1001, [nid]));
     assert(typeof table[node.tag] === "function", message(1004, [JSON.stringify(node.tag)]));
@@ -460,13 +459,66 @@ let transformer = (function() {
     });
   }
 
+  function img(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      const err = [].concat(e0);
+      const val = {
+        type: "img",
+        attr: attrFromVal(v0),
+      };
+      resume(err, val);
+    });
+  }
+
+  function svg(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "svg",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
+  function path(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "path",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
+  function code(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "code",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
   function span(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
       visit(node.elts[1], options, function (e1, v1) {
         const err = [].concat(e0).concat(e1);
         const val = {
           type: "span",
-          clss: v0,
+          attr: attrFromVal(v0),
           elts: v1,
         };
         resume(err, val);
@@ -480,7 +532,64 @@ let transformer = (function() {
         const err = [].concat(e0).concat(e1);
         const val = {
           type: "p",
-          clss: v0,
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
+  function a(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "a",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        console.log("a() val=" + JSON.stringify(val, null, 2));
+        resume(err, val);
+      });
+    });
+  }
+
+  function ol(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "ol",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
+  function ul(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "ul",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
+  function li(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "li",
+          attr: attrFromVal(v0),
           elts: v1,
         };
         resume(err, val);
@@ -513,13 +622,38 @@ let transformer = (function() {
     });
   }
 
+  function attrFromVal(val) {
+    let attr;
+    if (typeof val === 'string') {
+      attr = {
+        'className': val,
+      };
+    } else {
+      attr = {};
+      Object.keys(val).forEach(key => {
+        if (key === 'class') {
+          attr['className'] = val[key];
+        } else {
+          const parts = key.split('-');
+          let name = parts.shift();
+          parts.forEach(part => {
+            name += part.charAt(0).toUpperCase() + part.slice(1)
+          });
+          attr[name] = val[key];
+        }
+      });
+    }
+    console.log("attrFromVal() attr=" + JSON.stringify(attr, null, 2));
+    return attr;
+  }
+  
   function div(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
       visit(node.elts[1], options, function (e1, v1) {
         const err = [].concat(e0).concat(e1);
         const val = {
           type: "div",
-          clss: v0,
+          attr: attrFromVal(v0),
           elts: v1,
         };
         resume(err, val);
@@ -553,6 +687,14 @@ let transformer = (function() {
     "APPLY" : apply,
     "MAP" : map,
 
+    'IMG': img,
+    'SVG': svg,
+    'PATH': path,
+    'CODE': code,
+    'A': a,
+    'OL': ol,
+    'UL': ul,
+    'LI': li,
     'TITLE': title,
     'SPAN': span,
     'P': p,

@@ -10,23 +10,47 @@ window.gcexports.viewer = (function () {
     let key = 1;
     data.forEach(d => {
       switch(d.type) {
+      case 'svg':
+        elts.push(<svg key={key++} {...d.attr}>{renderElts(d.elts)}</svg>);
+        break;
+      case 'img':
+        elts.push(<img key={key++} {...d.attr}/>);
+        break;
+      case 'path':
+        elts.push(<path key={key++} {...d.attr}>{renderElts(d.elts)}</path>);
+        break;
+      case 'code':
+        elts.push(<code key={key++} {...d.attr}>{renderElts(d.elts)}</code>);
+        break;
+      case 'a':
+        elts.push(<a key={key++} {...d.attr}>{renderElts(d.elts)}</a>);
+        break;
+      case 'ol':
+        elts.push(<ol key={key++} {...d.attr}>{renderElts(d.elts)}</ol>);
+        break;
+      case 'ul':
+        elts.push(<ul key={key++} {...d.attr}>{renderElts(d.elts)}</ul>);
+        break;
+      case 'li':
+        elts.push(<li key={key++} {...d.attr}>{renderElts(d.elts)}</li>);
+        break;
       case 'title':
         document.title = renderElts(d.elts);
         break;
       case 'div':
-        elts.push(<div key={key++} className={d.clss}>{renderElts(d.elts)}</div>);
+        elts.push(<div key={key++} {...d.attr}>{renderElts(d.elts)}</div>);
         break;
       case 'span':
-        elts.push(<span key={key++} className={d.clss}>{renderElts(d.elts)}</span>);
+        elts.push(<span key={key++} {...d.attr} >{renderElts(d.elts)}</span>);
         break;
       case 'h3':
         elts.push(<h3 key={key++}>{renderElts(d.elts)}</h3>);
         break;
       case 'p':
-        elts.push(<p key={key++} className={d.clss}>{renderElts(d.elts)}</p>);
+        elts.push(<p key={key++} {...d.attr}>{renderElts(d.elts)}</p>);
         break;
       default:
-        elts.push(data);
+        elts.push(d);
         break;
       }
     });
