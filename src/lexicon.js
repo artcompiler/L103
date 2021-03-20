@@ -1,5 +1,7 @@
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
+  "button" : { "tk": 1, "name": "BUTTON", "cls": "function", "length": 2, "arity": 2 },
+  "input" : { "tk": 1, "name": "INPUT", "cls": "function", "length": 1, "arity": 1 },
   "img" : { "tk": 1, "name": "IMG", "cls": "function", "length": 1, "arity": 1 },
   "svg" : { "tk": 1, "name": "SVG", "cls": "function", "length": 2, "arity": 2 },
   "path" : { "tk": 1, "name": "PATH", "cls": "function", "length": 2, "arity": 2 },

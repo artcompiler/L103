@@ -459,6 +459,31 @@ let transformer = (function() {
     });
   }
 
+  function input(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      const err = [].concat(e0);
+      const val = {
+        type: "input",
+        attr: attrFromVal(v0),
+      };
+      resume(err, val);
+    });
+  }
+
+  function button(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      visit(node.elts[1], options, function (e1, v1) {
+        const err = [].concat(e0).concat(e1);
+        const val = {
+          type: "button",
+          attr: attrFromVal(v0),
+          elts: v1,
+        };
+        resume(err, val);
+      });
+    });
+  }
+
   function img(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
       const err = [].concat(e0);
@@ -687,6 +712,8 @@ let transformer = (function() {
     "APPLY" : apply,
     "MAP" : map,
 
+    'INPUT': input,
+    'BUTTON': button,
     'IMG': img,
     'SVG': svg,
     'PATH': path,
