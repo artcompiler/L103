@@ -1,5 +1,8 @@
 // The lexicon must be the last definition and the only one with a left curly.
 window.gcexports.globalLexicon = {
+  "sendPasscode" : { "tk": 1, "name": "SEND-PASSCODE", "cls": "function", "length": 1, "arity": 1 },
+  "getPasscode" : { "tk": 1, "name": "GET-PASSCODE", "cls": "function", "length": 1, "arity": 1 },
+  "goto" : { "tk": 1, "name": "GOTO", "cls": "function", "length": 1, "arity": 1 },
   "button" : { "tk": 1, "name": "BUTTON", "cls": "function", "length": 2, "arity": 2 },
   "input" : { "tk": 1, "name": "INPUT", "cls": "function", "length": 1, "arity": 1 },
   "img" : { "tk": 1, "name": "IMG", "cls": "function", "length": 1, "arity": 1 },

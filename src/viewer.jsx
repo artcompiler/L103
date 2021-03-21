@@ -12,6 +12,57 @@ function renderAttr(attr) {
   return attr;
 }
 
+window.getPasscode = () => {
+  const value = d3.select('#mobile-number').property('value');
+  signIn(value);
+}
+window.sendPasscode = () => {
+  const value = d3.select('#passcode').property('value');
+  finishSignIn(value);
+}
+function signIn(number) {
+  d3.request('/signIn')
+    .header("X-Requested-With", "XMLHttpRequest")
+    .header("Content-type", "application/json; charset=UTF-8")
+    .mimeType("application/json")
+    .post(JSON.stringify({
+      name: "jeff",
+      number: number,
+    }))
+    .response(xhr => {
+      const data = JSON.parse(xhr.responseText);
+      localStorage.setItem("accessToken", data.jwt);
+    });
+}
+function finishSignIn(passcode) {
+  const jwt = localStorage.getItem("accessToken");
+  d3.request('/finishSignIn')
+    .header("X-Requested-With", "XMLHttpRequest")
+    .header("Content-type", "application/json; charset=UTF-8")
+    .mimeType("application/json")
+    .post(JSON.stringify({
+      jwt: jwt,
+      passcode: passcode,
+    }))
+    .response(xhr => {
+      const data = JSON.parse(xhr.responseText);
+      console.log("finishSignIn() data=" + JSON.stringify(data));
+      localStorage.setItem("accessToken", data.jwt);
+      localStorage.setItem("userID", data.userID);
+    });
+}
+function signOut() {
+  // Restore sign-in state.
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("userID");
+  d3.select("input#name-txt").classed("is-valid", false);
+  d3.select("input#number-txt").classed("is-valid", false);
+  d3.select("div#name-feedback").classed("valid-feedback", false).text("");
+  d3.select("button#signin").html("SIGN IN");
+  d3.select("button#signin").classed("is-signup", false);
+  d3.select("input#passcode-txt").node().value = "";
+}
+
 window.gcexports.viewer = (function () {
   function renderElts(data) {
     data = [].concat(data);

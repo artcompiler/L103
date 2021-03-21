@@ -459,6 +459,33 @@ let transformer = (function() {
     });
   }
 
+  function getPasscode(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      const err = [].concat(e0);
+      const val = "window.getPasscode(); window.location.href='" + v0 + "'";
+      resume(err, val);
+    });
+  }
+
+  function sendPasscode(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      const err = [].concat(e0);
+      const val = "window.sendPasscode(); window.location.href='" + v0 + "'";
+      resume(err, val);
+    });
+  }
+
+  function goto(node, options, resume) {
+    visit(node.elts[0], options, function (e0, v0) {
+      const err = [].concat(e0);
+      const val = {
+        type: "goto",
+        attr: attrFromVal(v0),
+      };
+      resume(err, val);
+    });
+  }
+
   function input(node, options, resume) {
     visit(node.elts[0], options, function (e0, v0) {
       const err = [].concat(e0);
@@ -712,6 +739,9 @@ let transformer = (function() {
     "APPLY" : apply,
     "MAP" : map,
 
+    'GET-PASSCODE': getPasscode,
+    'SEND-PASSCODE': sendPasscode,
+    'GOTO': goto,
     'INPUT': input,
     'BUTTON': button,
     'IMG': img,
