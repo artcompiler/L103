@@ -1,5 +1,5 @@
 /* Copyright (c) 2020, ARTCOMPILER INC */
-import {assert, message, messages, reserveCodeRange} from "./assert.ts";
+import {assert, message, messages, reserveCodeRange} from "./assert.js";
 import fs from "fs";
 import * as https from "https";
 import * as http from "http";

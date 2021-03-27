@@ -23,13 +23,13 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.[j|t]sx?$/,
+        test: /\.jsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
       },
     ],
   },
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js', '.jsx' ],
+    extensions: ['.js', '.jsx'],
   },
 };
