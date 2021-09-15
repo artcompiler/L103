@@ -695,7 +695,6 @@ let transformer = (function() {
         }
       });
     }
-    console.log("attrFromVal() attr=" + JSON.stringify(attr, null, 2));
     return attr;
   }
   
@@ -789,7 +788,6 @@ export const compiler = (function () {
     langID: 103,
     version: "v0.0.0",
     compile: function compile(code, data, config, resume) {
-      console.log("compile() code=" + JSON.stringify(code, null, 2));
       // Compiler takes an AST in the form of a node pool (code) and transforms it
       // into an object to be rendered on the client by the viewer for this
       // language.
