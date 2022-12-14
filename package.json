@@ -16,7 +16,7 @@
     "body-parser": "^1.18.3",
     "decimal.js": "^10.2.0",
     "domready": "^1.0.8",
-    "express": "^4.0.x",
+    "express": "^4.17.x",
     "hashids": "1.1.1",
     "morgan": "^1.9.1",
     "request": "^2.88.0",
